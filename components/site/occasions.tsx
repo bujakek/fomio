@@ -1,0 +1,134 @@
+'use client'
+
+import { cn } from '@/lib/utils'
+import { Cake, GlassWater, Heart, Plane, Sun } from 'lucide-react'
+import Image from 'next/image'
+import { useState } from 'react'
+import { Reveal } from './reveal'
+
+const occasions = [
+  {
+    id: 'eskuvo',
+    label: 'Esküvő',
+    icon: Heart,
+    image: '/images/wedding-dance.png',
+    alt: 'Esküvői első tánc',
+    title: 'Az egész nap, ahogy a vendégek látták',
+    text: 'A fotós képei mellé ott lesz minden ölelés, könnycsepp és éjszakai táncparkett-pillanat is.',
+  },
+  {
+    id: 'szuletesnap',
+    label: 'Születésnap',
+    icon: Cake,
+    image: '/images/birthday.png',
+    alt: 'Születésnapi ünneplés',
+    title: 'Minden gyertya és minden meglepetés',
+    text: 'A tortától az utolsó ölelésig — a vendégek minden nevetős pillanatot egy helyre gyűjtenek.',
+  },
+  {
+    id: 'utazas',
+    label: 'Utazás',
+    icon: Plane,
+    image: '/images/travel.png',
+    alt: 'Közös utazás',
+    title: 'A közös élmény, mindenki nézőpontjából',
+    text: 'A csapat összes fotója egy albumban — nem kell többé linkeket és üzeneteket vadászni.',
+  },
+  {
+    id: 'buli',
+    label: 'Buli',
+    icon: GlassWater,
+    image: '/images/party.png',
+    alt: 'Esti buli',
+    title: 'Az éjszaka, ahogy tényleg megtörtént',
+    text: 'A vendégek élőben töltik fel a képeket, te pedig másnap reggel az egészet egyben kapod meg.',
+  },
+  {
+    id: 'hetkoznapok',
+    label: 'Hétköznapok',
+    icon: Sun,
+    image: '/images/everyday.png',
+    alt: 'Hétköznapi pillanat',
+    title: 'A kis pillanatok, amikből az élet áll',
+    text: 'Egy közös ebéd vagy egy vasárnap délután — a legszebb képek nem mindig a nagy alkalmakon készülnek.',
+  },
+]
+
+export function Occasions() {
+  const [active, setActive] = useState(occasions[0].id)
+  const current = occasions.find((o) => o.id === active) ?? occasions[0]
+
+  return (
+    <section id="alkalmak" className="relative px-4 py-24 sm:px-6 lg:py-32">
+      <div className="mx-auto max-w-6xl">
+        <Reveal className="max-w-2xl">
+          <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+            Minden alkalomra, ahol fotó készül
+          </h2>
+          <p className="mt-4 text-pretty text-muted-foreground">
+            Válassz egy alkalmat, és nézd meg, hogyan gyűlik össze a nap minden
+            szemszögből.
+          </p>
+        </Reveal>
+
+        {/* Category selector */}
+        <Reveal className="mt-10" delay={80}>
+          <div className="flex flex-wrap gap-2">
+            {occasions.map((o) => {
+              const isActive = o.id === active
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  onClick={() => setActive(o.id)}
+                  aria-pressed={isActive}
+                  className={cn(
+                    'inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-300',
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'glass glass-hover text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  <o.icon className="size-4" strokeWidth={1.7} />
+                  {o.label}
+                </button>
+              )
+            })}
+          </div>
+        </Reveal>
+
+        {/* Display */}
+        <Reveal className="mt-8" delay={140}>
+          <div className="glass-strong relative overflow-hidden rounded-[2rem] p-2">
+            <div className="relative aspect-[16/10] overflow-hidden rounded-[1.6rem] sm:aspect-[16/8]">
+              {occasions.map((o) => (
+                <Image
+                  key={o.id}
+                  src={o.image || '/placeholder.svg'}
+                  alt={o.alt}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 1100px"
+                  className={cn(
+                    'object-cover transition-opacity duration-700 ease-out',
+                    o.id === active ? 'opacity-100' : 'opacity-0',
+                  )}
+                />
+              ))}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10">
+                <div key={current.id} className="reveal is-visible max-w-xl">
+                  <h3 className="text-balance text-2xl font-semibold sm:text-3xl">
+                    {current.title}
+                  </h3>
+                  <p className="mt-3 text-pretty text-sm leading-relaxed text-foreground/80 sm:text-base">
+                    {current.text}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
+}

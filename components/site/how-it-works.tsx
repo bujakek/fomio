@@ -1,0 +1,121 @@
+import { cn } from '@/lib/utils'
+import { CalendarPlus, Images, Link2, Lock, QrCode } from 'lucide-react'
+import Image from 'next/image'
+import { Reveal } from './reveal'
+
+const steps = [
+  {
+    number: '01',
+    icon: CalendarPlus,
+    title: 'Hozd létre az eseményt',
+    text: 'Adj nevet és dátumot az eseménynek. Egy perc alatt kész, kártya és regisztráció nélkül indulhatsz.',
+    image: '/images/wedding-portrait.png',
+    alt: 'Esemény létrehozása telefonon',
+    note: null,
+  },
+  {
+    number: '02',
+    icon: QrCode,
+    title: 'Hívd meg a vendégeket QR-kóddal',
+    text: 'Nyomtatható QR-kódot és megosztható linket kapsz. Tedd az asztalokra, küldd el üzenetben — bárki egy koppintással csatlakozik.',
+    image: '/images/garden-party.png',
+    alt: 'QR-kód az asztalokon',
+    note: 'Csak azok látják a képeket, akiket meghívtok — az album nem nyilvános, és nem jelenik meg a keresőkben. A fotókat nem osztjuk meg és nem adjuk el senkinek, és bármikor véglegesen törölheted őket.',
+  },
+  {
+    number: '03',
+    icon: Images,
+    title: 'Gyűjtsétek együtt a pillanatokat',
+    text: 'A képek élőben érkeznek a közös galériába. Az esemény után eredeti minőségben töltheted le az egészet.',
+    image: '/images/evening-party.png',
+    alt: 'Közös galéria élőben',
+    note: null,
+  },
+]
+
+export function HowItWorks() {
+  return (
+    <section id="hogyan-mukodik" className="relative px-4 py-24 sm:px-6 lg:py-32">
+      <div className="mx-auto max-w-6xl">
+        <Reveal className="max-w-2xl">
+          <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+            Három lépés, és gyűlnek a képek
+          </h2>
+        </Reveal>
+
+        <div className="mt-16 flex flex-col gap-16 lg:gap-24">
+          {steps.map((step, i) => {
+            const reversed = i % 2 === 1
+            return (
+              <Reveal key={step.number}>
+                <div
+                  className={cn(
+                    'grid items-center gap-8 lg:grid-cols-2 lg:gap-14',
+                    reversed && 'lg:[direction:rtl]',
+                  )}
+                >
+                  {/* Text */}
+                  <div className="lg:[direction:ltr]">
+                    <div className="flex items-center gap-4">
+                      <span className="text-gradient text-5xl font-semibold tracking-tight">
+                        {step.number}
+                      </span>
+                      <span className="glass flex size-12 items-center justify-center rounded-2xl">
+                        <step.icon className="size-6 text-accent" strokeWidth={1.6} />
+                      </span>
+                    </div>
+                    <h3 className="mt-6 text-balance text-2xl font-semibold sm:text-3xl">
+                      {step.title}
+                    </h3>
+                    <p className="mt-4 max-w-md text-pretty leading-relaxed text-muted-foreground">
+                      {step.text}
+                    </p>
+                    {step.note && (
+                      <div className="glass mt-6 flex max-w-md items-start gap-3 rounded-2xl p-4">
+                        <Lock className="mt-0.5 size-4 shrink-0 text-accent" />
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          {step.note}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Visual */}
+                  <div className="lg:[direction:ltr]">
+                    <div className="glass-strong overflow-hidden rounded-[2rem] p-2">
+                      <div className="relative aspect-[4/3] overflow-hidden rounded-[1.6rem]">
+                        <Image
+                          src={step.image || '/placeholder.svg'}
+                          alt={step.alt}
+                          fill
+                          sizes="(max-width: 1024px) 100vw, 520px"
+                          className="object-cover"
+                        />
+                        {i === 1 && (
+                          <div className="glass-strong absolute bottom-4 left-4 flex items-center gap-3 rounded-2xl p-3">
+                            <span className="flex size-14 items-center justify-center rounded-xl bg-white p-1.5">
+                              <QrCode className="size-full text-black" strokeWidth={1.2} />
+                            </span>
+                            <div className="pr-2">
+                              <p className="flex items-center gap-1 text-xs font-semibold">
+                                <Link2 className="size-3 text-accent" />
+                                pillanatok.app/e/…
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">
+                                Koppints a csatlakozáshoz
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
