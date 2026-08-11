@@ -62,7 +62,7 @@ export function Occasions() {
     <section id="alkalmak" className="relative px-4 py-24 sm:px-6 lg:py-32">
       <div className="mx-auto max-w-6xl">
         <Reveal className="max-w-2xl">
-          <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Minden alkalomra, ahol fotó készül
           </h2>
           <p className="mt-4 text-pretty text-muted-foreground">
@@ -117,10 +117,10 @@ export function Occasions() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10">
                 <div key={current.id} className="reveal is-visible max-w-xl">
-                  <h3 className="text-balance text-2xl font-semibold sm:text-3xl">
+                  <h3 className="text-2xl font-semibold text-balance sm:text-3xl">
                     {current.title}
                   </h3>
-                  <p className="mt-3 text-pretty text-sm leading-relaxed text-foreground/80 sm:text-base">
+                  <p className="mt-3 text-sm leading-relaxed text-pretty text-foreground/80 sm:text-base">
                     {current.text}
                   </p>
                 </div>

@@ -9,8 +9,8 @@ const benefits = [
   },
   {
     icon: Zap,
-    title: 'Azonnal megjelenik',
-    text: 'A feltöltött fotók másodperceken belül láthatók a közös galériában — valós időben.',
+    title: 'Egyből a helyén',
+    text: 'A feltöltött fotó egyből bekerül a közös galériába, ahol minden vendég megnézheti.',
   },
   {
     icon: ShieldCheck,
@@ -20,7 +20,7 @@ const benefits = [
   {
     icon: Download,
     title: 'Töltsd le mind',
-    text: 'Egyetlen kattintással letöltheted az összes fotót ZIP-ben, tömörítés nélkül.',
+    text: 'Egyetlen kattintással letöltheted az összes fotót egy ZIP-fájlban.',
   },
 ]
 
@@ -29,7 +29,7 @@ export function Benefits() {
     <section className="relative px-4 py-24 sm:px-6 lg:py-32">
       <div className="mx-auto max-w-6xl">
         <Reveal className="max-w-2xl">
-          <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Minden megvan, semmit nem kell megtanulni
           </h2>
           <p className="mt-4 text-pretty text-muted-foreground">

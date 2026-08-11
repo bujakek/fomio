@@ -26,7 +26,7 @@ const steps = [
     number: '03',
     icon: Images,
     title: 'Gyűjtsétek együtt a pillanatokat',
-    text: 'A képek élőben érkeznek a közös galériába. Az esemény után eredeti minőségben töltheted le az egészet.',
+    text: 'A képek élőben érkeznek a közös galériába. Az esemény után nagy felbontásban töltheted le az egészet.',
     image: '/images/evening-party.png',
     alt: 'Közös galéria élőben',
     note: null,
@@ -35,10 +35,13 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="hogyan-mukodik" className="relative px-4 py-24 sm:px-6 lg:py-32">
+    <section
+      id="hogyan-mukodik"
+      className="relative px-4 py-24 sm:px-6 lg:py-32"
+    >
       <div className="mx-auto max-w-6xl">
         <Reveal className="max-w-2xl">
-          <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Három lépés, és gyűlnek a képek
           </h2>
         </Reveal>
@@ -61,13 +64,16 @@ export function HowItWorks() {
                         {step.number}
                       </span>
                       <span className="glass flex size-12 items-center justify-center rounded-2xl">
-                        <step.icon className="size-6 text-accent" strokeWidth={1.6} />
+                        <step.icon
+                          className="size-6 text-accent"
+                          strokeWidth={1.6}
+                        />
                       </span>
                     </div>
-                    <h3 className="mt-6 text-balance text-2xl font-semibold sm:text-3xl">
+                    <h3 className="mt-6 text-2xl font-semibold text-balance sm:text-3xl">
                       {step.title}
                     </h3>
-                    <p className="mt-4 max-w-md text-pretty leading-relaxed text-muted-foreground">
+                    <p className="mt-4 max-w-md leading-relaxed text-pretty text-muted-foreground">
                       {step.text}
                     </p>
                     {step.note && (
@@ -94,7 +100,10 @@ export function HowItWorks() {
                         {i === 1 && (
                           <div className="glass-strong absolute bottom-4 left-4 flex items-center gap-3 rounded-2xl p-3">
                             <span className="flex size-14 items-center justify-center rounded-xl bg-white p-1.5">
-                              <QrCode className="size-full text-black" strokeWidth={1.2} />
+                              <QrCode
+                                className="size-full text-black"
+                                strokeWidth={1.2}
+                              />
                             </span>
                             <div className="pr-2">
                               <p className="flex items-center gap-1 text-xs font-semibold">

@@ -19,20 +19,20 @@ const faqs = [
     a: 'Az albumot csak azok érhetik el, akik megkapták az esemény QR-kódját vagy meghívólinkjét. Az album nem nyilvános, és nem jelenik meg a keresőkben.',
   },
   {
-    q: 'Eredeti minőségben érkeznek a fotók?',
-    a: 'Igen. A képeket nem tömörítjük le, így az eredeti felbontásban tölthetők le és nyomtathatók ki.',
+    q: 'Milyen minőségben érkeznek a fotók?',
+    a: 'Nagy felbontásban: a képek hosszabb éle legfeljebb 4096 pixel, alig észrevehető tömörítéssel. Így nagyíthatók és nyomtathatók maradnak, de a helyszíni wifin is gyorsan feltöltődnek.',
   },
   {
     q: 'Meddig érhetők el a képek?',
-    a: 'A képek az eseményhez tartozó megőrzési idő végéig érhetők el. A pontos időtartamot az eseménycsomag tartalmazza, és lejárat előtt értesítést küldünk.',
+    a: 'A galéria az esemény után is elérhető marad, így a házigazda ráérősen letöltheti az egész albumot. Az esemény tartalmát a házigazda bármikor véglegesen törölheti.',
   },
   {
     q: 'Moderálhatom, mi kerül az albumba?',
-    a: 'Igen. Házigazdaként elrejtheted vagy törölheted a nem kívánt képeket, és szabályozhatod, hogy a vendégek láthatják-e egymás feltöltéseit.',
+    a: 'Igen. Házigazdaként elrejtheted vagy törölheted a nem kívánt képeket.',
   },
   {
     q: 'Mi történik, ha gyenge a wifi a helyszínen?',
-    a: 'A feltöltés gyenge kapcsolat esetén is folytatódik. Ha a kapcsolat megszakad, a rendszer később automatikusan újrapróbálhatja a feltöltést.',
+    a: 'A telefon a feltöltés előtt lekicsinyíti a képet, így gyenge wifin is gyorsan feltöltődik. Ha egy feltöltés mégis megszakad, egyetlen koppintással újrapróbálható.',
   },
   {
     q: 'Hogyan kezelitek az adatokat?',
@@ -47,7 +47,7 @@ export function Faq() {
     <section id="gyik" className="relative px-4 py-24 sm:px-6 lg:py-32">
       <div className="mx-auto max-w-3xl">
         <Reveal className="text-center">
-          <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Gyakori kérdések
           </h2>
         </Reveal>
@@ -92,7 +92,7 @@ export function Faq() {
                     )}
                   >
                     <div className="overflow-hidden">
-                      <p className="px-6 pb-6 text-pretty text-sm leading-relaxed text-muted-foreground">
+                      <p className="px-6 pb-6 text-sm leading-relaxed text-pretty text-muted-foreground">
                         {item.a}
                       </p>
                     </div>

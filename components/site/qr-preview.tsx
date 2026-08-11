@@ -1,22 +1,9 @@
 'use client'
 
+import { slugify } from '@/lib/slug'
 import { QRCodeSVG } from 'qrcode.react'
 import { useMemo, useState } from 'react'
 import { Reveal } from './reveal'
-
-function slugify(input: string) {
-  const base = input
-    .toLowerCase()
-    .normalize('NFD')
-    // strip diacritics
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/&/g, ' ')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-  return base || 'esemeny'
-}
 
 export function QrPreview() {
   const [name, setName] = useState('Anna & Péter')
@@ -33,10 +20,10 @@ export function QrPreview() {
             <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-wide text-accent">
               QR-KÓD ELŐNÉZET
             </span>
-            <h2 className="mt-6 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h2 className="mt-6 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
               Nézd meg, mit olvasnak be a vendégeid
             </h2>
-            <p className="mt-4 max-w-md text-pretty leading-relaxed text-muted-foreground">
+            <p className="mt-4 max-w-md leading-relaxed text-pretty text-muted-foreground">
               Írd be az esemény nevét, és azonnal látod a kártyát, ami az
               asztalokra kerül. A vendégek ezt olvassák be, és már tölthetik is
               fel a képeiket.
@@ -56,7 +43,7 @@ export function QrPreview() {
                 onChange={(e) => setName(e.target.value)}
                 maxLength={40}
                 placeholder="Anna & Péter"
-                className="glass w-full rounded-2xl px-5 py-3.5 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-accent"
+                className="glass w-full rounded-2xl px-5 py-3.5 text-base text-foreground transition-colors outline-none placeholder:text-muted-foreground/60 focus:border-accent"
               />
               <div className="mt-4 flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">A generált link:</span>

@@ -1,82 +1,145 @@
 # Project: Fomio — QR-code shared photo album for events
 
-> The shipped product name is **Fomio**. Domain: `fomio.io`. (Earlier working names "Moments" and "Pillanatok" are deprecated — do not use them in new code or copy.)
+> Product name: **Fomio**. Domain: `fomio.io`. (Earlier working names "Moments" and "Pillanatok" are deprecated — never use them in code or copy.)
 
-## What this is
+## Read this first
 
-A web app that lets anyone create an event (wedding, birthday, party), and guests scan a QR code to upload photos straight from their phone browser — **no app download, no account required**. The host (event creator) can later view/download all submitted photos.
+Guests scan a QR code at an event and upload photos from their phone browser — **no app, no account**. The host views and downloads all of them afterward.
 
-**Language:** The product ships in **Hungarian** (`lang="hu"`, all UI copy in Hungarian). This is not multi-language — it's single-language Hungarian. Keep all guest/host-facing copy in Hungarian; code, comments, and this doc stay in English.
+**Phase: MVP / pilot for one real wedding.** The single question we're answering: do guests actually use the QR to upload? Nothing else matters yet. There is no validated business model — don't build for scale, don't build for a second customer.
 
-**Current phase: MVP / pilot.** The goal is to test on a single real event (a wedding) whether guests actually use the QR to upload mechanic. There is no validated business model yet — this build exists to prove the core mechanic works, not to ship a finished product.
+**Language:** UI copy is **Hungarian only** (`lang="hu"`). Not multi-language. Code, comments, commit messages, and this doc stay in English.
 
-**Original inspiration:** once.film (iOS app, "disposable camera" vibe, delayed reveal). Our version is simpler — no delayed reveal, no film filters, just an immediate shared gallery.
+**Mobile-first, always.** Guests arrive almost exclusively on phones via QR or a shared link. Design and test at 390px width before anything else.
 
-**Design direction (authoritative):** dark **glassmorphism** — near-black background (`#050505`), "liquid glass" surfaces, gradient borders, subtle glow/float animations, Manrope typeface. Tokens live in `app/globals.css`. Match this look across all new pages (event/upload/gallery/admin). (Ignore any earlier "warm/nostalgic/editorial" phrasing — that direction was dropped.)
+## Before you say a task is done
 
-## Business context (why the scope is this narrow)
+```bash
+pnpm verify   # typecheck + lint + build. Must pass.
+pnpm format   # Prettier; run after writing files
+```
 
-- Originally aimed at a B2B model (white-label reseller for photographers), but pivoted to B2C because photographers want to see real usage/referrals before committing their brand to it. Real, visible usage comes first; going back to photographers is a later phase.
-- **Do not build in B2B/multi-tenant/branding/token-payment logic** — that's a LATER phase, intentionally out of scope right now.
-- Pilot success is measured by guest participation rate: what percentage of attendees actually upload a photo.
+Never use npm or yarn — this project is **pnpm**. Never re-add `typescript.ignoreBuildErrors` to `next.config.mjs`; it was removed deliberately so type errors actually fail the build.
+
+## Skills — load these instead of re-deriving conventions
+
+Project skills live in `.cursor/skills/`. Read the relevant one _before_ writing code in that area:
+
+| Skill            | Load when                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
+| `fomio-ui`       | Building or restyling any page or component (glass surfaces, tokens, Hungarian copy conventions) |
+| `fomio-supabase` | Touching the database, migrations, RLS, storage buckets, or auth                                 |
+| `fomio-upload`   | Working on the photo upload pipeline (HEIC, compression, direct-to-Storage)                      |
 
 ## Tech stack
 
-- **Framework:** Next.js 16 (App Router), React 19, TypeScript — fullstack, frontend and API routes together
-- **Package manager:** **pnpm** (use `pnpm install` / `pnpm dev` / `pnpm build`, not npm)
-- **Hosting:** Vercel
-- **Database + Auth + Storage:** Supabase (Postgres, Supabase Storage, Supabase Auth if needed) — **not yet installed** (`@supabase/supabase-js` is not in `package.json` yet; adding it is part of build step 1)
-- **Styling:** **Tailwind CSS v4** — config is CSS-based via `@theme` in `app/globals.css`; there is NO `tailwind.config.js`. Add design tokens as CSS variables there.
-- **UI components:** shadcn/ui (`components.json`, primitives in `components/ui/`) built on `@base-ui/react`; `lucide-react` for icons
-- **QR generation:** `qrcode.react` (already a dependency)
-- Env vars are already wired up on Vercel (via the Vercel-Supabase integration). If `.env.local` is missing locally, pull it from Vercel — don't hand-edit or commit these values.
+- **Next.js 16** (App Router, Turbopack), **React 19**, TypeScript strict
+- **pnpm**; hosted on **Vercel**
+- **Supabase** — Postgres + Storage + Auth. **Not installed yet**; adding it is build step 1
+- **Tailwind CSS v4** — CSS-based config via `@theme` in `app/globals.css`. There is **no `tailwind.config.js`**; don't create one
+- **shadcn/ui** (`components.json`, style `base-nova`) on `@base-ui/react`; `lucide-react` icons
+- **qrcode.react** for QR generation
+- ESLint (flat config, `eslint.config.mjs`) + Prettier (`.prettierrc.json`, no semicolons, single quotes, Tailwind class sorting)
 
-## Current state (as of this doc)
+### Local env
 
-- Only the **marketing landing page** exists (`app/page.tsx` + `components/site/*`: hero, stats, how-it-works, testimonials, FAQ, QR preview, final CTA, etc.). It was generated with v0 and is the public homepage at `/`.
-- The functional MVP pages do **not** exist yet: `/[slug]` (event page), `/[slug]/upload`, `/[slug]/gallery`, and admin.
-- Supabase is not wired up yet; there is no data layer, no `lib/supabase` client, and no migrations.
+Env vars are managed by the Vercel–Supabase integration. `.env.local` is gitignored and **must never be hand-edited or committed**:
 
-## Routing
+```bash
+vercel link && vercel env pull .env.local
+```
 
-- `/` — public **marketing homepage** (the existing v0 landing page); this stays as the permanent front page.
-- `/[slug]` — per-event page (the page guests reach via QR/link).
-- `/[slug]/upload`, `/[slug]/gallery` — event upload and gallery.
-- Admin lives under its own path (e.g. `/admin`), password-protected.
+Expected keys: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and (server-only, admin ZIP export) `SUPABASE_SERVICE_ROLE_KEY`.
 
-## What we ARE building for the MVP
+## Current state
 
-- Event page (`/[slug]`) — no branding system yet, dark glassmorphism UI matching the landing page
-- Photo upload page (`/[slug]/upload`) — camera or gallery picker, upload with progress indicator
-- Gallery page (`/[slug]/gallery`) — host/guests can view submitted photos
-- Minimal admin (password-protected or Supabase Auth) — create events, delete photos for moderation
-- Data model: `events` table (id, slug, event_name, event_date) + `photos` table (id, event_id, storage_path, uploaded_at)
-- QR code generation from the final event URL
+- **Marketing landing page only** — `app/page.tsx` composing `components/site/*` (hero, stats, how-it-works, occasions, testimonials, qr-preview, live-demo, photo-quality, faq, final-cta, footer). Originally v0-generated, now the permanent homepage at `/`.
+- `components/site/live-demo.tsx` is a **fake simulation** with hardcoded images, not a real gallery.
+- **Nothing functional exists yet**: no event pages, no Supabase client, no migrations, no admin.
+- `lib/slug.ts` holds the canonical `slugify()` — admin and the QR preview must both use it so printed QR codes never disagree.
 
-## What we are DELIBERATELY LEAVING OUT (don't suggest or build these unless I explicitly ask)
+## Routing (settled — QR codes get printed, so this is expensive to change)
 
-- App Clip / native iOS app
-- Photographer/multi-tenant dashboard, branding system for multiple clients
-- Payments, token system, revenue-share automation, invoicing
-- Guest authentication or mandatory registration
-- Delayed reveal, film-filter effects
-- Email notifications, multi-language support
+| Route               | Purpose                                            |
+| ------------------- | -------------------------------------------------- |
+| `/`                 | Marketing homepage. Permanent. Don't repurpose it. |
+| `/e/[slug]`         | Event page guests land on from the QR code         |
+| `/e/[slug]/upload`  | Upload screen (camera or gallery picker)           |
+| `/e/[slug]/gallery` | Shared gallery                                     |
+| `/admin`            | Host/admin area, Supabase Auth magic link          |
 
-If any of these come up as a natural next step while building, flag it, but don't start implementing it automatically. Ask first.
+The `/e/` prefix is what the landing page already advertises in `qr-preview.tsx` and `how-it-works.tsx`, and it keeps the root namespace free for marketing pages.
 
-## Priority / build order
+## Access model (settled)
 
-1. Next.js project + Supabase connection
-2. Data model (events, photos tables via Supabase migration)
-3. Landing/event page with static/sample data
-4. Upload flow (file to Supabase Storage, DB record)
-5. Gallery page
-6. Simple admin (create event, delete photos)
-7. Live testing on mobile, QR code generation and printing
+- **Guests: no gate at all.** Anyone with the link or QR can view the gallery and upload. No passcode, no login, no nickname required. Any friction directly reduces the participation rate we're trying to measure.
+- **Host/admin: Supabase Auth magic link.** Only the admin area is protected.
+- Privacy comes from the URL being unguessable and unindexed — add `noindex` to event routes.
 
-## Important technical notes
+## Data model (settled)
 
-- Client-side image compression before upload is recommended (phone photos can be large; venue wifi may be strained)
-- Prefer uploading directly from the browser to Supabase Storage (skip routing the file through a Next.js API route)
-- Storage bucket RLS policy: public read, restricted insert — a simple, permissive policy is fine to start, tighten later if needed
-- Mobile-first — guests will almost exclusively arrive on their phones from a shared link/QR code
+Details, DDL, and RLS live in `.cursor/skills/fomio-supabase/SKILL.md`. Shape:
+
+- **`events`** — `id`, `slug` (unique), `event_name`, `event_date`, `uploads_close_at` (upload window; gallery stays viewable after), `created_at`
+- **`photos`** — `id`, `event_id`, `storage_path`, `uploader_name` (nullable — optional guest nickname, remembered on their device), `hidden_at` (soft delete for moderation; never hard-delete), `width`, `height`, `byte_size`, `mime_type` (so the gallery grid reserves space and avoids layout shift), `created_at`
+
+Storage layout: `event-photos/{event_id}/{photo_id}.jpg`.
+
+## MVP scope
+
+**Building:**
+
+1. Event page `/e/[slug]` — name, date, prominent upload CTA, link to gallery
+2. Upload `/e/[slug]/upload` — camera or gallery picker, client-side HEIC conversion + compression, per-file progress, manual retry
+3. Gallery `/e/[slug]/gallery` — responsive grid, lightbox, hidden photos excluded
+4. Admin `/admin` — create events, generate/print QR, hide photos, **ZIP download of the whole album**
+5. QR code generated from the final event URL
+
+**Not building — flag it and ask first, never start it:**
+
+- App Clip / native app
+- Photographer or multi-tenant dashboard, per-client branding
+- Payments, token system, revenue share, invoicing
+- Guest accounts or mandatory registration
+- Delayed reveal, film filters
+- Email notifications, multi-language
+- Realtime gallery updates (Supabase Realtime) — guests refresh; the copy no longer promises live updates
+- Resumable/background uploads — manual retry only
+
+## Build order
+
+1. Supabase installed and connected (`@supabase/supabase-js`, `@supabase/ssr`)
+2. Migrations for `events` + `photos`, RLS, storage bucket
+3. Event page with real data
+4. Upload flow → Storage + DB row
+5. Gallery
+6. Admin: create event, hide photo, ZIP export
+7. Real-phone testing, QR printing
+
+## Photo quality policy (settled — the landing page depends on it)
+
+Compress **client-side before upload**, in the browser, straight to Supabase Storage:
+
+- **4096px bounding box, JPEG quality 0.90–0.92.** Below ~85% JPEG drops data exponentially and skin tones go muddy in dim venues; 92% is visually indistinguishable and keeps a 48MP iPhone photo at roughly 1.5–2.2MB instead of 8MB. Print-ready for the couple, fast on congested venue wifi.
+- **HEIC must be converted in the browser.** Only Safari can read HEIC; Chrome, Edge, and desktop break on it. Use `heic-to` (lightweight, libheif 1.18) rather than `heic2any` (600KB+ of WASM), and **dynamically import it only when an HEIC file is detected**.
+
+Full pipeline in `.cursor/skills/fomio-upload/SKILL.md`.
+
+## Landing page promises we must honor
+
+The marketing page is live, so guests and hosts arrive with expectations. These claims are load-bearing:
+
+- **ZIP download of the whole album** (`benefits.tsx`, `live-demo.tsx`) — must actually work for the pilot
+- **High-resolution, print-ready photos** (`photo-quality.tsx` comparison slider, FAQ) — satisfied by the 4096px/92% policy above. The pitch is "chat apps crush your photos, we don't", which stays true; never re-add claims of literally uncompressed originals
+- **Private, unindexed album** (`benefits.tsx`, FAQ) — event routes need `noindex`
+- **Host can hide unwanted photos** (FAQ) — needs the `hidden_at` flag
+
+If a change would falsify a landing-page claim, either honor it or update the Hungarian copy in the same change.
+
+## Conventions
+
+- `components/site/*` marketing sections · `components/event/*` guest-facing event UI · `components/admin/*` admin UI · `components/ui/*` shadcn primitives
+- Files kebab-case; components named exports (`export function EventHeader()`), no default exports except App Router pages/layouts
+- Server Components by default; add `'use client'` only for state, refs, or browser APIs
+- Shared logic in `lib/` (`lib/slug.ts`, `lib/supabase/*`); never duplicate a helper across components
+- Import alias `@/*` from the repo root

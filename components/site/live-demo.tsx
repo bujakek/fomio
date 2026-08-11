@@ -1,7 +1,14 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { Check, Download, ImagePlus, Loader2, RotateCcw, Wifi } from 'lucide-react'
+import {
+  Check,
+  Download,
+  ImagePlus,
+  Loader2,
+  RotateCcw,
+  Wifi,
+} from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 import { Reveal } from './reveal'
@@ -13,7 +20,10 @@ const basePhotos = [
   { src: '/images/group-lookout.png', alt: 'Csoportkép a kilátónál' },
 ]
 
-const newPhoto = { src: '/images/guests-laughing.png', alt: 'Frissen feltöltött vendégfotó' }
+const newPhoto = {
+  src: '/images/guests-laughing.png',
+  alt: 'Frissen feltöltött vendégfotó',
+}
 
 type Tab = 'vendeg' | 'hazigazda'
 
@@ -46,7 +56,7 @@ export function LiveDemo() {
             <span className="size-1.5 animate-pulse rounded-full bg-accent" />
             ÉLŐ BEMUTATÓ
           </span>
-          <h2 className="mt-6 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="mt-6 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Nézd meg, milyen egy közös album
           </h2>
           <p className="mt-4 text-pretty text-muted-foreground">
@@ -102,7 +112,9 @@ export function LiveDemo() {
                     key={`${p.src}-${i}`}
                     className={cn(
                       'relative aspect-square overflow-hidden rounded-2xl',
-                      uploaded && p.src === newPhoto.src && 'ring-2 ring-accent',
+                      uploaded &&
+                        p.src === newPhoto.src &&
+                        'ring-2 ring-accent',
                     )}
                   >
                     <Image
@@ -113,7 +125,7 @@ export function LiveDemo() {
                       className="object-cover"
                     />
                     {uploaded && p.src === newPhoto.src && (
-                      <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                      <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
                         <Check className="size-3" /> Most érkezett
                       </span>
                     )}
@@ -143,7 +155,8 @@ export function LiveDemo() {
                       >
                         {uploading ? (
                           <>
-                            <Loader2 className="size-4 animate-spin" /> Feltöltés…
+                            <Loader2 className="size-4 animate-spin" />{' '}
+                            Feltöltés…
                           </>
                         ) : uploaded ? (
                           <>
@@ -156,8 +169,8 @@ export function LiveDemo() {
                         )}
                       </button>
                       <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Wifi className="size-3.5" />A feltöltés a háttérben
-                        folytatódik gyenge wifi esetén is.
+                        <Wifi className="size-3.5" />A feltöltés állapotát végig
+                        látod, gyenge wifi mellett is.
                       </p>
                       {uploaded && (
                         <button
@@ -175,7 +188,7 @@ export function LiveDemo() {
                   <>
                     <p className="text-sm leading-relaxed text-muted-foreground">
                       Házigazdaként az esemény után egyetlen kattintással
-                      letöltöd az összes fotót — eredeti minőségben, ZIP-ben.
+                      letöltöd az összes fotót — nagy felbontásban, ZIP-ben.
                     </p>
                     <div className="mt-auto space-y-3 pt-6">
                       <div className="glass flex items-center justify-between rounded-2xl px-4 py-3">

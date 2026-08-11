@@ -30,7 +30,7 @@ export function Testimonials() {
     <section id="velemenyek" className="relative px-4 py-24 sm:px-6 lg:py-32">
       <div className="mx-auto max-w-6xl">
         <Reveal className="text-center">
-          <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Amit a házigazdák mondanak
           </h2>
           <div className="mt-4 flex items-center justify-center gap-2">
@@ -51,15 +51,17 @@ export function Testimonials() {
             <Reveal key={r.name} delay={i * 100}>
               <figure className="glass glass-hover flex h-full flex-col rounded-3xl p-8">
                 <Quote className="size-8 text-accent/60" strokeWidth={1.4} />
-                <blockquote className="mt-5 flex-1 text-pretty text-lg leading-relaxed text-foreground/90">
+                <blockquote className="mt-5 flex-1 text-lg leading-relaxed text-pretty text-foreground/90">
                   {`„${r.quote}”`}
                 </blockquote>
                 <figcaption className="mt-7 flex items-center gap-3 border-t border-border pt-5">
-                  <span className="flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-accent/30 to-accent-blue/30 text-sm font-semibold text-foreground ring-1 ring-inset ring-border-strong">
+                  <span className="flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-accent/30 to-accent-blue/30 text-sm font-semibold text-foreground ring-1 ring-border-strong ring-inset">
                     {r.monogram}
                   </span>
                   <span>
-                    <span className="block text-sm font-semibold">{r.name}</span>
+                    <span className="block text-sm font-semibold">
+                      {r.name}
+                    </span>
                     <span className="block text-xs text-muted-foreground">
                       {r.date}
                     </span>

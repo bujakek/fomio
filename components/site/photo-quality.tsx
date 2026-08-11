@@ -38,14 +38,14 @@ export function PhotoQuality() {
           <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-wide text-accent">
             FOTÓMINŐSÉG
           </span>
-          <h2 className="mt-6 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-            Eredeti minőségben, nem tömörítve
+          <h2 className="mt-6 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            Nyomtatható minőségben, nem összenyomva
           </h2>
-          <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
-            A vendégek ma jellemzően Messenger-csoportba küldik a képeket, ahol a
-            telefon összenyomja őket. Ami ott megmarad, az a fotó töredéke.
-            Nálunk minden kép eredeti felbontásban érkezik — nagyítható,
-            vágható, nyomtatható.
+          <p className="mt-4 leading-relaxed text-pretty text-muted-foreground">
+            A vendégek ma jellemzően Messenger-csoportba küldik a képeket, ahol
+            a telefon összenyomja őket. Ami ott megmarad, az a fotó töredéke.
+            Nálunk minden kép nagy felbontásban érkezik — nagyítható, vágható,
+            nyomtatható.
           </p>
         </Reveal>
 
@@ -53,7 +53,7 @@ export function PhotoQuality() {
           <div className="glass-strong overflow-hidden rounded-[2rem] p-2">
             <div
               ref={containerRef}
-              className="relative aspect-[16/10] w-full cursor-ew-resize touch-none select-none overflow-hidden rounded-[1.6rem] sm:aspect-[16/8]"
+              className="relative aspect-[16/10] w-full cursor-ew-resize touch-none overflow-hidden rounded-[1.6rem] select-none sm:aspect-[16/8]"
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
@@ -62,7 +62,7 @@ export function PhotoQuality() {
               {/* Original (right, full) */}
               <Image
                 src="/images/quality-original.png"
-                alt="A fotó eredeti, éles minőségben"
+                alt="A fotó éles, nyomtatható minőségben"
                 fill
                 sizes="(max-width: 768px) 100vw, 1100px"
                 className="object-cover"
@@ -75,7 +75,7 @@ export function PhotoQuality() {
               >
                 <Image
                   src="/images/quality-original.png"
-                  alt="Ugyanaz a fotó, tömörítés után romlott minőségben"
+                  alt="Ugyanaz a fotó csevegőappban, összenyomva"
                   fill
                   sizes="(max-width: 768px) 100vw, 1100px"
                   className="object-cover blur-[2.5px] brightness-95 contrast-[0.92] saturate-[0.72]"
@@ -84,11 +84,11 @@ export function PhotoQuality() {
               </div>
 
               {/* Labels */}
-              <span className="glass absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-medium">
-                Tömörített
+              <span className="glass absolute top-3 left-3 rounded-full px-3 py-1 text-xs font-medium">
+                Csevegőappban
               </span>
-              <span className="glass absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-medium text-accent">
-                Eredeti minőség
+              <span className="glass absolute top-3 right-3 rounded-full px-3 py-1 text-xs font-medium text-accent">
+                Fomióval
               </span>
 
               {/* Divider + handle */}
@@ -105,17 +105,17 @@ export function PhotoQuality() {
 
           {/* Accessible control */}
           <label className="mt-5 flex items-center gap-3 px-1">
-            <span className="text-xs text-muted-foreground">Tömörített</span>
+            <span className="text-xs text-muted-foreground">Csevegőappban</span>
             <input
               type="range"
               min={0}
               max={100}
               value={pos}
               onChange={(e) => setPos(Number(e.target.value))}
-              aria-label="Összehasonlítás csúszka a tömörített és az eredeti minőségű fotó között"
+              aria-label="Összehasonlítás csúszka a csevegőappban összenyomott és a Fomióval feltöltött fotó között"
               className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-border accent-accent"
             />
-            <span className="text-xs text-accent">Eredeti</span>
+            <span className="text-xs text-accent">Fomióval</span>
           </label>
         </Reveal>
       </div>

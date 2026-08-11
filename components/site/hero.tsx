@@ -4,7 +4,10 @@ import { QrCode, ScanLine, Star } from 'lucide-react'
 import Image from 'next/image'
 
 const galleryImages = [
-  { src: '/images/wedding-dance.png', alt: 'Esküvői első tánc fényfüzérek alatt' },
+  {
+    src: '/images/wedding-dance.png',
+    alt: 'Esküvői első tánc fényfüzérek alatt',
+  },
   { src: '/images/wedding-cake.png', alt: 'Tortavágás az esküvőn' },
   { src: '/images/guests-laughing.png', alt: 'Nevető vendégek az asztalnál' },
   { src: '/images/garden-party.png', alt: 'Esti kerti buli fényfüzérekkel' },
@@ -14,7 +17,7 @@ export function Hero() {
   return (
     <section
       id="top"
-      className="relative flex min-h-[92vh] items-center px-4 pb-16 pt-32 sm:px-6 lg:pt-36"
+      className="relative flex min-h-[92vh] items-center px-4 pt-32 pb-16 sm:px-6 lg:pt-36"
     >
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
         {/* Copy */}
@@ -24,7 +27,7 @@ export function Hero() {
             QR-kódos közös fotóalbum
           </span>
 
-          <h1 className="mt-6 text-balance text-5xl font-semibold leading-[1.03] tracking-tight sm:text-6xl lg:text-[5rem]">
+          <h1 className="mt-6 text-5xl leading-[1.03] font-semibold tracking-tight text-balance sm:text-6xl lg:text-[5rem]">
             <span className="text-gradient">Az esemény</span>
             <br />
             minden vendég
@@ -32,7 +35,7 @@ export function Hero() {
             <span className="text-gradient-accent">szemével</span>
           </h1>
 
-          <p className="mt-7 max-w-lg text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="mt-7 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground sm:text-lg">
             A vendégek beolvassák a QR-kódot, és a telefonjuk böngészőjéből
             azonnal feltöltik a képeiket. Nincs alkalmazás, nincs regisztráció —
             minden fotó egyetlen közös galériába érkezik.
@@ -70,12 +73,12 @@ export function Hero() {
         <div className="relative mx-auto w-full max-w-md lg:max-w-none">
           <div className="relative aspect-[4/5] w-full">
             {/* Phone mockup */}
-            <div className="animate-float-slow absolute left-1/2 top-1/2 w-[62%] max-w-[280px] -translate-x-1/2 -translate-y-1/2">
+            <div className="absolute top-1/2 left-1/2 w-[62%] max-w-[280px] -translate-x-1/2 -translate-y-1/2 animate-float-slow">
               <div className="glass-strong overflow-hidden rounded-[2.5rem] p-2.5">
                 <div className="overflow-hidden rounded-[2rem] bg-background-secondary">
                   <div className="flex items-center justify-between px-4 py-3">
                     <div>
-                      <p className="text-[13px] font-semibold leading-tight">
+                      <p className="text-[13px] leading-tight font-semibold">
                         Anna &amp; Péter
                       </p>
                       <p className="text-[10px] text-muted-foreground">
@@ -106,7 +109,7 @@ export function Hero() {
 
             {/* Floating glass photo card — top left */}
             <div
-              className="animate-float-slower absolute left-0 top-4 w-[38%] max-w-[150px] [--rot:-6deg]"
+              className="absolute top-4 left-0 w-[38%] max-w-[150px] animate-float-slower [--rot:-6deg]"
               style={{ transform: 'rotate(-6deg)' }}
             >
               <div className="glass glass-hover overflow-hidden rounded-2xl p-1.5">
@@ -124,7 +127,7 @@ export function Hero() {
 
             {/* Floating glass photo card — bottom right */}
             <div
-              className="animate-float-slow absolute bottom-6 right-0 w-[40%] max-w-[160px] [--rot:7deg] [animation-delay:-4s]"
+              className="absolute right-0 bottom-6 w-[40%] max-w-[160px] animate-float-slow [--rot:7deg] [animation-delay:-4s]"
               style={{ transform: 'rotate(7deg)' }}
             >
               <div className="glass glass-hover overflow-hidden rounded-2xl p-1.5">
@@ -141,7 +144,7 @@ export function Hero() {
             </div>
 
             {/* QR scan card — top right */}
-            <div className="animate-float-slower absolute -right-2 top-8 w-[34%] max-w-[132px] [animation-delay:-8s]">
+            <div className="absolute top-8 -right-2 w-[34%] max-w-[132px] animate-float-slower [animation-delay:-8s]">
               <div className="glass-strong relative overflow-hidden rounded-2xl p-3">
                 <div className="flex items-center justify-center rounded-xl bg-white p-2">
                   <QrCode className="size-full text-black" strokeWidth={1.2} />
@@ -150,7 +153,7 @@ export function Hero() {
                   Olvasd be a képekhez
                 </p>
                 {/* scan line */}
-                <span className="animate-float-slow absolute inset-x-3 top-3 h-8 rounded-lg bg-gradient-to-b from-accent/40 to-transparent" />
+                <span className="absolute inset-x-3 top-3 h-8 animate-float-slow rounded-lg bg-gradient-to-b from-accent/40 to-transparent" />
               </div>
               <div className="glass absolute -bottom-3 -left-3 flex items-center gap-1 rounded-full px-2.5 py-1">
                 <ScanLine className="size-3 text-accent" />

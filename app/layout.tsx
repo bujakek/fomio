@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://fomio.io'),
   title: 'Fomio — QR-kódos közös fotóalbum eseményekhez',
   description:
-    'A vendégek beolvassák a QR-kódot, és a telefonjuk böngészőjéből azonnal feltöltik a képeiket. Nincs alkalmazás, nincs regisztráció — minden fotó egyetlen közös, privát galériába érkezik, eredeti minőségben.',
+    'A vendégek beolvassák a QR-kódot, és a telefonjuk böngészőjéből azonnal feltöltik a képeiket. Nincs alkalmazás, nincs regisztráció — minden fotó egyetlen közös, privát galériába érkezik, nagy felbontásban.',
   keywords: [
     'közös fotóalbum',
     'QR-kód',

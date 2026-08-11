@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
+    // Guest photos are served straight from Supabase Storage; revisit if
+    // gallery payloads get too heavy on mobile data.
     unoptimized: true,
   },
 }

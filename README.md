@@ -50,7 +50,10 @@ public/
 ## Features
 
 - **No app required** — guests upload directly from their browser
-- **Real-time gallery** — photos appear instantly for everyone
+- **Shared gallery** — every guest's photo lands in one album
 - **Private by default** — album accessible only via QR code or link
 - **ZIP download** — host downloads all photos in one click
 - **Live QR preview** — generated on the fly from the event name
+
+> Status: pre-MVP. Only the marketing landing page is implemented — see `CLAUDE.md`
+> for the build plan and what is intentionally out of scope.

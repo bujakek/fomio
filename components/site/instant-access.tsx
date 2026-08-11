@@ -3,10 +3,26 @@ import Image from 'next/image'
 import { Reveal } from './reveal'
 
 const arriving = [
-  { src: '/images/wedding-cake.png', alt: 'Épp most érkezett tortás fotó', label: 'Most érkezett' },
-  { src: '/images/guests-laughing.png', alt: 'Nevető vendégek fotója', label: '2 perce' },
-  { src: '/images/evening-party.png', alt: 'Esti buli fotója', label: '5 perce' },
-  { src: '/images/group-lookout.png', alt: 'Csoportkép a kilátónál', label: '8 perce' },
+  {
+    src: '/images/wedding-cake.png',
+    alt: 'Épp most érkezett tortás fotó',
+    label: 'Most érkezett',
+  },
+  {
+    src: '/images/guests-laughing.png',
+    alt: 'Nevető vendégek fotója',
+    label: '2 perce',
+  },
+  {
+    src: '/images/evening-party.png',
+    alt: 'Esti buli fotója',
+    label: '5 perce',
+  },
+  {
+    src: '/images/group-lookout.png',
+    alt: 'Csoportkép a kilátónál',
+    label: '8 perce',
+  },
 ]
 
 export function InstantAccess() {
@@ -18,14 +34,14 @@ export function InstantAccess() {
             <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-wide text-accent">
               AZONNAL
             </span>
-            <h2 className="mt-6 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h2 className="mt-6 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
               Nem kell várnod, nem kell linkeket kérned
             </h2>
-            <p className="mt-4 max-w-md text-pretty leading-relaxed text-muted-foreground">
-              Ma ez úgy megy, hogy hetekig gyűjtöd a képeket: egyvalaki
-              elküldi, a másik elfelejti, a harmadiktól külön kell elkérni. Itt
-              a fotók már az esemény alatt megérkeznek. Mire hazaérsz, együtt van
-              az album.
+            <p className="mt-4 max-w-md leading-relaxed text-pretty text-muted-foreground">
+              Ma ez úgy megy, hogy hetekig gyűjtöd a képeket: egyvalaki elküldi,
+              a másik elfelejti, a harmadiktól külön kell elkérni. Itt a fotók
+              már az esemény alatt megérkeznek. Mire hazaérsz, együtt van az
+              album.
             </p>
           </Reveal>
 
@@ -43,7 +59,7 @@ export function InstantAccess() {
                   {arriving.map((p, i) => (
                     <div
                       key={p.src}
-                      className="animate-float-slow relative aspect-square overflow-hidden rounded-xl"
+                      className="relative aspect-square animate-float-slow overflow-hidden rounded-xl"
                       style={{ animationDelay: `${i * -2.5}s` }}
                     >
                       <Image

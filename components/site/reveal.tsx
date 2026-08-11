@@ -10,7 +10,12 @@ interface RevealProps {
   as?: 'div' | 'section' | 'li' | 'article' | 'header'
 }
 
-export function Reveal({ children, className, delay = 0, as = 'div' }: RevealProps) {
+export function Reveal({
+  children,
+  className,
+  delay = 0,
+  as = 'div',
+}: RevealProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
 

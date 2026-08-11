@@ -11,12 +11,17 @@ interface Stat {
 const stats: Stat[] = [
   {
     end: 4.9,
-    format: (v) => v.toLocaleString('hu-HU', { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+    format: (v) =>
+      v.toLocaleString('hu-HU', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }),
     label: 'átlagos értékelés',
   },
   {
     end: 3.2,
-    format: (v) => `${v.toLocaleString('hu-HU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} millió`,
+    format: (v) =>
+      `${v.toLocaleString('hu-HU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} millió`,
     label: 'összegyűjtött fotó',
   },
   {

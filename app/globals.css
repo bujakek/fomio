@@ -19,8 +19,12 @@
   --color-accent-silver: var(--accent-silver);
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-manrope), 'Manrope Fallback', ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-manrope), 'Manrope Fallback', ui-sans-serif, system-ui, sans-serif;
+  --font-sans:
+    var(--font-manrope), 'Manrope Fallback', ui-sans-serif, system-ui,
+    sans-serif;
+  --font-display:
+    var(--font-manrope), 'Manrope Fallback', ui-sans-serif, system-ui,
+    sans-serif;
 
   --radius-sm: 0.75rem;
   --radius-md: 1rem;

@@ -21,7 +21,7 @@ const groups = [
 
 export function Footer() {
   return (
-    <footer className="relative px-4 pb-10 pt-16 sm:px-6">
+    <footer className="relative px-4 pt-16 pb-10 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="glass rounded-[2rem] p-8 sm:p-12">
           <div className="grid gap-10 lg:grid-cols-[1.4fr_2fr]">

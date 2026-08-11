@@ -81,7 +81,9 @@ export function Navbar() {
       <div
         className={cn(
           'fixed inset-0 z-40 flex flex-col px-4 pt-24 transition-all duration-400 md:hidden',
-          open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+          open
+            ? 'pointer-events-auto opacity-100'
+            : 'pointer-events-none opacity-0',
         )}
       >
         <div className="absolute inset-0 -z-10 bg-background/80 backdrop-blur-2xl" />
