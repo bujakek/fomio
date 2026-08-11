@@ -99,7 +99,7 @@ export function HowItWorks() {
                             <div className="pr-2">
                               <p className="flex items-center gap-1 text-xs font-semibold">
                                 <Link2 className="size-3 text-accent" />
-                                pillanatok.app/e/…
+                                fomio.io/e/…
                               </p>
                               <p className="text-[10px] text-muted-foreground">
                                 Koppints a csatlakozáshoz

@@ -21,7 +21,7 @@ function slugify(input: string) {
 export function QrPreview() {
   const [name, setName] = useState('Anna & Péter')
   const slug = useMemo(() => slugify(name), [name])
-  const url = `https://pillanatok.app/e/${slug}`
+  const url = `https://fomio.io/e/${slug}`
   const displayName = name.trim() || 'Az esemény neve'
 
   return (

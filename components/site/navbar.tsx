@@ -42,7 +42,7 @@ export function Navbar() {
           <span className="glass flex size-9 items-center justify-center rounded-xl">
             <Aperture className="size-5 text-accent" strokeWidth={1.6} />
           </span>
-          <span className="text-lg font-semibold tracking-tight">Pillanatok</span>
+          <span className="text-lg font-semibold tracking-tight">Fomio</span>
         </a>
 
         <ul className="hidden items-center gap-1 md:flex">

@@ -1,4 +1,4 @@
-# Pillanatok
+# Fomio
 
 **QR-code-based shared photo album for events.**
 Guests scan a QR code and upload photos directly from their phone browser — no app, no account needed. Every photo lands in one shared gallery the host can download afterward.

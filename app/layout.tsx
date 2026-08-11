@@ -10,8 +10,8 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://pillanatok.app'),
-  title: 'Pillanatok — QR-kódos közös fotóalbum eseményekhez',
+  metadataBase: new URL('https://fomio.io'),
+  title: 'Fomio — QR-kódos közös fotóalbum eseményekhez',
   description:
     'A vendégek beolvassák a QR-kódot, és a telefonjuk böngészőjéből azonnal feltöltik a képeiket. Nincs alkalmazás, nincs regisztráció — minden fotó egyetlen közös, privát galériába érkezik, eredeti minőségben.',
   keywords: [
@@ -20,15 +20,15 @@ export const metadata: Metadata = {
     'esküvői fotók',
     'esemény galéria',
     'vendég fotók',
-    'Pillanatok',
+    'Fomio',
   ],
-  authors: [{ name: 'Pillanatok' }],
+  authors: [{ name: 'Fomio' }],
   openGraph: {
     type: 'website',
     locale: 'hu_HU',
-    url: 'https://pillanatok.app',
-    siteName: 'Pillanatok',
-    title: 'Pillanatok — Az esemény minden vendég szemével',
+    url: 'https://fomio.io',
+    siteName: 'Fomio',
+    title: 'Fomio — Az esemény minden vendég szemével',
     description:
       'QR-kódos közös fotóalbum eseményekhez. A vendégek a telefonjuk böngészőjéből töltik fel a képeket — app és regisztráció nélkül.',
     images: [
@@ -36,13 +36,13 @@ export const metadata: Metadata = {
         url: '/images/wedding-dance.png',
         width: 1200,
         height: 630,
-        alt: 'Esküvői első tánc a Pillanatok közös albumában',
+        alt: 'Esküvői első tánc a Fomio közös albumában',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Pillanatok — Az esemény minden vendég szemével',
+    title: 'Fomio — Az esemény minden vendég szemével',
     description:
       'QR-kódos közös fotóalbum eseményekhez. App és regisztráció nélkül.',
     images: ['/images/wedding-dance.png'],

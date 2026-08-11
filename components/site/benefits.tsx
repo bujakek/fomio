@@ -33,7 +33,7 @@ export function Benefits() {
             Minden megvan, semmit nem kell megtanulni
           </h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            A Pillanatok úgy működik, ahogy a vendégeid amúgy is használják a
+            A Fomio úgy működik, ahogy a vendégeid amúgy is használják a
             telefonjukat. Nulla súrlódás, maximális élmény.
           </p>
         </Reveal>

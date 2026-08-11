@@ -31,7 +31,7 @@ export function Footer() {
                   <Aperture className="size-5 text-accent" strokeWidth={1.6} />
                 </span>
                 <span className="text-lg font-semibold tracking-tight">
-                  Pillanatok
+                  Fomio
                 </span>
               </div>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
@@ -64,7 +64,7 @@ export function Footer() {
 
           <div className="mt-12 border-t border-border pt-6">
             <p className="text-sm text-muted-foreground">
-              © 2026 Pillanatok. Készült Budapesten, sok-sok fényképpel.
+              © 2026 Fomio. Készült Budapesten, sok-sok fényképpel.
             </p>
           </div>
         </div>
