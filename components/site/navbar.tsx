@@ -33,13 +33,20 @@ export function Navbar() {
     <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
       <nav
         className={cn(
-          'glass-nav flex w-full max-w-3xl items-center gap-2 rounded-full py-2 pr-2 pl-3 transition-shadow duration-500 sm:gap-3 sm:pr-2.5 sm:pl-4',
-          scrolled && 'shadow-[0_16px_48px_-12px_rgba(0,0,0,0.95)]',
+          'glass-nav flex w-full max-w-3xl items-center rounded-full',
+          'gap-2 py-2 pr-2 pl-4 sm:gap-6 sm:py-2.5 sm:pr-3 sm:pl-5',
+          scrolled &&
+            'glass-nav-scrolled py-1.5 pl-3 sm:gap-4 sm:py-1.5 sm:pr-2 sm:pl-4',
         )}
         aria-label="Fő navigáció"
       >
         <a href="#top" className="flex shrink-0 items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-full bg-white/5">
+          <span
+            className={cn(
+              'flex items-center justify-center rounded-full bg-white/5 transition-all duration-200',
+              scrolled ? 'size-7' : 'size-8',
+            )}
+          >
             <Aperture className="size-4 text-accent" strokeWidth={1.6} />
           </span>
           <span className="text-base font-semibold tracking-tight">Fomio</span>
@@ -50,7 +57,10 @@ export function Navbar() {
             <li key={link.href}>
               <a
                 href={link.href}
-                className="rounded-full px-3 py-2 text-sm text-foreground/70 transition-colors hover:text-foreground"
+                className={cn(
+                  'rounded-full text-foreground/80 transition-all duration-200 hover:text-foreground',
+                  scrolled ? 'px-2.5 py-1.5 text-[13px]' : 'px-3 py-2 text-sm',
+                )}
               >
                 {link.label}
               </a>
@@ -60,7 +70,10 @@ export function Navbar() {
 
         <a
           href="#zaro-cta"
-          className="btn-shine hidden shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03] md:inline-flex"
+          className={cn(
+            'btn-shine hidden shrink-0 rounded-full bg-primary font-semibold text-primary-foreground transition-all duration-200 hover:scale-[1.03] md:inline-flex',
+            scrolled ? 'px-3.5 py-1.5 text-[13px]' : 'px-4 py-2 text-sm',
+          )}
         >
           Esemény létrehozása
         </a>
@@ -86,7 +99,7 @@ export function Navbar() {
         )}
       >
         <div className="absolute inset-0 -z-10 bg-background/80 backdrop-blur-2xl" />
-        <div className="glass-nav flex flex-col gap-1 rounded-3xl p-4">
+        <div className="glass-strong flex flex-col gap-1 rounded-3xl p-4">
           {navLinks.map((link) => (
             <a
               key={link.href}

@@ -112,19 +112,28 @@
       0 30px 70px -25px rgba(0, 0, 0, 0.9);
   }
 
-  /* Fixed chrome (nav): dark tint under the blur so links stay readable over content */
+  /* Fixed chrome (nav pill). Two states: a bright translucent film while the
+     hero is still behind it, condensing into a near-solid pill once content
+     scrolls under. Blur stays low — the tint does the contrast work, and a
+     heavy blur only smears the photography behind it into grey mud. */
   .glass-nav {
-    background: linear-gradient(
-      180deg,
-      rgba(11, 11, 13, 0.84) 0%,
-      rgba(5, 5, 5, 0.78) 100%
-    );
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    border: 1px solid var(--border-strong);
-    box-shadow:
-      0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
-      0 12px 40px -12px rgba(0, 0, 0, 0.85);
+    background: rgba(255, 255, 255, 0.09);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 12px 34px -14px rgba(0, 0, 0, 0.5);
+    transition:
+      padding 0.22s ease,
+      gap 0.22s ease,
+      background 0.22s ease,
+      border-color 0.22s ease,
+      box-shadow 0.22s ease;
+  }
+
+  .glass-nav-scrolled {
+    background: rgba(11, 11, 13, 0.93);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 14px 40px -16px rgba(0, 0, 0, 0.6);
   }
 
   .glass-hover {
