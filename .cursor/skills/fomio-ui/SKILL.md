@@ -36,6 +36,7 @@ Defined in `app/globals.css` — compose them with Tailwind:
 
 - `.glass` — standard liquid-glass surface (blur 20px, white 6%→2% gradient, inset highlight). Default for cards, inputs, pills, badges.
 - `.glass-strong` — heavier blur and brighter edge. For the one hero element on a screen, or a container wrapping other glass.
+- `.glass-nav` — dark-tinted frosted surface for fixed chrome (nav pill). Use instead of `.glass` when content scrolls behind — tint carries contrast; blur only softens edges.
 - `.glass-hover` — lift + lilac glow on hover. Add to interactive cards only, always alongside `.glass`.
 - `.text-gradient` (silver) / `.text-gradient-accent` (lilac→blue) — headline emphasis. One per screen at most.
 - `.btn-shine` — sheen sweep on hover. Primary CTAs only.

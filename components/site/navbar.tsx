@@ -30,27 +30,27 @@ export function Navbar() {
   }, [open])
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4">
+    <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
       <nav
         className={cn(
-          'mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-4 py-3 transition-all duration-500 sm:px-6',
-          scrolled ? 'glass-strong' : 'glass',
+          'glass-nav flex w-full max-w-3xl items-center gap-2 rounded-full py-2 pr-2 pl-3 transition-shadow duration-500 sm:gap-3 sm:pr-2.5 sm:pl-4',
+          scrolled && 'shadow-[0_16px_48px_-12px_rgba(0,0,0,0.95)]',
         )}
         aria-label="Fő navigáció"
       >
-        <a href="#top" className="flex items-center gap-2.5">
-          <span className="glass flex size-9 items-center justify-center rounded-xl">
-            <Aperture className="size-5 text-accent" strokeWidth={1.6} />
+        <a href="#top" className="flex shrink-0 items-center gap-2">
+          <span className="flex size-8 items-center justify-center rounded-full bg-white/5">
+            <Aperture className="size-4 text-accent" strokeWidth={1.6} />
           </span>
-          <span className="text-lg font-semibold tracking-tight">Fomio</span>
+          <span className="text-base font-semibold tracking-tight">Fomio</span>
         </a>
 
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul className="hidden flex-1 items-center justify-center gap-0.5 md:flex">
           {navLinks.map((link) => (
             <li key={link.href}>
               <a
                 href={link.href}
-                className="rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                className="rounded-full px-3 py-2 text-sm text-foreground/70 transition-colors hover:text-foreground"
               >
                 {link.label}
               </a>
@@ -58,23 +58,22 @@ export function Navbar() {
           ))}
         </ul>
 
-        <div className="flex items-center gap-2">
-          <a
-            href="#zaro-cta"
-            className="btn-shine hidden rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03] md:inline-flex"
-          >
-            Esemény létrehozása
-          </a>
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-label={open ? 'Menü bezárása' : 'Menü megnyitása'}
-            aria-expanded={open}
-            className="glass flex size-10 items-center justify-center rounded-xl text-foreground md:hidden"
-          >
-            {open ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
-        </div>
+        <a
+          href="#zaro-cta"
+          className="btn-shine hidden shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03] md:inline-flex"
+        >
+          Esemény létrehozása
+        </a>
+
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? 'Menü bezárása' : 'Menü megnyitása'}
+          aria-expanded={open}
+          className="ml-auto flex size-10 shrink-0 items-center justify-center rounded-full bg-white/5 text-foreground md:hidden"
+        >
+          {open ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
       </nav>
 
       {/* Mobile full-screen panel */}
@@ -87,7 +86,7 @@ export function Navbar() {
         )}
       >
         <div className="absolute inset-0 -z-10 bg-background/80 backdrop-blur-2xl" />
-        <div className="glass-strong flex flex-col gap-1 rounded-3xl p-4">
+        <div className="glass-nav flex flex-col gap-1 rounded-3xl p-4">
           {navLinks.map((link) => (
             <a
               key={link.href}

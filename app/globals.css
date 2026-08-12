@@ -112,6 +112,21 @@
       0 30px 70px -25px rgba(0, 0, 0, 0.9);
   }
 
+  /* Fixed chrome (nav): dark tint under the blur so links stay readable over content */
+  .glass-nav {
+    background: linear-gradient(
+      180deg,
+      rgba(11, 11, 13, 0.84) 0%,
+      rgba(5, 5, 5, 0.78) 100%
+    );
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--border-strong);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+      0 12px 40px -12px rgba(0, 0, 0, 0.85);
+  }
+
   .glass-hover {
     transition:
       transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
