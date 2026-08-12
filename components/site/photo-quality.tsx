@@ -61,7 +61,7 @@ export function PhotoQuality() {
             >
               {/* Original (right, full) */}
               <Image
-                src="/images/quality-original.png"
+                src="/images/quality-original.webp"
                 alt="A fotó éles, nyomtatható minőségben"
                 fill
                 sizes="(max-width: 768px) 100vw, 1100px"
@@ -74,7 +74,7 @@ export function PhotoQuality() {
                 style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
               >
                 <Image
-                  src="/images/quality-original.png"
+                  src="/images/quality-original.webp"
                   alt="Ugyanaz a fotó csevegőappban, összenyomva"
                   fill
                   sizes="(max-width: 768px) 100vw, 1100px"

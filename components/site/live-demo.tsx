@@ -14,14 +14,14 @@ import { useState } from 'react'
 import { Reveal } from './reveal'
 
 const basePhotos = [
-  { src: '/images/wedding-dance.png', alt: 'Esküvői tánc' },
-  { src: '/images/wedding-cake.png', alt: 'Tortás pillanat' },
-  { src: '/images/garden-party.png', alt: 'Kerti buli fényfüzérekkel' },
-  { src: '/images/group-lookout.png', alt: 'Csoportkép a kilátónál' },
+  { src: '/images/wedding-dance.webp', alt: 'Esküvői tánc' },
+  { src: '/images/wedding-cake.webp', alt: 'Tortás pillanat' },
+  { src: '/images/garden-party.webp', alt: 'Kerti buli fényfüzérekkel' },
+  { src: '/images/group-lookout.webp', alt: 'Csoportkép a kilátónál' },
 ]
 
 const newPhoto = {
-  src: '/images/guests-laughing.png',
+  src: '/images/guests-laughing.webp',
   alt: 'Frissen feltöltött vendégfotó',
 }
 

@@ -4,22 +4,22 @@ import { Reveal } from './reveal'
 
 const floatingPhotos = [
   {
-    src: '/images/wedding-dance.png',
+    src: '/images/wedding-dance.webp',
     alt: 'Esküvői tánc',
     className: 'left-[4%] top-[18%] w-24 rotate-[-8deg] sm:w-28',
   },
   {
-    src: '/images/birthday.png',
+    src: '/images/birthday.webp',
     alt: 'Születésnap',
     className: 'right-[6%] top-[12%] w-24 rotate-[7deg] sm:w-32',
   },
   {
-    src: '/images/group-lookout.png',
+    src: '/images/group-lookout.webp',
     alt: 'Csoportkép',
     className: 'left-[8%] bottom-[14%] w-24 rotate-[6deg] sm:w-28',
   },
   {
-    src: '/images/garden-party.png',
+    src: '/images/garden-party.webp',
     alt: 'Kerti buli',
     className: 'right-[5%] bottom-[16%] w-24 rotate-[-6deg] sm:w-32',
   },

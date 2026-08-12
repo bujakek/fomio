@@ -5,12 +5,12 @@ import Image from 'next/image'
 
 const galleryImages = [
   {
-    src: '/images/wedding-dance.png',
+    src: '/images/wedding-dance.webp',
     alt: 'Esküvői első tánc fényfüzérek alatt',
   },
-  { src: '/images/wedding-cake.png', alt: 'Tortavágás az esküvőn' },
-  { src: '/images/guests-laughing.png', alt: 'Nevető vendégek az asztalnál' },
-  { src: '/images/garden-party.png', alt: 'Esti kerti buli fényfüzérekkel' },
+  { src: '/images/wedding-cake.webp', alt: 'Tortavágás az esküvőn' },
+  { src: '/images/guests-laughing.webp', alt: 'Nevető vendégek az asztalnál' },
+  { src: '/images/garden-party.webp', alt: 'Esti kerti buli fényfüzérekkel' },
 ]
 
 export function Hero() {
@@ -115,7 +115,7 @@ export function Hero() {
               <div className="glass glass-hover overflow-hidden rounded-2xl p-1.5">
                 <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
                   <Image
-                    src="/images/wedding-portrait.png"
+                    src="/images/wedding-portrait.webp"
                     alt="Esküvői portré a párról"
                     fill
                     sizes="150px"
@@ -133,7 +133,7 @@ export function Hero() {
               <div className="glass glass-hover overflow-hidden rounded-2xl p-1.5">
                 <div className="relative aspect-square overflow-hidden rounded-xl">
                   <Image
-                    src="/images/evening-party.png"
+                    src="/images/evening-party.webp"
                     alt="Esti fényfüzéres buli"
                     fill
                     sizes="160px"
