@@ -4,22 +4,22 @@ import { Reveal } from './reveal'
 
 const arriving = [
   {
-    src: '/images/wedding-cake.png',
+    src: '/images/wedding-cake.webp',
     alt: 'Épp most érkezett tortás fotó',
     label: 'Most érkezett',
   },
   {
-    src: '/images/guests-laughing.png',
+    src: '/images/guests-laughing.webp',
     alt: 'Nevető vendégek fotója',
     label: '2 perce',
   },
   {
-    src: '/images/evening-party.png',
+    src: '/images/evening-party.webp',
     alt: 'Esti buli fotója',
     label: '5 perce',
   },
   {
-    src: '/images/group-lookout.png',
+    src: '/images/group-lookout.webp',
     alt: 'Csoportkép a kilátónál',
     label: '8 perce',
   },

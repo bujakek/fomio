@@ -33,7 +33,9 @@ export const metadata: Metadata = {
       'QR-kódos közös fotóalbum eseményekhez. A vendégek a telefonjuk böngészőjéből töltik fel a képeket — app és regisztráció nélkül.',
     images: [
       {
-        url: '/images/wedding-dance.png',
+        // Crawlers fetch this URL directly — no Next optimization, and WebP
+        // support is inconsistent across chat previews. Keep it a real 1200x630 JPEG.
+        url: '/images/og-cover.jpg',
         width: 1200,
         height: 630,
         alt: 'Esküvői első tánc a Fomio közös albumában',
@@ -45,7 +47,7 @@ export const metadata: Metadata = {
     title: 'Fomio — Az esemény minden vendég szemével',
     description:
       'QR-kódos közös fotóalbum eseményekhez. App és regisztráció nélkül.',
-    images: ['/images/wedding-dance.png'],
+    images: ['/images/og-cover.jpg'],
   },
   generator: 'v0.app',
 }
