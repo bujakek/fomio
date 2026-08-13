@@ -66,7 +66,6 @@ export function PhotoQuality() {
                 fill
                 sizes="(max-width: 768px) 100vw, 1100px"
                 className="object-cover"
-                priority={false}
               />
               {/* Compressed (left, clipped) */}
               <div

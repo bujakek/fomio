@@ -218,7 +218,7 @@ export async function createClient() {
               cookieStore.set(name, value, options),
             )
           } catch {
-            // Called from a Server Component render; middleware refreshes it.
+            // Called from a Server Component render; proxy.ts refreshes it.
           }
         },
       },
@@ -265,13 +265,24 @@ The gallery must show photos uploaded seconds ago, so it cannot be statically ca
 
 ## Admin auth
 
-Magic link, guarded by middleware:
+Magic link, guarded by **`proxy.ts`**. Next.js 16 renamed middleware:
 
 ```ts
-// middleware.ts — refresh the session and gate /admin
-export const config = { matcher: ['/admin/:path*'] }
+// proxy.ts at the repo root — refresh the session and gate /admin
+export function proxy(request: NextRequest) {
+  /* … */
+}
+export const proxyConfig = { matcher: ['/admin/:path*'] }
 ```
 
-In middleware, create a server client bound to the request/response cookies, call `supabase.auth.getUser()`, and redirect to the login route when there's no user. Use `getUser()` for authorization decisions — never trust `getSession()` on the server, since it reads unverified cookie data.
+|        | Next 14–15      | **Next 16 (this project)** |
+| ------ | --------------- | -------------------------- |
+| File   | `middleware.ts` | `proxy.ts`                 |
+| Export | `middleware()`  | `proxy()`                  |
+| Config | `config`        | `proxyConfig`              |
+
+This matters more than a rename usually would: a `middleware.ts` in a Next 16 project is **silently ignored**. There is no warning and no error — the file simply never runs, and `/admin` ends up completely unguarded while looking protected in the source tree. Verify the gate by actually requesting `/admin` while signed out.
+
+Inside `proxy()`, create a server client bound to the request/response cookies, call `supabase.auth.getUser()`, and redirect to the login route when there's no user. Use `getUser()` for authorization decisions — never trust `getSession()` on the server, since it reads unverified cookie data.
 
 The ZIP export is the one place that legitimately needs `SUPABASE_SERVICE_ROLE_KEY`: a Route Handler that streams every object for an event, including hidden ones if the host asks. Keep it in a server-only file and re-check the user's session before streaming.

@@ -218,9 +218,13 @@ Do not reopen these without a reason; the tickets below already assume them.
 
 - [ ] **5.1 Magic-link login.** Supabase Auth, host only.
       _Depends on: 1.7_
-- [ ] **5.2 Middleware gate.** `matcher: ['/admin/:path*']`, session refresh, and
-      `getUser()` for the authorization decision — never `getSession()` on the
-      server.
+- [ ] **5.2 Auth gate in `proxy.ts`.** Next 16 renamed middleware: the file is
+      `proxy.ts`, the export is `proxy()`, the config is `proxyConfig`. A
+      `middleware.ts` is **silently ignored** in Next 16 — no warning, no error,
+      `/admin` simply unguarded while looking protected. `matcher:
+    ['/admin/:path*']`, session refresh, and `getUser()` for the
+      authorization decision, never `getSession()` on the server. Verify by
+      requesting `/admin` signed out.
       _Depends on: 5.1_
 - [ ] **5.3 Admin shell.** Layout plus event list.
       _Depends on: 5.2_
