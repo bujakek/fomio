@@ -7,11 +7,9 @@ description: Fomio's Supabase conventions — browser and server client setup wi
 
 Postgres + Storage + Auth. Guests are **anonymous** (never signed in); only the host signs in, via magic link, to reach `/admin`.
 
-## Install (build step 1, not done yet)
+## Install — done
 
-```bash
-pnpm add @supabase/supabase-js @supabase/ssr
-```
+`@supabase/supabase-js` and `@supabase/ssr` are installed, and the Supabase CLI is a **devDependency**, so invoke it as `pnpm supabase …` rather than a global binary.
 
 Env keys are maintained **by hand** in `.env.local`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and server-only `SUPABASE_SERVICE_ROLE_KEY`. `vercel env pull` does not work on this project — the integration's variables are marked Sensitive and pull back as `[SENSITIVE]`; see the Local env section of `CLAUDE.md`. The service role key must **never** be imported into a Client Component or any file reachable from one.
 
@@ -22,11 +20,11 @@ Mind the prefix: the integration also provisions bare `SUPABASE_URL` and `SUPABA
 Never change schema by clicking in the dashboard; the repo is the source of truth.
 
 ```bash
-supabase init                                   # once
-supabase link --project-ref <ref>               # once
-supabase migration new create_events_and_photos # creates supabase/migrations/<ts>_*.sql
-supabase db push                                # apply to the linked project
-supabase gen types typescript --linked > lib/supabase/database.types.ts
+# init and link are already done.
+pnpm supabase migration new <name>   # creates supabase/migrations/<ts>_*.sql
+pnpm supabase db push --linked       # apply to the remote (needs SUPABASE_DB_PASSWORD)
+pnpm supabase gen types typescript --linked > lib/supabase/database.types.ts
+python3 supabase/tests/rls.py        # re-run the access-model checks after any policy change
 ```
 
 Migrations are append-only: to change something, write a new migration. Every table gets RLS enabled in the same migration that creates it.
@@ -40,6 +38,7 @@ create table public.events (
   event_name       text not null,
   event_date       date,
   uploads_close_at timestamptz,  -- null = open forever; gallery stays readable after
+  gallery_hidden_at timestamptz, -- set = guests upload but cannot view; host togglable
   owner_id         uuid not null references auth.users (id) on delete restrict,
   created_at       timestamptz not null default now()
 );
@@ -73,28 +72,17 @@ create index photos_event_created_idx
 alter table public.events enable row level security;
 alter table public.photos enable row level security;
 
-create policy "anyone with the link can read events"
-  on public.events for select to anon, authenticated
-  using (true);
-
+-- Guests get NO read policy on either table. See "Guests never read tables".
 create policy "host manages own events"
   on public.events for all to authenticated
   using (owner_id = auth.uid())
   with check (owner_id = auth.uid());
 
-create policy "anyone can read visible photos"
-  on public.photos for select to anon, authenticated
-  using (hidden_at is null);
-
-create policy "guests can add photos while uploads are open"
+create policy "guests add photos while uploads are open"
   on public.photos for insert to anon
   with check (
     hidden_at is null
-    and exists (
-      select 1 from public.events e
-      where e.id = photos.event_id
-        and (e.uploads_close_at is null or e.uploads_close_at > now())
-    )
+    and public.event_accepts_uploads(event_id)
   );
 
 create policy "host manages photos in own events"
@@ -113,10 +101,29 @@ create policy "host manages photos in own events"
   );
 ```
 
-Why it's shaped this way:
+### Guests never read tables
+
+The anon key ships in the browser bundle, so **anything `anon` can `select` through PostgREST, anyone on the internet can list.** A `using (true)` read policy on `events` would expose `GET /rest/v1/events?select=slug` — every album in the system — which makes the unguessable slug suffix pointless and contradicts the FAQ's privacy claim. The same applies to `photos`.
+
+So guests read through `security definer` functions that take the slug or event id as an argument. You can fetch an album whose address you already know; there is nothing to enumerate.
+
+| Function                      | Purpose                                           |
+| ----------------------------- | ------------------------------------------------- |
+| `event_by_slug(text)`         | One event by slug. Deliberately omits `owner_id`. |
+| `event_photos(uuid)`          | Visible photos for one event, newest first.       |
+| `event_accepts_uploads(uuid)` | Boolean, used inside the insert policy.           |
+
+All three are `security definer`, `stable`, and `set search_path = ''` (so fully qualify every table reference), with `execute` granted to `anon, authenticated`.
+
+`event_accepts_uploads()` **has to** be `security definer`. Policy expressions are evaluated as the invoking role, so an inline `exists (select 1 from public.events …)` inside the guest insert policy would itself be filtered by events' RLS — and since guests cannot read events, it would quietly evaluate false and every upload would fail its `with check`. This is the trap to remember: removing a read policy can silently break an unrelated write policy.
+
+Why the rest is shaped this way:
 
 - Guests get **insert only**. No update, no delete — a guest can't edit or remove someone else's photo, and can't un-hide a moderated one (`hidden_at is null` is enforced in `with check`).
-- The `exists (...)` clause makes the upload window a database rule, not a UI suggestion.
+- **An insert must not ask for the row back.** `supabase-js` `.insert()` alone sends `Prefer: return=minimal` and succeeds; chaining `.select()` asks to read what it just wrote, which guests have no policy for.
+- **RLS makes anon `update` and `delete` no-ops, not errors.** They return `204` having matched zero rows. When testing, assert on the row's state afterwards — a status code alone will convince you the table is wide open when it isn't.
+- `events.gallery_hidden_at` closes the gallery to guests while uploads continue; `event_photos()` returns nothing while it is set, and `event_by_slug()` exposes it as `gallery_private` so the UI can explain the state instead of showing an empty album. Host-togglable both ways.
+- `event_accepts_uploads()` makes the upload window a database rule, not a UI suggestion — hiding the upload button is a courtesy, not the enforcement.
 - Host policies key off **`owner_id`, never a bare `to authenticated`**. A blanket `using (true)` would make every signed-in user a host of every event — able to read hidden photos, export albums and delete them. With ownership scoping, a stray signup lands in an empty admin instead. Disabling public signups is still worth doing, but it is now defence in depth rather than the only thing standing between a stranger and someone's wedding.
 - Ownership scoping is **not** the multi-tenant dashboard that `CLAUDE.md` rules out. There is no per-client branding, no tenant switching, no sharing — just a row knowing who created it.
 - `owner_id` is `not null`, so a user must exist before any event can be inserted. Create your own account in the dashboard before seeding development data.
@@ -218,19 +225,31 @@ export async function createClient() {
 
 Keep queries in `lib/` modules (`lib/events.ts`, `lib/photos.ts`), not inline in components, so admin and guest pages share one definition of "visible photo".
 
+Guest-facing reads go through the RPCs, never `.from('events')` — the table returns nothing to `anon` by design:
+
 ```ts
 export async function getEventBySlug(slug: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from('events')
-    .select('id, slug, event_name, event_date, uploads_close_at')
-    .eq('slug', slug)
+    .rpc('event_by_slug', { p_slug: slug })
     .maybeSingle()
 
   if (error) throw error
   return data // null → caller calls notFound()
 }
+
+export async function getEventPhotos(eventId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase.rpc('event_photos', {
+    p_event_id: eventId,
+  })
+
+  if (error) throw error
+  return data ?? []
+}
 ```
+
+Admin reads are the exception: a signed-in host queries `events` and `photos` directly, and ownership policies scope the result. That path also sees `hidden_at` rows, which the guest RPCs filter out.
 
 Use `.maybeSingle()` for slug lookups (`.single()` throws on miss). Always check `error` — Supabase does not reject the promise on query failure.
 

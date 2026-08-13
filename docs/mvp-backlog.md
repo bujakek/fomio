@@ -78,11 +78,25 @@ Do not reopen these without a reason; the tickets below already assume them.
       asserted by name through PostgREST, all six indexes present, anon `select`
       returns `[]` and anon `insert` is refused with `42501` on both tables.
       _Depends on: 1.3_
-- [ ] **1.5 RLS policies migration.** Anon read events; anon read visible photos;
-      anon insert while the upload window is open (enforced in the policy, not
-      the UI). Host policies scope to `owner_id = auth.uid()` — photos via an
-      `exists` join back to `events`. Never a blanket `to authenticated`.
+- [x] **1.5 RLS policies migration.** Done — `20260813133341_rls_policies.sql`
+      plus `20260813134313_event_gallery_privacy.sql`, both applied.
+      **Guests get no read policy on either table.** The originally documented
+      `using (true)` would have exposed `GET /rest/v1/events?select=slug` — every
+      album in the system — making the D1 slug suffix pointless. Reads go
+      through `security definer` RPCs keyed on slug or event id
+      (`event_by_slug`, `event_photos`), so there is nothing to enumerate.
+      `event_accepts_uploads()` must also be `security definer`: policy
+      expressions run as the invoking role, so an inline `exists` against
+      `events` would be filtered by its RLS and silently fail every upload.
+      Host policies scope to `owner_id = auth.uid()`.
+      Verified by `supabase/tests/rls.py` — 19 checks, all passing.
       _Depends on: 1.4_
+- [x] **1.5b Private gallery toggle (schema + policy).** Done. `gallery_hidden_at`
+      on `events`: guests keep uploading, `event_photos()` returns nothing, and
+      `event_by_slug()` surfaces `gallery_private` so the UI can explain the
+      state rather than show an empty album. Reversible at any time. Admin UI
+      for it is 5.6b.
+      _Depends on: 1.5_
 - [ ] **1.6 Storage migration.** `event-photos` bucket — public, 15 MB limit,
       `image/jpeg` only — plus object policies. Path layout
       `event-photos/{event_id}/{photo_id}.jpg` and `{photo_id}_thumb.jpg`.
@@ -196,6 +210,13 @@ Do not reopen these without a reason; the tickets below already assume them.
 - [ ] **5.6 Moderation.** Hide/unhide via `hidden_at` (never hard-delete a photo),
       revalidate the gallery afterwards.
       _Depends on: 5.3_
+- [ ] **5.6b Private gallery toggle (UI).** Switch the event between public and
+      private by setting or clearing `gallery_hidden_at`; the database side is
+      already done (1.5b). Make the current state obvious in admin, and make
+      clear that guests can still upload while it is closed. The guest event
+      page also needs to read `gallery_private` and say why the gallery is
+      unavailable instead of rendering an empty grid.
+      _Depends on: 5.3, 1.5b_
 - [ ] **5.7 ZIP export.** Route handler using the service-role key. Server-only
       file; stream rather than buffer the whole album. The service key bypasses
       RLS, so ownership must be checked in code — confirm `owner_id` matches the

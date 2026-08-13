@@ -87,8 +87,11 @@ The `/e/` prefix is what the landing page already advertises in `qr-preview.tsx`
 
 Details, DDL, and RLS live in `.cursor/skills/fomio-supabase/SKILL.md`. Shape:
 
-- **`events`** — `id`, `slug` (unique), `event_name`, `event_date`, `uploads_close_at` (upload window; gallery stays viewable after), `owner_id` (→ `auth.users`; the host, and what every RLS host policy keys off), `created_at`
+- **`events`** — `id`, `slug` (unique), `event_name`, `event_date`, `uploads_close_at` (upload window; gallery stays viewable after), `gallery_hidden_at` (set = guests upload but cannot view; host togglable both ways), `owner_id` (→ `auth.users`; the host, and what every RLS host policy keys off), `created_at`
+
 - **`photos`** — `id`, `event_id`, `storage_path`, `thumb_path`, `uploader_name` (nullable — optional guest nickname, remembered on their device), `hidden_at` (soft delete for moderation; never hard-delete), `width`, `height`, `byte_size`, `mime_type` (so the gallery grid reserves space and avoids layout shift), `created_at`
+
+**Guests never read these tables directly.** The anon key is public, so any table `anon` can `select` is a table anyone can list — a permissive read policy on `events` would hand out every album's slug and make the unguessable URL pointless. Guest reads go through `security definer` functions keyed on the slug or event id (`event_by_slug`, `event_photos`); admin reads the tables directly under ownership policies. Details in the Supabase skill.
 
 Storage layout: `event-photos/{event_id}/{photo_id}.jpg` plus `event-photos/{event_id}/{photo_id}_thumb.jpg`.
 
@@ -110,7 +113,8 @@ Storage layout: `event-photos/{event_id}/{photo_id}.jpg` plus `event-photos/{eve
 - Photographer or multi-tenant dashboard, per-client branding
 - Payments, token system, revenue share, invoicing
 - Guest accounts or mandatory registration
-- Delayed reveal, film filters
+- Film filters
+- **Automatic** delayed reveal (timed or scheduled unveiling). The host _can_ close the gallery manually at any time via `gallery_hidden_at` — guests keep uploading, they just can't browse — and can reopen it just as easily. That manual toggle is in scope; anything that schedules or automates it is not.
 - Email notifications, multi-language
 - Realtime gallery updates (Supabase Realtime) — guests refresh; the copy no longer promises live updates
 - Resumable/background uploads — manual retry only
