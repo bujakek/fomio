@@ -74,17 +74,19 @@ The `/e/` prefix is what the landing page already advertises in `qr-preview.tsx`
 ## Access model (settled)
 
 - **Guests: no gate at all.** Anyone with the link or QR can view the gallery and upload. No passcode, no login, no nickname required. Any friction directly reduces the participation rate we're trying to measure.
-- **Host/admin: Supabase Auth magic link.** Only the admin area is protected.
-- Privacy comes from the URL being unguessable and unindexed — add `noindex` to event routes.
+- **Host/admin: Supabase Auth magic link.** Only the admin area is protected. Every event has an `owner_id`, and RLS scopes host reads and writes to `owner_id = auth.uid()` — a signed-in user who owns nothing sees nothing. This is ownership scoping, **not** the multi-tenant dashboard ruled out below.
+- Privacy comes from the URL being unguessable and unindexed — add `noindex` to event routes. Slugs therefore carry a random suffix (`anna-peter-k3f9x7`); `slugify()` stays deterministic for the QR preview, and `generateEventSlug()` is what real events get. Never create an event with a bare `slugify()` result.
 
 ## Data model (settled)
 
 Details, DDL, and RLS live in `.cursor/skills/fomio-supabase/SKILL.md`. Shape:
 
-- **`events`** — `id`, `slug` (unique), `event_name`, `event_date`, `uploads_close_at` (upload window; gallery stays viewable after), `created_at`
-- **`photos`** — `id`, `event_id`, `storage_path`, `uploader_name` (nullable — optional guest nickname, remembered on their device), `hidden_at` (soft delete for moderation; never hard-delete), `width`, `height`, `byte_size`, `mime_type` (so the gallery grid reserves space and avoids layout shift), `created_at`
+- **`events`** — `id`, `slug` (unique), `event_name`, `event_date`, `uploads_close_at` (upload window; gallery stays viewable after), `owner_id` (→ `auth.users`; the host, and what every RLS host policy keys off), `created_at`
+- **`photos`** — `id`, `event_id`, `storage_path`, `thumb_path`, `uploader_name` (nullable — optional guest nickname, remembered on their device), `hidden_at` (soft delete for moderation; never hard-delete), `width`, `height`, `byte_size`, `mime_type` (so the gallery grid reserves space and avoids layout shift), `created_at`
 
-Storage layout: `event-photos/{event_id}/{photo_id}.jpg`.
+Storage layout: `event-photos/{event_id}/{photo_id}.jpg` plus `event-photos/{event_id}/{photo_id}_thumb.jpg`.
+
+**The gallery must serve the thumb, never the full image.** A 4096px/~2MB file is the right artifact to download and print, and completely the wrong one to tile at 200px — a single guest scrolling a 600-photo album would pull over a gigabyte. The client already holds the decoded bitmap during upload, so the ~400px thumb is nearly free to produce there.
 
 ## MVP scope
 

@@ -1,13 +1,18 @@
 'use client'
 
-import { slugify } from '@/lib/slug'
+import { EXAMPLE_SLUG_SUFFIX, slugify } from '@/lib/slug'
 import { QRCodeSVG } from 'qrcode.react'
 import { useMemo, useState } from 'react'
 import { Reveal } from './reveal'
 
 export function QrPreview() {
   const [name, setName] = useState('Anna & Péter')
-  const slug = useMemo(() => slugify(name), [name])
+  // A real event slug carries a random suffix (see generateEventSlug). Use a
+  // fixed stand-in rather than generating one: this re-runs on every keystroke,
+  // and a URL that reshuffles as you type is not a preview of anything. The
+  // suffix has to be *shown* though — a mockup that omits it teaches hosts to
+  // expect a shorter URL than the one they will actually be given.
+  const slug = useMemo(() => `${slugify(name)}-${EXAMPLE_SLUG_SUFFIX}`, [name])
   const url = `https://fomio.io/e/${slug}`
   const displayName = name.trim() || 'Az esemény neve'
 
@@ -53,7 +58,8 @@ export function QrPreview() {
               </div>
               <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
                 A valódi eseményedhez nyomtatható kártyát és megosztható linket
-                is kapsz.
+                is kapsz. A link végén lévő egyedi kód gondoskodik arról, hogy
+                csak a meghívottak találják meg az albumot.
               </p>
             </div>
           </Reveal>

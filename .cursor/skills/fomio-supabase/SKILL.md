@@ -38,13 +38,17 @@ create table public.events (
   event_name       text not null,
   event_date       date,
   uploads_close_at timestamptz,  -- null = open forever; gallery stays readable after
+  owner_id         uuid not null references auth.users (id) on delete restrict,
   created_at       timestamptz not null default now()
 );
+
+create index events_owner_idx on public.events (owner_id);
 
 create table public.photos (
   id            uuid primary key default gen_random_uuid(),
   event_id      uuid not null references public.events (id) on delete cascade,
   storage_path  text not null unique,
+  thumb_path    text not null,  -- ~400px tile; the gallery must never load storage_path
   uploader_name text,          -- optional guest nickname, kept on their device
   hidden_at     timestamptz,   -- soft delete for moderation; never hard-delete
   width         integer,
@@ -71,9 +75,10 @@ create policy "anyone with the link can read events"
   on public.events for select to anon, authenticated
   using (true);
 
-create policy "signed-in host manages events"
+create policy "host manages own events"
   on public.events for all to authenticated
-  using (true) with check (true);
+  using (owner_id = auth.uid())
+  with check (owner_id = auth.uid());
 
 create policy "anyone can read visible photos"
   on public.photos for select to anon, authenticated
@@ -90,16 +95,29 @@ create policy "guests can add photos while uploads are open"
     )
   );
 
-create policy "signed-in host manages photos"
+create policy "host manages photos in own events"
   on public.photos for all to authenticated
-  using (true) with check (true);
+  using (
+    exists (
+      select 1 from public.events e
+      where e.id = photos.event_id and e.owner_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.events e
+      where e.id = photos.event_id and e.owner_id = auth.uid()
+    )
+  );
 ```
 
 Why it's shaped this way:
 
 - Guests get **insert only**. No update, no delete — a guest can't edit or remove someone else's photo, and can't un-hide a moderated one (`hidden_at is null` is enforced in `with check`).
 - The `exists (...)` clause makes the upload window a database rule, not a UI suggestion.
-- `for all to authenticated` means **any** signed-in user is a host. Acceptable for a single-host pilot **only if public signups are disabled** in the Supabase dashboard (Auth → Providers → email, disable signups; invite yourself). Verify this before launch, or add an email allowlist check to the policy.
+- Host policies key off **`owner_id`, never a bare `to authenticated`**. A blanket `using (true)` would make every signed-in user a host of every event — able to read hidden photos, export albums and delete them. With ownership scoping, a stray signup lands in an empty admin instead. Disabling public signups is still worth doing, but it is now defence in depth rather than the only thing standing between a stranger and someone's wedding.
+- Ownership scoping is **not** the multi-tenant dashboard that `CLAUDE.md` rules out. There is no per-client branding, no tenant switching, no sharing — just a row knowing who created it.
+- `owner_id` is `not null`, so a user must exist before any event can be inserted. Create your own account in the dashboard before seeding development data.
 
 ## Storage
 
@@ -112,18 +130,38 @@ create policy "public read event photos"
   on storage.objects for select to anon, authenticated
   using (bucket_id = 'event-photos');
 
-create policy "guests can upload event photos"
+create policy "guests upload into an open event folder"
   on storage.objects for insert to anon
-  with check (bucket_id = 'event-photos');
+  with check (
+    bucket_id = 'event-photos'
+    and (storage.foldername(name))[1] in (
+      select e.id::text from public.events e
+      where e.uploads_close_at is null or e.uploads_close_at > now()
+    )
+  );
 
-create policy "signed-in host manages event photos"
+create policy "host manages objects in own events"
   on storage.objects for all to authenticated
-  using (bucket_id = 'event-photos') with check (bucket_id = 'event-photos');
+  using (
+    bucket_id = 'event-photos'
+    and (storage.foldername(name))[1] in (
+      select e.id::text from public.events e where e.owner_id = auth.uid()
+    )
+  )
+  with check (
+    bucket_id = 'event-photos'
+    and (storage.foldername(name))[1] in (
+      select e.id::text from public.events e where e.owner_id = auth.uid()
+    )
+  );
 ```
 
-- Path layout: `event-photos/{event_id}/{photo_id}.jpg`
+- Path layout: `event-photos/{event_id}/{photo_id}.jpg`, with the tile alongside it at `{photo_id}_thumb.jpg`. The first path segment is always the event id — every policy above depends on that, so never flatten the layout.
+- Compare the folder segment as **text** (`e.id::text`), not by casting the segment to `uuid`. A malformed path would make the cast raise rather than simply fail the check.
+- Guest inserts are scoped to a folder belonging to a real event with an open upload window. A blanket `with check (bucket_id = 'event-photos')` would let anyone write arbitrary objects into any folder they invented.
 - Only `image/jpeg` is allowed because the client always converts and compresses to JPEG first (see `fomio-upload`). HEIC never reaches the bucket.
-- Public bucket = privacy comes from unguessable event slugs, not from storage ACLs. Add `noindex` to event routes.
+- Public bucket = privacy comes from unguessable event slugs, not from storage ACLs. Slugs carry a random suffix (`lib/slug.ts`, `generateEventSlug()`); add `noindex` to event routes.
+- Guests can insert but never update or delete an object, so nobody can overwrite someone else's photo by guessing its path.
 
 ## Clients
 
