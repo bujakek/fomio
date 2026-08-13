@@ -163,12 +163,17 @@ try:
 finally:
     print("\ncleanup:")
     for ev in events:
-        call('POST', '/storage/v1/object/remove/event-photos', SVC,
-             {'prefixes': [f'{ev}/{n}' for n in
-                           [o.get('name') for o in
-                            (call('POST', '/storage/v1/object/list/event-photos', SVC,
-                                  {'prefix': f'{ev}/', 'limit': 100})[1] or [])
-                            if isinstance(o, dict)]]})
+        # Removal is DELETE /object/{bucket} with a prefixes body. The
+        # /object/remove/{bucket} form returns 400 and leaves every object
+        # behind — which it silently did for several runs, quietly filling a
+        # 1GB free tier with test fixtures.
+        listed = call('POST', '/storage/v1/object/list/event-photos', SVC,
+                      {'prefix': f'{ev}/', 'limit': 200})[1] or []
+        paths = [f"{ev}/{o['name']}" for o in listed if isinstance(o, dict)]
+        if paths:
+            st, _ = call('DELETE', '/storage/v1/object/event-photos', SVC,
+                         {'prefixes': paths})
+            assert st == 200, f'storage cleanup failed: {st}'
         call('DELETE', f'/rest/v1/events?id=eq.{ev}', SVC)
     for u in users:
         call('DELETE', f"/auth/v1/admin/users/{u['id']}", SVC)

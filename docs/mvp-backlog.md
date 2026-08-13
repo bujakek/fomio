@@ -5,10 +5,11 @@ Ordered build plan for the pilot. Derived from the build order and MVP scope in
 
 - **Goal of the pilot:** answer one question — do guests actually use the QR to
   upload? Anything that does not serve that question is out of scope.
-- **Status:** D1–D4 settled, **Phases 1 and 2 complete**, all verified against
+- **Status:** D1–D4 settled, **Phases 1–3 complete**, all verified against
   the live database. Run `pnpm seed` for a working event to develop against; it
   prints the URL. Next
-  is Phase 3 (upload), the first thing that writes guest data.
+  is Phase 4 (gallery). Upload is built but has only been exercised
+  synthetically — real phones are ticket 6.7.
 - **Last updated:** 2026-08-13
 
 Work the phases in order. Within a phase, respect the stated dependencies;
@@ -202,22 +203,37 @@ Do not reopen these without a reason; the tickets below already assume them.
       from the bitmap already decoded in 3.2 so it costs almost nothing. The
       gallery grid depends on this — see 4.1.
       _Depends on: 3.2_
-- [ ] **3.3 Picker and state machine.** Per-file status:
-      `várakozik → előkészítés → feltöltés → kész | hiba`.
+- [x] **3.3 Picker and state machine.** Done —
+      `components/event/upload-queue.tsx`, `app/e/[slug]/upload/page.tsx`.
+      Per-file status `várakozik → előkészítés → feltöltés → kész | hiba`,
+      processed strictly one at a time. The picker is disabled while the queue
+      runs and `accept` keeps `.heic`/`.heif` listed, so nothing is silently
+      unselectable.
       _Depends on: 2.2_
-- [ ] **3.4 Upload and insert.** Both objects (full + thumb) direct
-      browser→Storage, then the `photos` row — in that order, so a failed insert
-      leaves harmless orphans rather than a broken tile. Client-generated UUID
-      so paths and row agree.
+- [x] **3.4 Upload and insert.** Done — `lib/upload-photo.ts`. Both objects
+      then the row, in that order. The photo id is generated per attempt rather
+      than per queue item: guests hold insert-only rights on storage, so they
+      cannot overwrite, and reusing an id after a partial failure would collide
+      with the object the failed attempt already wrote. No `.select()` chained
+      on the insert — guests have no read policy, so asking for the row back
+      reports an error on a write that actually succeeded.
+      Verified end to end from a browser as `anon`: RPC lookup, prepare, both
+      objects, row insert.
       _Depends on: 3.2b, 3.3, 1.6_
-- [ ] **3.5 Retry and cleanup.** Manual per-file retry, revoke every object URL,
-      guard against navigating away mid-upload.
+- [x] **3.5 Retry and cleanup.** Done. Per-file retry re-queues that one file;
+      object URLs are revoked on unmount so forty previews do not pin forty
+      full-size images in phone memory; `beforeunload` guards navigation while
+      the queue is busy, since uploads are not resumable.
       _Depends on: 3.4_
-- [ ] **3.6 Optional nickname.** Remembered in `localStorage` so a guest types it
-      once per device.
+- [x] **3.6 Optional nickname.** Done, remembered in `localStorage`.
+      Deliberately _not_ React state: seeding it during render breaks hydration
+      (no `localStorage` on the server) and seeding it in an effect cascades a
+      second render on every mount — which React 19's lint now flags. The input
+      is uncontrolled and read at upload time.
       _Depends on: 3.4_
-- [ ] **3.7 Success state.** Unmistakable and celebratory — this is the exact
-      moment the pilot is measuring.
+- [x] **3.7 Success state.** Done. Fires once the queue settles with at least
+      one success, and adapts to a private gallery — telling a guest to go look
+      at an album they cannot open would undercut the moment.
       _Depends on: 3.4_
 
 ---
@@ -323,7 +339,8 @@ Do not reopen these without a reason; the tickets below already assume them.
       pipeline (`app/pipeline-test/`, page + report route). Kept because opening
       it on a real iPhone is the cheapest way to answer the `OffscreenCanvas`
       question in 6.7 — remove it once that is done. It ships publicly
-      otherwise.
+      otherwise. (The `/upload-test` harness it shipped alongside is already
+      deleted; the real upload screen supersedes it.)
 - [ ] **6.9 Fix `backdrop-filter` prefixing.** The build ships only
       `-webkit-backdrop-filter` for `.glass`, `.glass-strong` and `.glass-nav`,
       so Firefox gets no glass blur anywhere on the site. Pre-existing and

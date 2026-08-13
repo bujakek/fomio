@@ -1,0 +1,306 @@
+'use client'
+
+import { prepareForUpload } from '@/lib/image'
+import { uploadPhoto } from '@/lib/upload-photo'
+import { cn } from '@/lib/utils'
+import {
+  AlertCircle,
+  Check,
+  ImagePlus,
+  Images,
+  Loader2,
+  RotateCw,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useCallback, useEffect, useRef, useState } from 'react'
+
+const NAME_KEY = 'fomio:uploader-name'
+
+/** Keep `.heic`/`.heif` listed. Excluding them makes iOS hand over a
+ *  transcoded JPEG sometimes, but on other paths it just makes the file
+ *  unselectable — a guest tapping a photo that refuses to be picked has no
+ *  idea why. We convert them ourselves regardless. */
+const ACCEPT = 'image/jpeg,image/png,image/webp,.heic,.heif'
+
+type Status = 'queued' | 'preparing' | 'uploading' | 'done' | 'error'
+
+type Item = {
+  key: string
+  file: File
+  previewUrl: string
+  status: Status
+  error?: string
+}
+
+const STATUS_LABEL: Record<Status, string> = {
+  queued: 'várakozik',
+  preparing: 'előkészítés…',
+  uploading: 'feltöltés…',
+  done: 'kész',
+  error: 'nem sikerült',
+}
+
+const isBusy = (s: Status) =>
+  s === 'queued' || s === 'preparing' || s === 'uploading'
+
+export function UploadQueue({
+  eventId,
+  slug,
+  galleryPrivate,
+}: {
+  eventId: string
+  slug: string
+  galleryPrivate: boolean
+}) {
+  const [items, setItems] = useState<Item[]>([])
+  const itemsRef = useRef<Item[]>([])
+  const runningRef = useRef(false)
+  const nameRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    itemsRef.current = items
+  }, [items])
+
+  // The nickname is deliberately not React state. It is only read at upload
+  // time, and holding it in state would mean either seeding it during render
+  // (localStorage does not exist on the server, so: hydration mismatch) or
+  // setting state inside an effect, which cascades a second render on every
+  // mount. Writing straight to the input avoids both.
+  useEffect(() => {
+    const stored = localStorage.getItem(NAME_KEY)
+    if (stored && nameRef.current) nameRef.current.value = stored
+  }, [])
+
+  // Revoke previews on unmount. Object URLs live until the document dies, so
+  // a guest who uploads forty photos and stays on the page would otherwise
+  // pin forty full-size images in memory on a phone.
+  useEffect(
+    () => () => {
+      itemsRef.current.forEach((i) => URL.revokeObjectURL(i.previewUrl))
+    },
+    [],
+  )
+
+  const busy = items.some((i) => isBusy(i.status))
+
+  // Uploads are not resumable — navigating away mid-queue loses the rest.
+  useEffect(() => {
+    if (!busy) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [busy])
+
+  const patch = useCallback((key: string, next: Partial<Item>) => {
+    setItems((prev) => prev.map((i) => (i.key === key ? { ...i, ...next } : i)))
+  }, [])
+
+  const runQueue = useCallback(async () => {
+    // One at a time. A parallel loop over ten 48MP photos runs mobile Safari
+    // out of memory and takes the tab down with it.
+    if (runningRef.current) return
+    runningRef.current = true
+    try {
+      for (;;) {
+        const next = itemsRef.current.find((i) => i.status === 'queued')
+        if (!next) break
+
+        patch(next.key, { status: 'preparing', error: undefined })
+        try {
+          const prepared = await prepareForUpload(next.file)
+          patch(next.key, { status: 'uploading' })
+          await uploadPhoto({
+            eventId,
+            prepared,
+            uploaderName: nameRef.current?.value.trim() || null,
+          })
+          patch(next.key, { status: 'done' })
+        } catch (e) {
+          patch(next.key, {
+            status: 'error',
+            error: e instanceof Error ? e.message : 'Ismeretlen hiba',
+          })
+        }
+        // Let the state commit land before scanning the queue again.
+        await new Promise((r) => setTimeout(r, 0))
+      }
+    } finally {
+      runningRef.current = false
+    }
+  }, [eventId, patch])
+
+  const addFiles = (files: FileList | null) => {
+    if (!files?.length) return
+    const added: Item[] = Array.from(files).map((file) => ({
+      key: crypto.randomUUID(),
+      file,
+      previewUrl: URL.createObjectURL(file),
+      status: 'queued' as const,
+    }))
+    setItems((prev) => {
+      const next = [...prev, ...added]
+      itemsRef.current = next
+      return next
+    })
+    void runQueue()
+  }
+
+  const retry = (key: string) => {
+    patch(key, { status: 'queued', error: undefined })
+    setItems((prev) => {
+      const next = prev.map((i) =>
+        i.key === key ? { ...i, status: 'queued' as const } : i,
+      )
+      itemsRef.current = next
+      return next
+    })
+    void runQueue()
+  }
+
+  const doneCount = items.filter((i) => i.status === 'done').length
+  const failedCount = items.filter((i) => i.status === 'error').length
+  const allSettled = items.length > 0 && !busy
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <label
+          htmlFor="uploader-name"
+          className="mb-2 block text-sm text-muted-foreground"
+        >
+          A neved — nem kötelező
+        </label>
+        <input
+          id="uploader-name"
+          ref={nameRef}
+          type="text"
+          defaultValue=""
+          maxLength={40}
+          autoComplete="name"
+          placeholder="Például: Réka"
+          onChange={(e) => localStorage.setItem(NAME_KEY, e.target.value)}
+          className="glass min-h-14 w-full rounded-2xl px-5 text-base text-foreground transition-colors outline-none placeholder:text-muted-foreground/60 focus:border-accent"
+        />
+      </div>
+
+      {allSettled && doneCount > 0 ? (
+        <div className="glass-strong flex flex-col items-center gap-3 rounded-3xl px-6 py-8 text-center">
+          <span className="flex size-14 items-center justify-center rounded-full bg-accent/20">
+            <Check className="size-7 text-accent" strokeWidth={2.2} />
+          </span>
+          <p className="text-xl font-semibold tracking-tight">
+            {doneCount === 1
+              ? 'Megvan! A képed felkerült.'
+              : `Megvan! ${doneCount} képed felkerült.`}
+          </p>
+          <p className="max-w-xs text-sm leading-relaxed text-pretty text-muted-foreground">
+            {galleryPrivate
+              ? 'A galériát a házigazda egyelőre elrejtette — a képeid megvannak, és akkor lesznek láthatók, amikor megnyitja az albumot.'
+              : 'Köszönjük, hogy megosztottad! Nézd meg, mit töltöttek fel a többiek.'}
+          </p>
+          {!galleryPrivate ? (
+            <Link
+              href={`/e/${slug}/gallery`}
+              className="glass glass-hover mt-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold"
+            >
+              <Images className="size-4" strokeWidth={1.8} />
+              Galéria megtekintése
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
+
+      {items.length > 0 ? (
+        <ul className="flex flex-col gap-2">
+          {items.map((item) => (
+            <li
+              key={item.key}
+              className="glass flex items-center gap-3 rounded-2xl p-2"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element --
+                  a blob: URL has no intrinsic remote source for next/image to
+                  optimise, and these are transient previews. */}
+              <img
+                src={item.previewUrl}
+                alt=""
+                className="size-14 shrink-0 rounded-xl object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{item.file.name}</p>
+                <p
+                  className={cn(
+                    'flex items-center gap-1.5 text-xs',
+                    item.status === 'error'
+                      ? 'text-destructive'
+                      : 'text-muted-foreground',
+                  )}
+                >
+                  {item.status === 'preparing' ||
+                  item.status === 'uploading' ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : null}
+                  {item.status === 'done' ? (
+                    <Check className="size-3 text-accent" />
+                  ) : null}
+                  {item.status === 'error' ? (
+                    <AlertCircle className="size-3" />
+                  ) : null}
+                  {STATUS_LABEL[item.status]}
+                </p>
+              </div>
+              {item.status === 'error' ? (
+                <button
+                  type="button"
+                  onClick={() => retry(item.key)}
+                  className="glass glass-hover flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-xs font-semibold"
+                >
+                  <RotateCw className="size-3.5" />
+                  Újra
+                </button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {failedCount > 0 && !busy ? (
+        <p className="text-center text-sm text-muted-foreground">
+          {failedCount} kép nem sikerült. Koppints az „Újra” gombra — a
+          feltöltés ott folytatódik, ahol abbamaradt.
+        </p>
+      ) : null}
+
+      <label
+        className={cn(
+          'btn-shine inline-flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground transition-transform',
+          busy ? 'pointer-events-none opacity-60' : 'hover:scale-[1.02]',
+        )}
+      >
+        <ImagePlus className="size-5" strokeWidth={1.8} />
+        {busy
+          ? 'Feltöltés folyamatban…'
+          : items.length > 0
+            ? 'Még több kép'
+            : 'Képek kiválasztása'}
+        <input
+          type="file"
+          accept={ACCEPT}
+          multiple
+          disabled={busy}
+          className="sr-only"
+          onChange={(e) => {
+            addFiles(e.target.files)
+            // Reset so picking the same file twice still fires a change.
+            e.target.value = ''
+          }}
+        />
+      </label>
+
+      {busy ? (
+        <p className="text-center text-xs leading-relaxed text-muted-foreground">
+          Ne zárd be az oldalt, amíg a feltöltés tart.
+        </p>
+      ) : null}
+    </div>
+  )
+}
