@@ -5,10 +5,11 @@ Ordered build plan for the pilot. Derived from the build order and MVP scope in
 
 - **Goal of the pilot:** answer one question — do guests actually use the QR to
   upload? Anything that does not serve that question is out of scope.
-- **Status:** D1–D4 settled. Phase 1 through 1.6 built and verified against the
+- **Status:** D1–D4 settled. Phase 1 done through 1.8 and verified against the
   live database — schema, RLS, guest-read RPCs, private-gallery toggle, storage
-  bucket and policies. Next up is 1.7. No application code yet beyond
-  `lib/slug.ts`.
+  bucket and policies, typed Supabase clients. Next is 1.9 (data access layer),
+  then 1.10 (seed), which needs a real auth user because `owner_id` is
+  `not null`.
 - **Last updated:** 2026-08-13
 
 Work the phases in order. Within a phase, respect the stated dependencies;
@@ -112,12 +113,28 @@ Do not reopen these without a reason; the tickets below already assume them.
       paths exercised with a **real signed-in JWT** rather than `service_role`,
       which bypasses RLS and would have proven nothing.
       _Depends on: 1.4_
-- [ ] **1.7 Client modules.** `lib/supabase/client.ts` (browser) and
-      `lib/supabase/server.ts` (async `cookies()`, Next 16). The server client
-      must never be reachable from a Client Component.
+- [x] **1.7 Client modules.** Done. `lib/supabase/client.ts` (browser) and
+      `lib/supabase/server.ts` (async `cookies()`, Next 16), both typed with the
+      generated `Database`. `server.ts` imports `server-only`, so reaching it
+      from a Client Component is a build error rather than a silent leak. Both
+      use the anon key and carry the caller's session, so RLS still applies —
+      the service role key stays confined to the ZIP export (5.7). Credentials
+      go through `lib/supabase/env.ts`, which fails with a message naming the
+      `NEXT_PUBLIC_` prefix trap instead of an opaque `Invalid URL` from inside
+      the SDK.
       _Depends on: 1.2_
-- [ ] **1.8 Generated types.** `lib/supabase/database.types.ts`, wired into
-      `pnpm verify` so schema drift fails the build.
+- [x] **1.8 Generated types.** Done. `lib/supabase/database.types.ts` generated
+      from the live schema, plus `pnpm types:gen` and `pnpm types:check`.
+      Verified as actually enforced, not merely present: a bogus column and a
+      bogus RPC argument both fail `tsc`, and `types:check` was confirmed to
+      exit 1 on a deliberately stale file.
+      **Deviation from the original ticket:** this is _not_ wired into
+      `pnpm verify`. `verify` runs after every edit and must stay fast and
+      offline; a live-database call would make it need CLI auth and a network
+      round trip, and break for anyone not logged into the Supabase CLI. The
+      real protection is that generated types make a wrong column a compile
+      error. Run `pnpm types:gen` after every `db push`; `types:check` is the
+      deliberate drift check, and belongs in CI if that ever exists.
       _Depends on: 1.4_
 - [ ] **1.9 Data access layer.** `lib/events.ts`, `lib/photos.ts`. One shared
       definition of "visible photo" for both admin and guest paths. Use

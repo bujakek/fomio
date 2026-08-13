@@ -23,11 +23,15 @@ Never change schema by clicking in the dashboard; the repo is the source of trut
 # init and link are already done.
 pnpm supabase migration new <name>   # creates supabase/migrations/<ts>_*.sql
 pnpm supabase db push --linked       # apply to the remote (needs SUPABASE_DB_PASSWORD)
-pnpm supabase gen types typescript --linked > lib/supabase/database.types.ts
+pnpm types:gen                       # regenerate lib/supabase/database.types.ts
+pnpm types:check                     # fails if the committed types have drifted
 python3 supabase/tests/rls.py        # re-run the access-model checks after any policy change
+python3 supabase/tests/storage.py
 ```
 
 Migrations are append-only: to change something, write a new migration. Every table gets RLS enabled in the same migration that creates it.
+
+**Run `pnpm types:gen` after every `db push`.** It is not part of `pnpm verify`: that has to stay fast and offline, and wiring a live-database call into the command you run after every edit would make it need CLI auth and a network round trip. The safety net is that generated types turn a wrong column name into a compile error; `types:check` is the deliberate drift check.
 
 ## Schema
 
