@@ -2,10 +2,13 @@
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
-    "target": "ES6",
+    "target": "ES2022",
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    // scripts/ runs under `node --experimental-strip-types`, which requires
+    // explicit .ts extensions on relative imports. Safe with noEmit.
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",

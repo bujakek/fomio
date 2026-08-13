@@ -5,11 +5,9 @@ Ordered build plan for the pilot. Derived from the build order and MVP scope in
 
 - **Goal of the pilot:** answer one question — do guests actually use the QR to
   upload? Anything that does not serve that question is out of scope.
-- **Status:** D1–D4 settled. Phase 1 done through 1.8 and verified against the
-  live database — schema, RLS, guest-read RPCs, private-gallery toggle, storage
-  bucket and policies, typed Supabase clients. Next is 1.9 (data access layer),
-  then 1.10 (seed), which needs a real auth user because `owner_id` is
-  `not null`.
+- **Status:** D1–D4 settled and **Phase 1 complete**, all verified against the
+  live database. Run `pnpm seed` for a working event to develop against. Next
+  is Phase 2 (`/e/[slug]`), which is the first guest-facing UI.
 - **Last updated:** 2026-08-13
 
 Work the phases in order. Within a phase, respect the stated dependencies;
@@ -136,16 +134,29 @@ Do not reopen these without a reason; the tickets below already assume them.
       error. Run `pnpm types:gen` after every `db push`; `types:check` is the
       deliberate drift check, and belongs in CI if that ever exists.
       _Depends on: 1.4_
-- [ ] **1.9 Data access layer.** `lib/events.ts`, `lib/photos.ts`. One shared
-      definition of "visible photo" for both admin and guest paths. Use
-      `.maybeSingle()` for slug lookups and always check `error`.
+- [x] **1.9 Data access layer.** Done. `lib/events.ts` (`getEventBySlug`,
+      `uploadsAreOpen`) and `lib/photos.ts` (`getEventPhotos`), both
+      `server-only` and both going through the RPCs rather than `.from()`.
+      Row types are _derived_ from the generated function signatures
+      (`Database['public']['Functions'][…]['Returns'][number]`), so adding a
+      column to an RPC without updating callers is a compile error rather than
+      a silent `undefined` — verified with a negative control.
+      `lib/storage.ts` is separate and isomorphic: it holds `photoStoragePaths`
+      (the single definition of the path layout every storage policy depends
+      on) and `photoPublicUrl`, and imports no client, so Client Components in
+      Phase 3 can use it without dragging in `server-only`.
       _Depends on: 1.7, 1.8_
-- [ ] **1.10 Dev seed event.** One event row plus a handful of photos.
-      `owner_id` is `not null`, so create your own user in the Supabase
-      dashboard first and seed against it — auth (5.1) otherwise becomes an
-      accidental prerequisite for all of Phases 2–4.
-      _Depends on: 1.9. Unblocks Phases 2–4 without waiting for admin — do this
-      early._
+- [x] **1.10 Dev seed event.** Done — `pnpm seed` (`scripts/seed.ts`).
+      Host user `olivia@apexlab.io` created via the admin API, email confirmed,
+      no password: magic-link only, matching 5.1. Seeds one event with six
+      photos put through the same shape as the Phase 3 browser pipeline —
+      4096px bound at q92 plus a ~400px thumb — because tiny placeholders would
+      make the gallery look fine while hiding the layout and payload problems
+      worth catching. Idempotent: a re-run reuses the event and skips uploads.
+      Verified end to end as `anon`: `event_by_slug` returns the event without
+      leaking `owner_id`, `event_photos` returns six rows with dimensions, and
+      both thumb (37KB) and full (233KB) fetch over the public URL.
+      _Depends on: 1.9_
 
 ---
 
@@ -222,7 +233,7 @@ Do not reopen these without a reason; the tickets below already assume them.
       `proxy.ts`, the export is `proxy()`, the config is `proxyConfig`. A
       `middleware.ts` is **silently ignored** in Next 16 — no warning, no error,
       `/admin` simply unguarded while looking protected. `matcher:
-    ['/admin/:path*']`, session refresh, and `getUser()` for the
+['/admin/:path*']`, session refresh, and `getUser()` for the
       authorization decision, never `getSession()` on the server. Verify by
       requesting `/admin` signed out.
       _Depends on: 5.1_

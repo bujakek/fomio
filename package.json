@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "verify": "pnpm typecheck && pnpm lint && pnpm build",
     "types:gen": "supabase gen types typescript --linked > lib/supabase/database.types.ts",
-    "types:check": "supabase gen types typescript --linked | diff -u lib/supabase/database.types.ts - && echo 'types match the remote schema'"
+    "types:check": "supabase gen types typescript --linked | diff -u lib/supabase/database.types.ts - && echo 'types match the remote schema'",
+    "seed": "node --env-file=.env.local --experimental-strip-types scripts/seed.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -41,6 +42,7 @@
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "shadcn": "^4.17.0",
+    "sharp": "^0.35.3",
     "supabase": "^2.114.0",
     "tailwindcss": "^4.3.3",
     "typescript": "5.9.3"
