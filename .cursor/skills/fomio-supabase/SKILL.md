@@ -135,18 +135,12 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values ('event-photos', 'event-photos', true, 15728640, array['image/jpeg'])
 on conflict (id) do nothing;
 
-create policy "public read event photos"
-  on storage.objects for select to anon, authenticated
-  using (bucket_id = 'event-photos');
-
+-- No select policy for anon. See "Public download, but no listing".
 create policy "guests upload into an open event folder"
   on storage.objects for insert to anon
   with check (
     bucket_id = 'event-photos'
-    and (storage.foldername(name))[1] in (
-      select e.id::text from public.events e
-      where e.uploads_close_at is null or e.uploads_close_at > now()
-    )
+    and public.event_folder_accepts_uploads((storage.foldername(name))[1])
   );
 
 create policy "host manages objects in own events"
@@ -165,9 +159,17 @@ create policy "host manages objects in own events"
   );
 ```
 
+### Public download, but no listing
+
+The bucket is public, which in Supabase means the `/storage/v1/object/public/…` route serves files **without consulting RLS**. Public download therefore needs no select policy, and granting one to `anon` would buy nothing for viewing while enabling `POST /storage/v1/object/list/event-photos` — which walks every event id and photo id in the project. That is the storage-layer twin of the table enumeration hole, and it would hand over every album no matter how unguessable the slug is. Verified in `supabase/tests/storage.py`.
+
+`event_folder_accepts_uploads(text)` is `security definer` for the same reason `event_accepts_uploads()` is: policy expressions run as the invoking role, and anon cannot read `events`, so an inline subquery would evaluate false and silently refuse every upload.
+
 - Path layout: `event-photos/{event_id}/{photo_id}.jpg`, with the tile alongside it at `{photo_id}_thumb.jpg`. The first path segment is always the event id — every policy above depends on that, so never flatten the layout.
-- Compare the folder segment as **text** (`e.id::text`), not by casting the segment to `uuid`. A malformed path would make the cast raise rather than simply fail the check.
+- Compare the folder segment as **text**, not by casting the segment to `uuid`. Guests control that path, and a malformed segment would make a cast raise instead of cleanly failing the check.
 - Guest inserts are scoped to a folder belonging to a real event with an open upload window. A blanket `with check (bucket_id = 'event-photos')` would let anyone write arbitrary objects into any folder they invented.
+- Guests get insert only — no update, no delete — so knowing an exact path is not enough to overwrite or remove someone else's photo.
+- **Public objects are CDN-cached, so removal is not instant.** A deleted file keeps answering `200` from the edge for a while, and hiding a photo (`hidden_at`) only drops it from the gallery — the object itself stays fetchable at its URL to anyone who already has it. Fine for moderation, where the point is that guests stop seeing it in the album; worth stating plainly if a deletion is ever requested under GDPR, where 5.8 must remove the object and you should expect cache lag.
 - Only `image/jpeg` is allowed because the client always converts and compresses to JPEG first (see `fomio-upload`). HEIC never reaches the bucket.
 - Public bucket = privacy comes from unguessable event slugs, not from storage ACLs. Slugs carry a random suffix (`lib/slug.ts`, `generateEventSlug()`); add `noindex` to event routes.
 - Guests can insert but never update or delete an object, so nobody can overwrite someone else's photo by guessing its path.

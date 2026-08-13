@@ -5,7 +5,10 @@ Ordered build plan for the pilot. Derived from the build order and MVP scope in
 
 - **Goal of the pilot:** answer one question — do guests actually use the QR to
   upload? Anything that does not serve that question is out of scope.
-- **Status:** planning. D1–D4 settled (2026-08-13); D1 implemented in `lib/slug.ts`. Nothing else built yet.
+- **Status:** D1–D4 settled. Phase 1 through 1.6 built and verified against the
+  live database — schema, RLS, guest-read RPCs, private-gallery toggle, storage
+  bucket and policies. Next up is 1.7. No application code yet beyond
+  `lib/slug.ts`.
 - **Last updated:** 2026-08-13
 
 Work the phases in order. Within a phase, respect the stated dependencies;
@@ -97,13 +100,17 @@ Do not reopen these without a reason; the tickets below already assume them.
       state rather than show an empty album. Reversible at any time. Admin UI
       for it is 5.6b.
       _Depends on: 1.5_
-- [ ] **1.6 Storage migration.** `event-photos` bucket — public, 15 MB limit,
-      `image/jpeg` only — plus object policies. Path layout
-      `event-photos/{event_id}/{photo_id}.jpg` and `{photo_id}_thumb.jpg`.
-      Guest insert is scoped to a folder belonging to a real event with an open
-      window; host access is scoped by ownership. Compare the folder segment as
-      text, never by casting it to `uuid` — a malformed path would raise rather
-      than fail the check.
+- [x] **1.6 Storage migration.** Done — `20260813135648_storage_bucket.sql`,
+      applied. `event-photos` bucket: public, 15 MB limit, `image/jpeg` only.
+      **No select policy for anon** — a public bucket serves downloads without
+      consulting RLS, so a select policy would add nothing for viewing while
+      enabling `object/list`, which walks every event id and photo id in the
+      project. Guest insert is scoped by `event_folder_accepts_uploads()`
+      (`security definer`, same RLS trap as 1.5); host access is scoped by
+      ownership. Folder segments compared as text, never cast to `uuid`.
+      Verified by `supabase/tests/storage.py` — 16 checks, including the host
+      paths exercised with a **real signed-in JWT** rather than `service_role`,
+      which bypasses RLS and would have proven nothing.
       _Depends on: 1.4_
 - [ ] **1.7 Client modules.** `lib/supabase/client.ts` (browser) and
       `lib/supabase/server.ts` (async `cookies()`, Next 16). The server client
@@ -208,7 +215,10 @@ Do not reopen these without a reason; the tickets below already assume them.
       print stylesheet and check the physical scan size.
       _Depends on: 5.4_
 - [ ] **5.6 Moderation.** Hide/unhide via `hidden_at` (never hard-delete a photo),
-      revalidate the gallery afterwards.
+      revalidate the gallery afterwards. Note the limit: hiding drops a photo
+      from the gallery, but the object stays fetchable at its public URL by
+      anyone who already has it, and public objects are CDN-cached. Adequate for
+      moderation; say so plainly if someone asks for real removal, which is 5.8.
       _Depends on: 5.3_
 - [ ] **5.6b Private gallery toggle (UI).** Switch the event between public and
       private by setting or clearing `gallery_hidden_at`; the database side is
@@ -224,7 +234,9 @@ Do not reopen these without a reason; the tickets below already assume them.
       thumbs.
       _Depends on: 5.3_
 - [ ] **5.8 Permanent event delete.** Cascade the rows and purge the storage
-      objects.
+      objects. Expect CDN lag — a removed public object keeps answering from the
+      edge for a while, so don't verify deletion by re-fetching the public URL
+      (list the folder instead).
       _Depends on: 5.3, D4 — only if D4 says build it._
 
 ---
