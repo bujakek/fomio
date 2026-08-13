@@ -2,7 +2,18 @@ import nextCoreWebVitals from 'eslint-config-next/core-web-vitals'
 import nextTypescript from 'eslint-config-next/typescript'
 
 const config = [
-  { ignores: ['.next/**', 'node_modules/**', 'next-env.d.ts'] },
+  {
+    // `.agents/` and `.claude/` hold vendored Claude Code skill scripts, not
+    // project source. Linting them buys nothing and drowns real findings.
+    ignores: [
+      '.next/**',
+      'node_modules/**',
+      'next-env.d.ts',
+      '.agents/**',
+      '.claude/**',
+      'supabase/**',
+    ],
+  },
   ...nextCoreWebVitals,
   ...nextTypescript,
   {

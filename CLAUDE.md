@@ -43,13 +43,19 @@ Project skills live in `.cursor/skills/`. Read the relevant one _before_ writing
 
 ### Local env
 
-Env vars are managed by the Vercel–Supabase integration. `.env.local` is gitignored and **must never be hand-edited or committed**:
+`.env.local` is gitignored and **must never be committed**. It is maintained **by hand** — only these three keys are needed:
 
 ```bash
-vercel link && vercel env pull .env.local
+NEXT_PUBLIC_SUPABASE_URL=       # Supabase dashboard → Project Settings → API Keys
+NEXT_PUBLIC_SUPABASE_ANON_KEY=  # the anon / public key
+SUPABASE_SERVICE_ROLE_KEY=      # service_role; server-only, admin ZIP export
 ```
 
-Expected keys: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and (server-only, admin ZIP export) `SUPABASE_SERVICE_ROLE_KEY`.
+**`vercel env pull` does not work on this project — don't reach for it.** The Vercel–Supabase integration created all 16 of its variables as _Sensitive_, which on Vercel means write-only: the value cannot be read back by the CLI, the API or the dashboard, and a pull returns the literal string `[SENSITIVE]` for every one. This is a property of the Sensitive flag, not of the environment scope, so re-scoping them to Development does not help either. Copy the three values from the Supabase dashboard instead.
+
+The integration's other variables are irrelevant here: the `POSTGRES_*` ones are connection strings for direct SQL clients, and `supabase-js` talks over HTTP. It also provisions Supabase's newer `publishable`/`secret` keys alongside the legacy `anon`/`service_role` pair — the code expects the legacy names; migrating is a deliberate choice, not something to drift into.
+
+Deployed builds are unaffected: Vercel injects all of these at build and runtime. This is purely a local-development concern.
 
 ## Current state
 
@@ -148,3 +154,13 @@ If a change would falsify a landing-page claim, either honor it or update the Hu
 - Server Components by default; add `'use client'` only for state, refs, or browser APIs
 - Shared logic in `lib/` (`lib/slug.ts`, `lib/supabase/*`); never duplicate a helper across components
 - Import alias `@/*` from the repo root
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

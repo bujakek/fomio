@@ -17,3 +17,11 @@ node_modules
 # TypeScript build artifacts
 *.tsbuildinfo
 next-env.d.ts
+.vercel
+.env*
+
+# Vendored Claude Code skill content (~1.4MB), plus the symlinks pointing into
+# it. Both are restored by the skill installer from skills-lock.json, which is
+# committed — tracking a symlink to an ignored directory just dangles on clone.
+.agents/
+.claude/skills/

@@ -13,7 +13,9 @@ Postgres + Storage + Auth. Guests are **anonymous** (never signed in); only the 
 pnpm add @supabase/supabase-js @supabase/ssr
 ```
 
-Env keys come from `vercel env pull .env.local`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and server-only `SUPABASE_SERVICE_ROLE_KEY`. The service role key must **never** be imported into a Client Component or any file reachable from one.
+Env keys are maintained **by hand** in `.env.local`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and server-only `SUPABASE_SERVICE_ROLE_KEY`. `vercel env pull` does not work on this project — the integration's variables are marked Sensitive and pull back as `[SENSITIVE]`; see the Local env section of `CLAUDE.md`. The service role key must **never** be imported into a Client Component or any file reachable from one.
+
+Mind the prefix: the integration also provisions bare `SUPABASE_URL` and `SUPABASE_ANON_KEY`. Next.js only exposes variables to the browser when they start with `NEXT_PUBLIC_`, so the browser client reads `undefined` if you wire it to the bare names.
 
 ## Migrations — always SQL files in the repo
 

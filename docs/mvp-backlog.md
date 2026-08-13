@@ -50,16 +50,23 @@ Do not reopen these without a reason; the tickets below already assume them.
 
 ## Phase 1 — Supabase foundation
 
-- [ ] **1.1 Provision project, pull env.** Wire the Vercel↔Supabase integration,
-      run `vercel env pull .env.local`, confirm all three keys arrive. Never
-      hand-edit or commit `.env.local`.
+- [x] **1.1 Provision project, wire local env.** Done. Project provisioned via
+      the Vercel↔Supabase integration (Zurich). `vercel env pull` turned out to
+      be a dead end — every variable is marked Sensitive and pulls back as
+      `[SENSITIVE]` — so `.env.local` is maintained by hand from the Supabase
+      dashboard. Watch the `NEXT_PUBLIC_` prefix: the integration also ships
+      bare `SUPABASE_URL`/`SUPABASE_ANON_KEY`, which the browser cannot read.
       _Depends on: D2_
-- [ ] **1.2 Install SDK.** `@supabase/supabase-js` + `@supabase/ssr`. No client
-      code in this ticket.
+- [x] **1.2 Install SDK.** Done. `@supabase/supabase-js` 2.112.3 and
+      `@supabase/ssr` 0.12.4.
       _Depends on: 1.1_
-- [ ] **1.3 CLI and migration workflow.** `supabase init`, `supabase link`, commit
-      the `supabase/` directory. Migrations are append-only SQL files in the
-      repo — never change schema from the dashboard.
+- [x] **1.3 CLI and migration workflow.** Done. The CLI is a **devDependency**
+      (`supabase` 2.114.0), not a global or brew install, so the version is
+      pinned in the lockfile — invoke it as `pnpm supabase …`. `init` and `link`
+      are complete against `supabase-fomio` (`eu-central-2`, Postgres 17.6) and
+      `pnpm supabase migration list` reaches the remote and returns empty.
+      Migrations are append-only SQL files in the repo — never change schema
+      from the dashboard.
       _Depends on: 1.1_
 - [ ] **1.4 Schema migration.** `events` (including `owner_id` → `auth.users`,
       `not null`) + `photos` (including `thumb_path`) + the partial index on
