@@ -104,7 +104,7 @@ export function Occasions() {
               {occasions.map((o) => (
                 <Image
                   key={o.id}
-                  src={o.image || '/placeholder.svg'}
+                  src={o.image}
                   alt={o.alt}
                   fill
                   sizes="(max-width: 768px) 100vw, 1100px"

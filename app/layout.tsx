@@ -49,7 +49,6 @@ export const metadata: Metadata = {
       'QR-kódos közös fotóalbum eseményekhez. App és regisztráció nélkül.',
     images: ['/images/og-cover.jpg'],
   },
-  generator: 'v0.app',
 }
 
 export const viewport: Viewport = {

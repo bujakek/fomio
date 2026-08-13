@@ -91,7 +91,7 @@ export function HowItWorks() {
                     <div className="glass-strong overflow-hidden rounded-[2rem] p-2">
                       <div className="relative aspect-[4/3] overflow-hidden rounded-[1.6rem]">
                         <Image
-                          src={step.image || '/placeholder.svg'}
+                          src={step.image}
                           alt={step.alt}
                           fill
                           sizes="(max-width: 1024px) 100vw, 520px"

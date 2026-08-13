@@ -92,7 +92,7 @@ export function Hero() {
                         className="relative aspect-square overflow-hidden rounded-xl"
                       >
                         <Image
-                          src={img.src || '/placeholder.svg'}
+                          src={img.src}
                           alt={img.alt}
                           fill
                           sizes="140px"

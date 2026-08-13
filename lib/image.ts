@@ -1,3 +1,8 @@
+// Browser APIs only. Importing this from a Server Component would compile
+// fine and then fail at runtime on createImageBitmap; this makes it a build
+// error instead, mirroring `server-only` on the query modules.
+import 'client-only'
+
 /**
  * Browser-side photo pipeline. Everything here runs on a guest's phone, on
  * venue wifi, with whatever memory the device has left.
@@ -70,7 +75,6 @@ function scaledSize(bitmap: ImageBitmap, maxEdge: number) {
   return {
     width: Math.round(bitmap.width * scale),
     height: Math.round(bitmap.height * scale),
-    scale,
   }
 }
 
@@ -119,14 +123,22 @@ export async function prepareForUpload(file: File): Promise<PreparedPhoto> {
   const bitmap = await decode(file)
 
   try {
-    const { width, height, scale } = scaledSize(bitmap, MAX_EDGE)
-    let full = await toJpeg(bitmap, width, height, QUALITY)
+    const { width, height } = scaledSize(bitmap, MAX_EDGE)
 
-    // Re-encoding an already-modest JPEG can make it bigger. If we did not
-    // resize and gained nothing, keep the guest's original bytes.
-    if (scale === 1 && file.type === 'image/jpeg' && full.size >= file.size) {
-      full = file
-    }
+    // Always re-encode, even when the original is smaller than the result.
+    //
+    // Passing the guest's file through untouched to save bytes looks like a
+    // free win and is not: the canvas round trip is what strips EXIF, and EXIF
+    // is where the GPS coordinates live. The bucket is public and object URLs
+    // are shareable, so an untouched original means a guest can hand over
+    // where they were standing along with the photo.
+    //
+    // This is the common case, not an edge one — a phone JPEG at 4032px is
+    // under the cap, so nothing is resized, and re-encoding an already
+    // compressed JPEG at q0.92 usually produces a slightly larger file
+    // (measured: 1.35MB in, 1.40MB out). Roughly 4% more bytes buys a
+    // guarantee that no location data leaves the device.
+    const full = await toJpeg(bitmap, width, height, QUALITY)
 
     const thumbSize = scaledSize(bitmap, THUMB_EDGE)
     const thumb = await toJpeg(

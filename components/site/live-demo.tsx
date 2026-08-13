@@ -118,7 +118,7 @@ export function LiveDemo() {
                     )}
                   >
                     <Image
-                      src={p.src || '/placeholder.svg'}
+                      src={p.src}
                       alt={p.alt}
                       fill
                       sizes="(max-width: 640px) 45vw, 220px"

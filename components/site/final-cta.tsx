@@ -56,7 +56,7 @@ export function FinalCta() {
                 >
                   <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
                     <Image
-                      src={p.src || '/placeholder.svg'}
+                      src={p.src}
                       alt={p.alt}
                       fill
                       sizes="128px"

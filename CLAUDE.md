@@ -35,7 +35,7 @@ Project skills live in `.cursor/skills/`. Read the relevant one _before_ writing
 
 - **Next.js 16** (App Router, Turbopack), **React 19**, TypeScript strict
 - **pnpm**; hosted on **Vercel**
-- **Supabase** — Postgres + Storage + Auth. **Not installed yet**; adding it is build step 1
+- **Supabase** — Postgres + Storage + Auth, installed and connected (`@supabase/supabase-js`, `@supabase/ssr`). The CLI is a devDependency: `pnpm supabase …`
 - **Tailwind CSS v4** — CSS-based config via `@theme` in `app/globals.css`. There is **no `tailwind.config.js`**; don't create one
 - **shadcn/ui** (`components.json`, style `base-nova`) on `@base-ui/react`; `lucide-react` icons
 - **qrcode.react** for QR generation
@@ -62,7 +62,8 @@ Deployed builds are unaffected: Vercel injects all of these at build and runtime
 - **`docs/mvp-backlog.md` is the working plan** — the build order below, broken into ordered tickets with dependencies, plus four decisions that block Phase 1. Check it before starting work, and tick items off as they land.
 - **Marketing landing page only** — `app/page.tsx` composing `components/site/*` (hero, stats, how-it-works, occasions, testimonials, qr-preview, live-demo, photo-quality, faq, final-cta, footer). Originally v0-generated, now the permanent homepage at `/`.
 - `components/site/live-demo.tsx` is a **fake simulation** with hardcoded images, not a real gallery.
-- **Nothing functional exists yet**: no event pages, no Supabase client, no migrations, no admin.
+- **Phases 1–2 built** (see `docs/mvp-backlog.md`): four migrations applied, RLS and storage policies enforced and covered by `supabase/tests/*.py`, typed clients and query modules in `lib/`, and the guest event page at `/e/[slug]`. `pnpm seed` creates an event to develop against and prints its URL.
+- **The browser photo pipeline exists** (`lib/image.ts`) but no upload UI yet. No gallery, no admin, no auth screens.
 - `lib/slug.ts` holds the canonical `slugify()` — admin and the QR preview must both use it so printed QR codes never disagree.
 
 ## Routing (settled — QR codes get printed, so this is expensive to change)

@@ -63,7 +63,7 @@ export function InstantAccess() {
                       style={{ animationDelay: `${i * -2.5}s` }}
                     >
                       <Image
-                        src={p.src || '/placeholder.svg'}
+                        src={p.src}
                         alt={p.alt}
                         fill
                         sizes="140px"

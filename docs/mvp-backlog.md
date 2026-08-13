@@ -319,6 +319,11 @@ Do not reopen these without a reason; the tickets below already assume them.
       path), one multi-select of 10+ photos, one throttled connection.
       Simulators reproduce none of these.
 - [ ] **6.8 Print and scan.** Full physical loop with a real printed card.
+- [ ] **6.11 Delete `/pipeline-test`.** Dev harness for the browser photo
+      pipeline (`app/pipeline-test/`, page + report route). Kept because opening
+      it on a real iPhone is the cheapest way to answer the `OffscreenCanvas`
+      question in 6.7 — remove it once that is done. It ships publicly
+      otherwise.
 - [ ] **6.9 Fix `backdrop-filter` prefixing.** The build ships only
       `-webkit-backdrop-filter` for `.glass`, `.glass-strong` and `.glass-nav`,
       so Firefox gets no glass blur anywhere on the site. Pre-existing and
