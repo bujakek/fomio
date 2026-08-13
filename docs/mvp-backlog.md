@@ -68,11 +68,15 @@ Do not reopen these without a reason; the tickets below already assume them.
       Migrations are append-only SQL files in the repo — never change schema
       from the dashboard.
       _Depends on: 1.1_
-- [ ] **1.4 Schema migration.** `events` (including `owner_id` → `auth.users`,
-      `not null`) + `photos` (including `thumb_path`) + the partial index on
-      `(event_id, created_at desc) where hidden_at is null` and an index on
-      `events.owner_id`. RLS **enabled** in the same migration, no policies yet,
-      so the tables start locked.
+- [x] **1.4 Schema migration.** Done —
+      `supabase/migrations/20260813130659_create_events_and_photos.sql`, applied
+      to the remote. `events` (with `owner_id` → `auth.users`, `not null`,
+      `on delete restrict`) + `photos` (with `thumb_path not null`), the partial
+      index on `(event_id, created_at desc) where hidden_at is null`, and
+      `events_owner_idx`. RLS enabled with **no** policies, so both tables are
+      locked until 1.5. Verified against the live database: every column
+      asserted by name through PostgREST, all six indexes present, anon `select`
+      returns `[]` and anon `insert` is refused with `42501` on both tables.
       _Depends on: 1.3_
 - [ ] **1.5 RLS policies migration.** Anon read events; anon read visible photos;
       anon insert while the upload window is open (enforced in the policy, not
