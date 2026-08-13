@@ -53,6 +53,7 @@ Expected keys: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and 
 
 ## Current state
 
+- **`docs/mvp-backlog.md` is the working plan** — the build order below, broken into ordered tickets with dependencies, plus four decisions that block Phase 1. Check it before starting work, and tick items off as they land.
 - **Marketing landing page only** — `app/page.tsx` composing `components/site/*` (hero, stats, how-it-works, occasions, testimonials, qr-preview, live-demo, photo-quality, faq, final-cta, footer). Originally v0-generated, now the permanent homepage at `/`.
 - `components/site/live-demo.tsx` is a **fake simulation** with hardcoded images, not a real gallery.
 - **Nothing functional exists yet**: no event pages, no Supabase client, no migrations, no admin.
@@ -107,6 +108,8 @@ Storage layout: `event-photos/{event_id}/{photo_id}.jpg`.
 - Resumable/background uploads — manual retry only
 
 ## Build order
+
+Ticket-level detail, dependencies, and the open decisions live in `docs/mvp-backlog.md` — work from there; this is the summary.
 
 1. Supabase installed and connected (`@supabase/supabase-js`, `@supabase/ssr`)
 2. Migrations for `events` + `photos`, RLS, storage bucket
