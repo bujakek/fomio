@@ -5,9 +5,10 @@ Ordered build plan for the pilot. Derived from the build order and MVP scope in
 
 - **Goal of the pilot:** answer one question — do guests actually use the QR to
   upload? Anything that does not serve that question is out of scope.
-- **Status:** D1–D4 settled and **Phase 1 complete**, all verified against the
-  live database. Run `pnpm seed` for a working event to develop against. Next
-  is Phase 2 (`/e/[slug]`), which is the first guest-facing UI.
+- **Status:** D1–D4 settled, **Phases 1 and 2 complete**, all verified against
+  the live database. Run `pnpm seed` for a working event to develop against; it
+  prints the URL. Next
+  is Phase 3 (upload), the first thing that writes guest data.
 - **Last updated:** 2026-08-13
 
 Work the phases in order. Within a phase, respect the stated dependencies;
@@ -162,15 +163,29 @@ Do not reopen these without a reason; the tickets below already assume them.
 
 ## Phase 2 — Guest event page
 
-- [ ] **2.1 Route scaffolding.** `/e/[slug]` and its layout, `noindex` on every
-      event route, `notFound()` on an unknown slug, `force-dynamic` so a photo
-      uploaded seconds ago is visible.
+- [x] **2.1 Route scaffolding.** Done. `app/e/[slug]/{layout,page}.tsx`.
+      `noindex` sits on the **layout** so it covers upload and gallery too
+      rather than each page remembering; verified as
+      `noindex, nofollow, nocache` in the response. `notFound()` on an unknown
+      slug (404 confirmed), `force-dynamic`. `getEventBySlug` is wrapped in
+      React `cache()` — every route needs the row twice, once in
+      `generateMetadata` and once in the component, and Next does not dedupe
+      arbitrary async calls the way it does `fetch`.
       _Depends on: 1.9_
-- [ ] **2.2 Event page UI.** Name, date, prominent upload CTA, gallery link.
-      Mobile-first — design and test at 390px first.
+- [x] **2.2 Event page UI.** Done. Name, date, upload CTA, gallery link, single
+      column, primary action thumb-reachable at the bottom, 56px tap targets.
+      Verified at a true 390px viewport (headless Chrome clamps window width on
+      macOS, so this needed an iframe to measure honestly).
+      `lib/format.ts` pins date formatting to UTC: `event_date` is a bare
+      calendar day, so formatting it in any timezone behind UTC renders the
+      _previous_ day — a 13 June wedding showing as június 12.
       _Depends on: 2.1_
-- [ ] **2.3 Closed-upload state.** Once the window has passed the gallery stays
-      viewable and the upload CTA disappears.
+- [x] **2.3 Closed-upload state.** Done, plus the private-gallery state, since
+      both are the same screen and the data was already there. All four
+      combinations exercised against the live event: open/closed uploads ×
+      visible/private gallery. A private gallery explains itself rather than
+      linking to an empty grid — "nobody uploaded anything" is a miserable
+      thing to imply to a guest who just did. Covers the guest half of 5.6b.
       _Depends on: 2.2_
 
 ---

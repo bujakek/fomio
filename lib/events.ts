@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { cache } from 'react'
+
 import { createClient } from './supabase/server'
 import type { Database } from './supabase/database.types'
 
@@ -18,20 +20,27 @@ export type GuestEvent =
  * Goes through the `event_by_slug` RPC, not `.from('events')`: guests have no
  * read policy on the table, precisely so that nobody can list every album.
  * You must already know the slug to get anything back.
+ *
+ * Wrapped in React `cache()` because every event route needs the same row
+ * twice — once in `generateMetadata` to title the page, once in the component.
+ * Unlike `fetch`, Next does not dedupe arbitrary async calls, so without this
+ * each render costs two identical round trips.
  */
-export async function getEventBySlug(slug: string): Promise<GuestEvent | null> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .rpc('event_by_slug', { p_slug: slug })
-    .maybeSingle()
+export const getEventBySlug = cache(
+  async (slug: string): Promise<GuestEvent | null> => {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .rpc('event_by_slug', { p_slug: slug })
+      .maybeSingle()
 
-  // supabase-js resolves rather than rejects on a failed query, so an
-  // unchecked call here would quietly return null and render a 404 for what is
-  // actually an outage.
-  if (error) throw error
+    // supabase-js resolves rather than rejects on a failed query, so an
+    // unchecked call here would quietly return null and render a 404 for what
+    // is actually an outage.
+    if (error) throw error
 
-  return data
-}
+    return data
+  },
+)
 
 /**
  * Whether guests can still upload. Mirrors `event_accepts_uploads()`, which is
