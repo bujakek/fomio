@@ -270,9 +270,12 @@ Magic link, guarded by **`proxy.ts`**. Next.js 16 renamed middleware:
 > **Email delivery is the weak link.** Supabase's built-in service only delivers
 > to project team members and allows 2 messages per hour, with no SLA — it is
 > documented as unsuitable for production. Magic link is the only way into
-> `/admin`, so configure custom SMTP before launch (ticket 6.7d). To sign in
-> without waiting on mail, `POST /auth/v1/admin/generate_link` with the service
-> key returns a usable link directly; that is how the auth flow is tested here.
+> `/admin`, so configure custom SMTP before launch (ticket 6.7d — Resend:
+> `smtp.resend.com`, user `resend`, password = API key). Note that Resend's SMTP
+> needs a **verified domain**, so it cannot be set up before `fomio.io` resolves.
+> To sign in without waiting on mail, `POST /auth/v1/admin/generate_link` with
+> the service key returns a usable link directly; that is how the auth flow is
+> tested here.
 
 ```ts
 // proxy.ts at the repo root — refresh the session and gate /admin

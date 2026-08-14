@@ -452,15 +452,25 @@ Do not reopen these without a reason; the tickets below already assume them.
       The domain is NXDOMAIN — not registered, or not configured. Every printed
       QR code encodes `fomio.io/e/…`, so the cards are worthless until it
       resolves. Do this _before_ anything goes to print.
-- [ ] **6.7d Configure custom SMTP. Blocking launch gate.**
-      Supabase's built-in email service refuses delivery to anyone who is not a
-      project team member, and is capped at **2 messages per hour** with no SLA.
-      Magic link is the only way into `/admin`, so email _is_ the lock.
-      Two mistyped attempts lock the host out for an hour, and pointing admin at
-      a non-team address fails silently — the form still says "check your
-      inbox". Any provider works (Resend, SES, Postmark); custom SMTP starts at
-      30/hour. Escape hatch meanwhile: `POST /auth/v1/admin/generate_link` with
-      the service key returns a working link without sending mail.
+- [ ] **6.7d Configure custom SMTP via Resend. Blocking launch gate.**
+      Supabase's built-in service refuses delivery to anyone outside the project
+      team and allows 2 messages/hour with no SLA. Magic link is the only way
+      into `/admin`, so email _is_ the lock.
+      **Resend chosen** — free tier is 3,000/month and 100/day with 1 domain,
+      against a real need of maybe a dozen login links ever.
+      **Ordering matters: this depends on 6.7c.** Resend SMTP requires a
+      _verified domain_, so `fomio.io` must be registered and its DNS records
+      in place first. Attempting this before that is wasted effort.
+      Then in Supabase → Authentication → SMTP Settings:
+      host `smtp.resend.com`, port `465` (implicit TLS) or `587` (STARTTLS),
+      username `resend`, password = the Resend API key, sender something like
+      `Fomio <noreply@fomio.io>`. Supabase's own rate limit starts at 30/hour
+      once custom SMTP is on, which is ample.
+      Until then, sign in with `POST /auth/v1/admin/generate_link` and the
+      service key — it returns a working login link without sending mail.
+      _If email is ever needed before the domain exists, a provider offering
+      single-sender verification (SendGrid does) avoids the domain requirement;
+      Resend does not._
 - [ ] **6.8 Print and scan.** Full physical loop with a real printed card.
 - [ ] **6.11 Delete `/pipeline-test`.** Dev harness for the browser photo
       pipeline (`app/pipeline-test/`, page + report route). Kept because opening
