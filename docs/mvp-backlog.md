@@ -315,12 +315,31 @@ Do not reopen these without a reason; the tickets below already assume them.
       account, which gets 200 and an empty list rather than someone else's
       events.
       _Depends on: 5.2_
-- [ ] **5.4 Create event.** Name, date, upload window. Slug comes from
-      `generateEventSlug()` — never a bare `slugify()` — plus retry on the
-      unique-constraint collision. Sets `owner_id = auth.uid()`.
+- [x] **5.4 Create event.** Done — `/admin/events/new`, a Server Action with
+      `useActionState`. Slug from `generateEventSlug()`, retried up to five
+      times but _only_ on `23505`; any other error surfaces rather than looping.
+      The upload deadline is converted to ISO **in the browser**, because a
+      `datetime-local` value carries no timezone and resolving it server-side
+      would silently use the server's.
+      Verified that an authenticated insert succeeds under RLS and that one
+      claiming a forged `owner_id` is refused with 403 — the `with check` half
+      of the policy, which the read-side tests never exercised.
       _Depends on: 5.3_
-- [ ] **5.5 QR and printable card.** Generated from the final event URL. Include a
-      print stylesheet and check the physical scan size.
+- [x] **5.5 QR and printable card.** Done — `components/admin/qr-card.tsx` on
+      `/admin/events/[slug]`, plus `@media print` rules in `globals.css`.
+      The URL comes from `lib/site.ts`, which defaults to **production**
+      regardless of where the page is rendered: a card generated in development
+      must not encode `localhost`, and that mistake stays invisible until
+      someone scans one at the venue. Confirmed the rendered QR encodes
+      `https://fomio.io/e/…` with no localhost anywhere on the page.
+      Rendered as SVG, not canvas, so it prints at the printer's resolution
+      rather than the screen's. Error correction stays at M — higher levels
+      pack in more modules, and a denser code is harder for an older phone to
+      read across a dim room, which is the likelier failure here than damage.
+      Print CSS drops the dark theme and hides everything but the card;
+      printing a near-black app would waste a cartridge and produce something
+      unscannable.
+      **Still unverified: an actual physical print and scan** — that is 6.8.
       _Depends on: 5.4_
 - [ ] **5.6 Moderation.** Hide/unhide via `hidden_at` (never hard-delete a photo),
       revalidate the gallery afterwards. Note the limit: hiding drops a photo

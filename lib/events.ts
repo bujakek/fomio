@@ -83,3 +83,24 @@ export async function getOwnedEvents(): Promise<OwnedEvent[]> {
   if (error) throw error
   return data ?? []
 }
+
+/**
+ * One of the host's own events, by slug. Returns null when it does not exist
+ * *or* belongs to someone else — RLS makes those indistinguishable here, which
+ * is the correct answer to give either way.
+ */
+export async function getOwnedEventBySlug(
+  slug: string,
+): Promise<OwnedEvent | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('events')
+    .select(
+      'id, slug, event_name, event_date, uploads_close_at, gallery_hidden_at, created_at',
+    )
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
+}
