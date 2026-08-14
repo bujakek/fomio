@@ -5,11 +5,12 @@ Ordered build plan for the pilot. Derived from the build order and MVP scope in
 
 - **Goal of the pilot:** answer one question — do guests actually use the QR to
   upload? Anything that does not serve that question is out of scope.
-- **Status:** D1–D4 settled, **Phases 1–3 complete**, all verified against
+- **Status:** D1–D4 settled, **Phases 1–4 complete**, all verified against
   the live database. Run `pnpm seed` for a working event to develop against; it
   prints the URL. Next
-  is Phase 4 (gallery). Upload is built but has only been exercised
-  synthetically — real phones are ticket 6.7.
+  is Phase 5 (admin), the first part needing auth. The whole guest journey —
+  land, upload, browse — now works end to end. It has only been exercised on
+  desktop; real phones are ticket 6.7.
 - **Last updated:** 2026-08-13
 
 Work the phases in order. Within a phase, respect the stated dependencies;
@@ -240,18 +241,27 @@ Do not reopen these without a reason; the tickets below already assume them.
 
 ## Phase 4 — Gallery
 
-- [ ] **4.1 Grid.** Responsive, hidden photos excluded, stored `width`/`height`
-      reserving space to avoid layout shift. **Serve `thumb_path`, never
-      `storage_path`** — a 4096px/~2MB file is the right thing to download and
-      print and completely the wrong thing to tile at 200px; one guest scrolling
-      a 600-photo album would otherwise pull over a gigabyte, which also breaks
-      the free-tier egress cap. Full resolution belongs in the lightbox and the
-      ZIP only. Mark the tiles `unoptimized` — they are already the right size,
-      so Vercel's optimizer would add cost and latency for nothing.
+- [x] **4.1 Grid.** Done — `components/event/photo-grid.tsx`,
+      `app/e/[slug]/gallery/page.tsx`. `grid-cols-2 sm:grid-cols-3`,
+      `aspect-square`, `unoptimized` tiles. Verified against the live event that
+      every rendered `<img>` points at `thumb_path` and none at `storage_path`:
+      7 of 7 thumbs. Full-resolution URLs do appear in the RSC payload, since
+      the lightbox needs them, but no bytes are fetched for them.
       _Depends on: 1.9, 3.2b_
-- [ ] **4.2 Lightbox.** Swipe, keyboard navigation, focus trap, escape to close.
+- [x] **4.2 Lightbox.** Done — `components/event/lightbox.tsx`, built on a
+      native `<dialog>` opened with `showModal()`, which supplies the focus
+      trap, the inert background and Escape-to-close rather than reimplementing
+      them (where hand-rolled lightboxes usually get accessibility wrong).
+      Arrow keys, prev/next buttons at 48px, and touch swipe past a 50px
+      threshold. **Caveat: the open/swipe interaction is not covered by an
+      automated check** — it needs a click, and headless Chrome cannot be made
+      to wait for this app's async work. Exercise it by hand, and on a phone in
+      6.7.
       _Depends on: 4.1_
-- [ ] **4.3 Empty state.** The first guest to arrive sees zero photos.
+- [x] **4.3 Empty state.** Done, and distinct from the private-gallery state —
+      "nobody has uploaded yet" and "the host has closed the album" look
+      identical as an empty grid but mean opposite things to a guest who just
+      contributed. Both verified against real events.
       _Depends on: 4.1_
 
 ---

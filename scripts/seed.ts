@@ -29,7 +29,6 @@ import { generateEventSlug } from '../lib/slug.ts'
 
 const HOST_EMAIL = 'olivia@apexlab.io'
 const EVENT_NAME = 'Anna & Péter'
-const SEED_MARKER = 'seed:' // stored in uploader_name so seed rows are findable
 const MAX_EDGE = 4096
 const THUMB_EDGE = 400
 const QUALITY = 92
@@ -157,7 +156,7 @@ async function main() {
       event_id: eventId,
       storage_path: fullPath,
       thumb_path: thumbPath,
-      uploader_name: UPLOADERS[i] ? `${SEED_MARKER}${UPLOADERS[i]}` : null,
+      uploader_name: UPLOADERS[i] ?? null,
       width: meta.width ?? null,
       height: meta.height ?? null,
       byte_size: full.byteLength,
