@@ -341,18 +341,25 @@ Do not reopen these without a reason; the tickets below already assume them.
       unscannable.
       **Still unverified: an actual physical print and scan** — that is 6.8.
       _Depends on: 5.4_
-- [ ] **5.6 Moderation.** Hide/unhide via `hidden_at` (never hard-delete a photo),
-      revalidate the gallery afterwards. Note the limit: hiding drops a photo
-      from the gallery, but the object stays fetchable at its public URL by
-      anyone who already has it, and public objects are CDN-cached. Adequate for
-      moderation; say so plainly if someone asks for real removal, which is 5.8.
+- [x] **5.6 Moderation.** Done — `components/admin/moderation-grid.tsx` on the
+      event page. Soft delete only; hidden tiles dim rather than vanish, so a
+      host can undo a mistap.
+      The action asks for the affected rows back and throws when none come. An
+      UPDATE has to SELECT the row first, so a missing or non-matching read
+      policy returns **zero rows and no error** — the difference between
+      "moderated" and "silently did nothing" is invisible otherwise. Verified
+      against the live database: hide affects exactly one row, the guest RPC
+      drops the photo, restore brings it back.
+      The limit stands: the object is still fetchable at its public URL by
+      anyone holding it, and public objects are CDN-cached. This removes a photo
+      from the album, which is what moderation means; erasure is 5.8.
       _Depends on: 5.3_
-- [ ] **5.6b Private gallery toggle (UI).** Switch the event between public and
-      private by setting or clearing `gallery_hidden_at`; the database side is
-      already done (1.5b). Make the current state obvious in admin, and make
-      clear that guests can still upload while it is closed. The guest event
-      page also needs to read `gallery_private` and say why the gallery is
-      unavailable instead of rendering an empty grid.
+- [x] **5.6b Private gallery toggle (UI).** Done —
+      `components/admin/gallery-toggle.tsx`, a `role="switch"` with
+      `aria-checked`. The copy states outright that guests can still upload
+      while the gallery is closed: "hidden" reads like "closed for business"
+      otherwise, and a host planning a reveal needs to know contributions keep
+      arriving. Guest side was already covered in 2.3.
       _Depends on: 5.3, 1.5b_
 - [ ] **5.7 ZIP export.** Route handler using the service-role key. Server-only
       file; stream rather than buffer the whole album. The service key bypasses

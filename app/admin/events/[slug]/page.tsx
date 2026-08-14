@@ -1,8 +1,11 @@
+import { GalleryToggle } from '@/components/admin/gallery-toggle'
+import { ModerationGrid } from '@/components/admin/moderation-grid'
 import { QrCard } from '@/components/admin/qr-card'
 import { getOwnedEventBySlug } from '@/lib/events'
+import { getAllEventPhotos } from '@/lib/photos'
 import { formatEventDate } from '@/lib/format'
 import { eventUrl } from '@/lib/site'
-import { ArrowLeft, ExternalLink, Images, Lock } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Images } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -25,6 +28,7 @@ export default async function AdminEventPage({ params }: Props) {
   const event = await getOwnedEventBySlug(slug)
   if (!event) notFound()
 
+  const photos = await getAllEventPhotos(event.id)
   const url = eventUrl(event.slug)
   const closed =
     event.uploads_close_at !== null &&
@@ -77,13 +81,23 @@ export default async function AdminEventPage({ params }: Props) {
             Galéria
           </Link>
         </div>
-        {event.gallery_hidden_at ? (
-          <p className="glass mt-2 flex items-center gap-2 rounded-2xl px-5 py-3 text-sm text-muted-foreground">
-            <Lock className="size-4 shrink-0" />A galéria jelenleg rejtve van a
-            vendégek elől.
-          </p>
-        ) : null}
       </div>
+
+      <div className="print-hidden mt-8">
+        <GalleryToggle
+          slug={event.slug}
+          hidden={event.gallery_hidden_at !== null}
+        />
+      </div>
+
+      <section className="print-hidden mt-10">
+        <h2 className="mb-3 text-lg font-semibold tracking-tight">Képek</h2>
+        <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+          Az elrejtett képek eltűnnek a galériából, de nem vesznek el — bármikor
+          visszaállíthatod őket.
+        </p>
+        <ModerationGrid photos={photos} slug={event.slug} />
+      </section>
     </main>
   )
 }

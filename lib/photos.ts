@@ -29,3 +29,35 @@ export async function getEventPhotos(eventId: string): Promise<GalleryPhoto[]> {
 
   return data ?? []
 }
+
+export type HostPhoto = {
+  id: string
+  storage_path: string
+  thumb_path: string
+  uploader_name: string | null
+  hidden_at: string | null
+  width: number | null
+  height: number | null
+  created_at: string
+}
+
+/**
+ * Every photo in an event, hidden ones included — the moderation view.
+ *
+ * Reads the table rather than `event_photos()`, because that RPC exists to
+ * hide exactly what a host needs to see here. RLS scopes the result to events
+ * the caller owns, so the `event_id` filter narrows rather than protects.
+ */
+export async function getAllEventPhotos(eventId: string): Promise<HostPhoto[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('photos')
+    .select(
+      'id, storage_path, thumb_path, uploader_name, hidden_at, width, height, created_at',
+    )
+    .eq('event_id', eventId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return data ?? []
+}
