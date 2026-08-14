@@ -334,6 +334,15 @@ Do not reopen these without a reason; the tickets below already assume them.
 - [ ] **6.7 Real-device matrix.** iPhone Safari (HEIC path), Android Chrome (JPEG
       path), one multi-select of 10+ photos, one throttled connection.
       Simulators reproduce none of these.
+- [ ] **6.7b Turn off Vercel Deployment Protection. Blocking launch gate.**
+      The project currently sits behind Vercel SSO: every request 302s to
+      `vercel.com/sso-api`, so only someone logged into the Vercel team can
+      load it. Guests would hit a login wall after scanning the QR code. This
+      is the single thing standing between the deployment and a working pilot.
+- [ ] **6.7c Register and point `fomio.io`. Blocking launch gate.**
+      The domain is NXDOMAIN — not registered, or not configured. Every printed
+      QR code encodes `fomio.io/e/…`, so the cards are worthless until it
+      resolves. Do this _before_ anything goes to print.
 - [ ] **6.8 Print and scan.** Full physical loop with a real printed card.
 - [ ] **6.11 Delete `/pipeline-test`.** Dev harness for the browser photo
       pipeline (`app/pipeline-test/`, page + report route). Kept because opening
