@@ -232,6 +232,27 @@ Do not reopen these without a reason; the tickets below already assume them.
       second render on every mount — which React 19's lint now flags. The input
       is uncontrolled and read at upload time.
       _Depends on: 3.4_
+- [ ] **3.8 Preserve HDR: pass JPEGs through, strip GPS surgically.**
+      Re-encoding destroys the HDR gain map — a container-level structure that
+      canvas cannot see, because canvas hands back tone-mapped SDR pixels. That
+      is the visible "SDR vs HDR" dulling on a real photo. We only re-encode an
+      in-spec JPEG to strip GPS, so the fix is to strip GPS _without_ touching
+      pixels.
+      Rule: if the file is JPEG, its long edge is ≤ 4096, and it is under ~4 MB,
+      pass the original bytes through with the GPS removed. Otherwise re-encode
+      as now (4096 cap, q0.92, Display P3). Thumbs are always generated.
+      **The trap:** Apple stores the gain map as a second image referenced by
+      MPF offsets in `APP2`. Any edit that changes the length of an earlier
+      segment shifts everything after it and can silently break those offsets.
+      So every edit must be **same-length and in place** — null the GPS IFD
+      pointer and zero the GPS value regions rather than removing bytes.
+      Blocked on a real HDR sample to verify against: a gain map cannot be
+      fabricated with the tooling here, and shipping unverified byte surgery on
+      guests' irreplaceable photos is not acceptable. Verify the map survives,
+      the pixels are byte-identical, orientation is kept, and GPS is
+      unrecoverable.
+      _Depends on: 3.2. Does not help HEIC uploads — those must be converted for
+      non-Safari browsers, which loses the gain map regardless._
 - [x] **3.7 Success state.** Done. Fires once the queue settles with at least
       one success, and adapts to a private gallery — telling a guest to go look
       at an album they cannot open would undercut the moment.

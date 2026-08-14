@@ -79,6 +79,8 @@ Notes:
 - `OffscreenCanvas` is well supported on modern iOS/Android; fall back to a detached `<canvas>` + `toBlob` if you need older Safari.
 - Capping the **long edge** at 4096 keeps total canvas area under iOS Safari's ~16.7M pixel ceiling (a 4:3 photo lands near 12.6M). Don't raise the cap without rechecking that.
 - The canvas re-encode drops all EXIF, including GPS coordinates. That's a privacy win — don't re-attach it.
+- It also drops the **HDR gain map**, which is why a re-encoded iPhone photo looks flat next to the original on an HDR screen. A gain map is a second image referenced by MPF offsets in `APP2`; canvas only ever sees tone-mapped SDR pixels, so no canvas setting recovers it. Preserving it means not re-encoding at all — see ticket 3.8.
+- Ask the 2D context for `colorSpace: 'display-p3'`. The default is sRGB, which clips everything a phone camera captures outside it. Confirm by profile size: Chrome writes 456 bytes for sRGB and ~520 for Display P3.
 - Process files **sequentially** (or two at a time at most). A parallel loop over ten 48MP photos will crash mobile Safari.
 
 ## Upload
