@@ -51,3 +51,35 @@ export function uploadsAreOpen(event: GuestEvent): boolean {
   if (!event.uploads_close_at) return true
   return new Date(event.uploads_close_at) > new Date()
 }
+
+export type OwnedEvent = {
+  id: string
+  slug: string
+  event_name: string
+  event_date: string | null
+  uploads_close_at: string | null
+  gallery_hidden_at: string | null
+  created_at: string
+}
+
+/**
+ * Events belonging to the signed-in host.
+ *
+ * Reads the table directly rather than an RPC — unlike guests, a host has a
+ * read policy, and it is scoped to `owner_id = auth.uid()`. There is
+ * deliberately no owner filter in this query: adding one would imply the
+ * database is not already enforcing it, and the day someone removes the
+ * `.eq()` believing RLS has their back, it should still be true.
+ */
+export async function getOwnedEvents(): Promise<OwnedEvent[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('events')
+    .select(
+      'id, slug, event_name, event_date, uploads_close_at, gallery_hidden_at, created_at',
+    )
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return data ?? []
+}

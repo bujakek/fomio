@@ -289,7 +289,13 @@ Do not reopen these without a reason; the tickets below already assume them.
 
 ## Phase 5 — Admin
 
-- [ ] **5.1 Magic-link login.** Supabase Auth, host only.
+- [x] **5.1 Magic-link login.** Done — `/admin/login`, `/auth/callback`,
+      `/auth/signout`. The callback handles both shapes Supabase can send
+      (`?code=` PKCE and `?token_hash=&type=`), because which one arrives
+      depends on the dashboard's email template and guessing wrong yields a
+      login link that silently does nothing. `shouldCreateUser: false`, so the
+      host account is created deliberately rather than by anyone who finds the
+      page. Sign-out is POST only — a GET could be triggered by any image tag.
       _Depends on: 1.7_
 - [ ] **5.2 Auth gate in `proxy.ts`.** Next 16 renamed middleware: the file is
       `proxy.ts`, the export is `proxy()`, the config is `proxyConfig`. A
@@ -299,7 +305,12 @@ Do not reopen these without a reason; the tickets below already assume them.
       authorization decision, never `getSession()` on the server. Verify by
       requesting `/admin` signed out.
       _Depends on: 5.1_
-- [ ] **5.3 Admin shell.** Layout plus event list.
+- [x] **5.3 Admin shell.** Done — event list with upload-closed and
+      hidden-gallery badges. `getOwnedEvents()` deliberately carries no owner
+      filter: RLS scopes it, and writing `.eq('owner_id', …)` would imply the
+      database is not already doing so. Verified with a second real signed-in
+      account, which gets 200 and an empty list rather than someone else's
+      events.
       _Depends on: 5.2_
 - [ ] **5.4 Create event.** Name, date, upload window. Slug comes from
       `generateEventSlug()` — never a bare `slugify()` — plus retry on the
