@@ -398,14 +398,22 @@ Do not reopen these without a reason; the tickets below already assume them.
 
 ## Phase 6 — Pre-pilot
 
-- [ ] **6.1 Funnel instrumentation.** Scan → page view → picker opened → upload
-      started → upload completed. Nothing currently measures the one question
-      the pilot exists to answer; without this the experiment produces no result.
-- [ ] **6.0 Upgrade to Pro — blocking launch gate.** Free tier is 1 GB storage /
-      5 GB egress; a well-attended wedding produces 1.2–2.4 GB and the ZIP
-      export alone can exceed the egress cap. Hitting either limit mid-reception
-      cannot be fixed in the moment. Do this before the QR codes go out, not on
-      the day.
+- [x] **6.1 Funnel instrumentation — answered with what already exists.**
+      No custom tracking: this is an MVP, and a bespoke events table is more
+      product than the question needs.
+      The numerator is already in the database — rows in `photos`, with distinct
+      `uploader_name` values as a rough headcount. The denominator comes from
+      Vercel Web Analytics, already wired in the root layout, which reports page
+      views per route: `/e/[slug]` (landed) versus `/e/[slug]/upload` (opened
+      the picker). Uploads over landings is the participation rate the pilot is
+      measuring.
+      Two honest limits. Vercel **custom events** need a paid plan and no-op
+      silently without one, which is why none are used — plain page views are
+      included and do work. And page views are not unique visitors, so a guest
+      who reloads counts twice; for one wedding the number is directional, not
+      exact. Good enough to answer "did guests use the QR", which is the whole
+      question.
+
 - [ ] **6.2 Verify ownership scoping holds.** Sign up a throwaway second account
       and confirm it sees an empty admin — no events, no photos, no export, no
       delete. Disabling public signups is still worth doing as defence in depth.
@@ -445,6 +453,23 @@ Do not reopen these without a reason; the tickets below already assume them.
       30/hour. Escape hatch meanwhile: `POST /auth/v1/admin/generate_link` with
       the service key returns a working link without sending mail.
 - [ ] **6.8 Print and scan.** Full physical loop with a real printed card.
+- [ ] **6.11 Delete `/pipeline-test`.** Dev harness for the browser photo
+      pipeline (`app/pipeline-test/`, page + report route). Kept because opening
+      it on a real iPhone is the cheapest way to answer the `OffscreenCanvas`
+      question in 6.7 — remove it once that is done. It ships publicly
+      otherwise. (The `/upload-test` harness it shipped alongside is already
+      deleted; the real upload screen supersedes it.)
+- [x] **6.9 Fix `backdrop-filter` prefixing.** Done. The build was emitting
+      only `-webkit-backdrop-filter` for `.glass`, `.glass-strong` and
+      `.glass-nav`, so Firefox got no blur anywhere on the site.
+      Cause was the opposite of what it looked like: Lightning CSS **adds** the
+      prefix itself, and the hand-written `-webkit-` line next to the standard
+      one made its deduplicator keep the prefixed declaration and drop the
+      standard one. The tell was that Tailwind's own `backdrop-blur` utilities
+      and the print rule — none of which are hand-prefixed — emitted both
+      correctly. Removing the three manual lines fixed it; all three utilities
+      now emit both properties.
+
 - [ ] **6.11 Delete `/pipeline-test`.** Dev harness for the browser photo
       pipeline (`app/pipeline-test/`, page + report route). Kept because opening
       it on a real iPhone is the cheapest way to answer the `OffscreenCanvas`
