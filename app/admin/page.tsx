@@ -66,7 +66,7 @@ export default async function AdminPage() {
             return (
               <li key={event.id}>
                 <Link
-                  href={`/e/${event.slug}`}
+                  href={`/admin/events/${event.slug}`}
                   className="glass glass-hover flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl px-5 py-4"
                 >
                   <div className="min-w-0">
