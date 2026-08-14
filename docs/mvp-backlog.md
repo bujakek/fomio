@@ -5,12 +5,12 @@ Ordered build plan for the pilot. Derived from the build order and MVP scope in
 
 - **Goal of the pilot:** answer one question — do guests actually use the QR to
   upload? Anything that does not serve that question is out of scope.
-- **Status:** D1–D4 settled, **Phases 1–4 complete**, all verified against
+- **Status:** D1–D4 settled, **Phases 1–5 complete**, all verified against
   the live database. Run `pnpm seed` for a working event to develop against; it
   prints the URL. Next
-  is Phase 5 (admin), the first part needing auth. The whole guest journey —
-  land, upload, browse — now works end to end. It has only been exercised on
-  desktop; real phones are ticket 6.7.
+  is Phase 6 (pre-pilot). Guest journey and admin both work end to end. Nothing
+  has been exercised on a real phone yet (6.7), and the deployment is still
+  behind Vercel SSO on a domain that does not resolve (6.7b, 6.7c).
 - **Last updated:** 2026-08-13
 
 Work the phases in order. Within a phase, respect the stated dependencies;
@@ -361,17 +361,38 @@ Do not reopen these without a reason; the tickets below already assume them.
       otherwise, and a host planning a reveal needs to know contributions keep
       arriving. Guest side was already covered in 2.3.
       _Depends on: 5.3, 1.5b_
-- [ ] **5.7 ZIP export.** Route handler using the service-role key. Server-only
-      file; stream rather than buffer the whole album. The service key bypasses
-      RLS, so ownership must be checked in code — confirm `owner_id` matches the
-      session user before streaming a single byte. Export full resolution, not
-      thumbs.
+- [x] **5.7 ZIP export.** Done — `/admin/events/[slug]/export`.
+      **It does not use the service-role key**, contrary to the original plan.
+      That assumed the export had to bypass RLS; it does not, because the bucket
+      is public so objects fetch without credentials, and the host's own session
+      already reads exactly their rows. `getOwnedEventBySlug` returning null is
+      the ownership check. Keeping the service key out of a path that streams
+      user data is a straight win.
+      Streams via `client-zip` fed by an **async generator**, so one object is in
+      flight at a time — an array of `fetch` promises would open a connection per
+      photo up front and defeat the streaming. No `Content-Length`: it needs
+      exact compressed sizes, and being wrong by one byte truncates the archive
+      silently, which is worse than a spinner. A failed object is skipped and
+      listed in `HIANYZO-KEPEK.txt` inside the ZIP rather than aborting a
+      download already under way.
+      Verified: unauthenticated request redirects; authenticated download is a
+      valid 22 MB / 41-file archive passing `unzip -t`, Hungarian filenames
+      intact, every object fetched cleanly.
       _Depends on: 5.3_
-- [ ] **5.8 Permanent event delete.** Cascade the rows and purge the storage
-      objects. Expect CDN lag — a removed public object keeps answering from the
-      edge for a while, so don't verify deletion by re-fetching the public URL
-      (list the folder instead).
-      _Depends on: 5.3, D4 — only if D4 says build it._
+
+- [x] **5.8 Permanent event delete.** Done —
+      `components/admin/danger-zone.tsx`, gated behind retyping the event name;
+      a `confirm()` is one reflexive tap from destroying a wedding album, and
+      this is the only irreversible action in the product.
+      Objects first, rows second: deleting the event cascades the photo rows, and
+      without them nothing records which objects existed — reversed, the files
+      sit orphaned in the bucket, still fetchable at their public URLs, which is
+      exactly what an erasure request forbids. Runs on the host's session, not
+      the service key.
+      Verified on a throwaway event: objects listed, removed, event deleted,
+      rows cascaded, zero left behind. Expect CDN lag on public URLs — verify by
+      listing the folder, never by re-fetching.
+      _Depends on: 5.3, D4_
 
 ---
 
