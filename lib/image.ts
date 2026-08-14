@@ -89,7 +89,11 @@ async function toJpeg(
   // data point this pilot cannot afford to lose.
   if (typeof OffscreenCanvas !== 'undefined') {
     const canvas = new OffscreenCanvas(width, height)
-    const ctx = canvas.getContext('2d')
+    // Wide gamut. A 2D context is sRGB by default, which silently clips
+    // everything a phone camera captures outside it — most visibly in skin
+    // tones and foliage. Browsers without the option ignore it and fall back
+    // to sRGB, so this is safe to ask for unconditionally.
+    const ctx = canvas.getContext('2d', { colorSpace: 'display-p3' })
     if (!ctx) throw new Error('2D context unavailable')
     ctx.drawImage(bitmap, 0, 0, width, height)
     return canvas.convertToBlob({ type: 'image/jpeg', quality })
@@ -98,7 +102,7 @@ async function toJpeg(
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
-  const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d', { colorSpace: 'display-p3' })
   if (!ctx) throw new Error('2D context unavailable')
   ctx.drawImage(bitmap, 0, 0, width, height)
 

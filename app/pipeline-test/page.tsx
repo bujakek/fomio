@@ -109,6 +109,26 @@ export default function PipelineTest() {
         `${pr.width}x${pr.height}`,
       )
 
+      // Chrome writes a 456-byte sRGB profile and a larger one for Display P3,
+      // so the APP2 length tells us whether the colorSpace hint was honoured.
+      const bytes = new Uint8Array(await pr.full.slice(0, 8192).arrayBuffer())
+      let iccLen = 0
+      for (let i = 0; i < bytes.length - 16; i++) {
+        if (
+          bytes[i] === 0xff &&
+          bytes[i + 1] === 0xe2 &&
+          String.fromCharCode(...bytes.slice(i + 4, i + 15)) === 'ICC_PROFILE'
+        ) {
+          iccLen = ((bytes[i + 2] << 8) | bytes[i + 3]) - 16
+          break
+        }
+      }
+      add(
+        'output is tagged wider than sRGB',
+        iccLen > 460,
+        `ICC ${iccLen} bytes (sRGB is 456)`,
+      )
+
       add(
         'OffscreenCanvas available',
         typeof OffscreenCanvas !== 'undefined',
