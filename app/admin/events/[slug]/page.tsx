@@ -1,3 +1,4 @@
+import { DangerZone } from '@/components/admin/danger-zone'
 import { GalleryToggle } from '@/components/admin/gallery-toggle'
 import { ModerationGrid } from '@/components/admin/moderation-grid'
 import { QrCard } from '@/components/admin/qr-card'
@@ -5,7 +6,7 @@ import { getOwnedEventBySlug } from '@/lib/events'
 import { getAllEventPhotos } from '@/lib/photos'
 import { formatEventDate } from '@/lib/format'
 import { eventUrl } from '@/lib/site'
-import { ArrowLeft, ExternalLink, Images } from 'lucide-react'
+import { ArrowLeft, Download, ExternalLink, Images } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -98,6 +99,30 @@ export default async function AdminEventPage({ params }: Props) {
         </p>
         <ModerationGrid photos={photos} slug={event.slug} />
       </section>
+
+      <section className="print-hidden mt-10">
+        <h2 className="mb-3 text-lg font-semibold tracking-tight">
+          Album letöltése
+        </h2>
+        <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+          Az összes kép eredeti méretben, egyetlen ZIP-fájlban. Az elrejtett
+          képek külön mappába kerülnek. Nagy albumnál a letöltés indulása
+          eltarthat egy ideig.
+        </p>
+        <a
+          href={`/admin/events/${event.slug}/export`}
+          className="btn-shine inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground"
+        >
+          <Download className="size-5" strokeWidth={1.8} />
+          ZIP letöltése
+        </a>
+      </section>
+
+      <DangerZone
+        slug={event.slug}
+        eventName={event.event_name}
+        photoCount={photos.length}
+      />
     </main>
   )
 }
