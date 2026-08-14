@@ -197,15 +197,20 @@ Do not reopen these without a reason; the tickets below already assume them.
 
 ## Phase 3 — Upload
 
-- [ ] **3.1 HEIC handling.** `lib/image.ts` with extension-and-MIME detection and
-      a dynamic `heic-to` import, so guests on JPEG phones never pay for the
-      decoder.
-- [ ] **3.2 Compression.** 4096px bounding box, quality 0.92, EXIF orientation
-      baked into the pixels, never upscale, process files sequentially.
+- [x] **3.1 HEIC handling.** Done — `lib/image.ts`. `isHeic()` is a cheap
+      synchronous name-and-MIME check rather than `heic-to`'s byte sniffer,
+      because importing the package to ask the question _is_ the 2.9 MB download
+      being avoided. The extension half is not redundant: HEIC routinely arrives
+      with an empty MIME type from Android pickers and iOS share sheets.
+- [x] **3.2 Compression.** Done. 4096px bound, q0.92, EXIF orientation baked in
+      via `imageOrientation: 'from-image'`, never upscales, files processed
+      sequentially. Canvas requests `colorSpace: 'display-p3'` — the default is
+      sRGB, which clips what a phone camera captures. Falls back to a detached
+      `<canvas>` where `OffscreenCanvas` is missing (Safari < 16.4).
       _Depends on: 3.1_
-- [ ] **3.2b Thumbnail generation.** A second ~400px JPEG per photo, produced
-      from the bitmap already decoded in 3.2 so it costs almost nothing. The
-      gallery grid depends on this — see 4.1.
+- [x] **3.2b Thumbnail generation.** Done. ~400px JPEG produced from the bitmap
+      already decoded in 3.2 — decode once, encode twice. Measured at 9 KB
+      against 231 KB for the full image.
       _Depends on: 3.2_
 - [x] **3.3 Picker and state machine.** Done —
       `components/event/upload-queue.tsx`, `app/e/[slug]/upload/page.tsx`.
@@ -235,6 +240,11 @@ Do not reopen these without a reason; the tickets below already assume them.
       second render on every mount — which React 19's lint now flags. The input
       is uncontrolled and read at upload time.
       _Depends on: 3.4_
+- [x] **3.7 Success state.** Done. Fires once the queue settles with at least
+      one success, and adapts to a private gallery — telling a guest to go look
+      at an album they cannot open would undercut the moment.
+      _Depends on: 3.4_
+
 - [ ] **3.8 Preserve HDR: pass JPEGs through, strip GPS surgically.**
       Re-encoding destroys the HDR gain map — a container-level structure that
       canvas cannot see, because canvas hands back tone-mapped SDR pixels. That
@@ -256,10 +266,6 @@ Do not reopen these without a reason; the tickets below already assume them.
       unrecoverable.
       _Depends on: 3.2. Does not help HEIC uploads — those must be converted for
       non-Safari browsers, which loses the gain map regardless._
-- [x] **3.7 Success state.** Done. Fires once the queue settles with at least
-      one success, and adapts to a private gallery — telling a guest to go look
-      at an album they cannot open would undercut the moment.
-      _Depends on: 3.4_
 
 ---
 
@@ -300,14 +306,17 @@ Do not reopen these without a reason; the tickets below already assume them.
       host account is created deliberately rather than by anyone who finds the
       page. Sign-out is POST only — a GET could be triggered by any image tag.
       _Depends on: 1.7_
-- [ ] **5.2 Auth gate in `proxy.ts`.** Next 16 renamed middleware: the file is
-      `proxy.ts`, the export is `proxy()`, the config is `proxyConfig`. A
-      `middleware.ts` is **silently ignored** in Next 16 — no warning, no error,
-      `/admin` simply unguarded while looking protected. `matcher:
-['/admin/:path*']`, session refresh, and `getUser()` for the
-      authorization decision, never `getSession()` on the server. Verify by
-      requesting `/admin` signed out.
+- [x] **5.2 Auth gate in `proxy.ts`.** Done. Next 16 wants `proxy.ts` exporting
+      `proxy()` — but the matcher export is still **`config`**, not
+      `proxyConfig` as the rename implies. That correction came from hitting it:
+      with `proxyConfig` the matcher is ignored and the proxy runs on every
+      request, so `/`, `/e/[slug]` and `/robots.txt` all redirected to the login
+      page. Silently. Uses `getUser()`, never `getSession()`, which reads the
+      cookie without verifying it.
+      Verified both directions: signed out, `/admin` redirects and `/` returns
+      200; signed in, `/admin/login` bounces to `/admin`.
       _Depends on: 5.1_
+
 - [x] **5.3 Admin shell.** Done — event list with upload-closed and
       hidden-gallery badges. `getOwnedEvents()` deliberately carries no owner
       filter: RLS scopes it, and writing `.eq('owner_id', …)` would imply the
@@ -469,17 +478,6 @@ Do not reopen these without a reason; the tickets below already assume them.
       and the print rule — none of which are hand-prefixed — emitted both
       correctly. Removing the three manual lines fixed it; all three utilities
       now emit both properties.
-
-- [ ] **6.11 Delete `/pipeline-test`.** Dev harness for the browser photo
-      pipeline (`app/pipeline-test/`, page + report route). Kept because opening
-      it on a real iPhone is the cheapest way to answer the `OffscreenCanvas`
-      question in 6.7 — remove it once that is done. It ships publicly
-      otherwise. (The `/upload-test` harness it shipped alongside is already
-      deleted; the real upload screen supersedes it.)
-- [ ] **6.9 Fix `backdrop-filter` prefixing.** The build ships only
-      `-webkit-backdrop-filter` for `.glass`, `.glass-strong` and `.glass-nav`,
-      so Firefox gets no glass blur anywhere on the site. Pre-existing and
-      unrelated to the MVP, but it is a whole-site visual bug.
 
 ---
 
