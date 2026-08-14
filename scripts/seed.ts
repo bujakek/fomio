@@ -27,7 +27,6 @@ import sharp from 'sharp'
 import type { Database } from '../lib/supabase/database.types.ts'
 import { generateEventSlug } from '../lib/slug.ts'
 
-const HOST_EMAIL = 'olivia@apexlab.io'
 const EVENT_NAME = 'Anna & Péter'
 const MAX_EDGE = 4096
 const THUMB_EDGE = 400
@@ -51,15 +50,27 @@ const UPLOADERS = ['Réka', 'Máté', 'Nagymama', null, 'Bence', 'Zsófi']
 
 async function main() {
   // --- host -----------------------------------------------------------------
+  // No address is hardcoded here on purpose: a personal email does not belong
+  // in a committed script. Set SEED_HOST_EMAIL, or rely on the fallback when
+  // the project has exactly one account.
   const { data: userList, error: userError } =
     await supabase.auth.admin.listUsers()
   if (userError) throw userError
 
-  const host = userList.users.find((u) => u.email === HOST_EMAIL)
+  const wanted = process.env.SEED_HOST_EMAIL
+  const host = wanted
+    ? userList.users.find((u) => u.email === wanted)
+    : userList.users.length === 1
+      ? userList.users[0]
+      : undefined
+
   if (!host) {
+    const known = userList.users.map((u) => u.email).join(', ') || 'none'
     throw new Error(
-      `No auth user for ${HOST_EMAIL}. Create one first — events.owner_id is ` +
-        `not null and references auth.users.`,
+      wanted
+        ? `No auth user for SEED_HOST_EMAIL=${wanted}. Known accounts: ${known}`
+        : `Set SEED_HOST_EMAIL to pick a host — this project has ` +
+            `${userList.users.length} accounts: ${known}`,
     )
   }
 

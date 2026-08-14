@@ -7,6 +7,18 @@
       "sourceType": "well-known",
       "computedHash": "cb3a966c47ee9fd753f2b9db06c1ae50dab6df2d05f386818818a6bd4e7da988",
       "wellKnownDigest": "sha256:20ce078bfe3ec42209b4d09a193586de7db3cbecbc2ee135c631498d92dab679"
+    },
+    "supabase": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase/SKILL.md",
+      "computedHash": "583344c20e90f3654dbb0632f088d89fd9f1dde8ac85e8a644dd12eee59b1380"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
+      "computedHash": "e14e276241805c97dbcfe40dcbea1a3035269cc7293cac4b1832dda41a835e60"
     }
   }
 }

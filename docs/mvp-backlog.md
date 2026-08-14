@@ -150,8 +150,11 @@ Do not reopen these without a reason; the tickets below already assume them.
       Phase 3 can use it without dragging in `server-only`.
       _Depends on: 1.7, 1.8_
 - [x] **1.10 Dev seed event.** Done — `pnpm seed` (`scripts/seed.ts`).
-      Host user `olivia@apexlab.io` created via the admin API, email confirmed,
-      no password: magic-link only, matching 5.1. Seeds one event with six
+      Host user created via the admin API, email confirmed, no password:
+      magic-link only, matching 5.1. The seed takes the host from
+      `SEED_HOST_EMAIL`, or the sole account if there is only one — no address
+      is hardcoded, because a personal email does not belong in a committed
+      script. Seeds one event with six
       photos put through the same shape as the Phase 3 browser pipeline —
       4096px bound at q92 plus a ~400px thumb — because tiny placeholders would
       make the gallery look fine while hiding the layout and payload problems
@@ -385,6 +388,15 @@ Do not reopen these without a reason; the tickets below already assume them.
       The domain is NXDOMAIN — not registered, or not configured. Every printed
       QR code encodes `fomio.io/e/…`, so the cards are worthless until it
       resolves. Do this _before_ anything goes to print.
+- [ ] **6.7d Configure custom SMTP. Blocking launch gate.**
+      Supabase's built-in email service refuses delivery to anyone who is not a
+      project team member, and is capped at **2 messages per hour** with no SLA.
+      Magic link is the only way into `/admin`, so email _is_ the lock.
+      Two mistyped attempts lock the host out for an hour, and pointing admin at
+      a non-team address fails silently — the form still says "check your
+      inbox". Any provider works (Resend, SES, Postmark); custom SMTP starts at
+      30/hour. Escape hatch meanwhile: `POST /auth/v1/admin/generate_link` with
+      the service key returns a working link without sending mail.
 - [ ] **6.8 Print and scan.** Full physical loop with a real printed card.
 - [ ] **6.11 Delete `/pipeline-test`.** Dev harness for the browser photo
       pipeline (`app/pipeline-test/`, page + report route). Kept because opening

@@ -267,6 +267,13 @@ The gallery must show photos uploaded seconds ago, so it cannot be statically ca
 
 Magic link, guarded by **`proxy.ts`**. Next.js 16 renamed middleware:
 
+> **Email delivery is the weak link.** Supabase's built-in service only delivers
+> to project team members and allows 2 messages per hour, with no SLA — it is
+> documented as unsuitable for production. Magic link is the only way into
+> `/admin`, so configure custom SMTP before launch (ticket 6.7d). To sign in
+> without waiting on mail, `POST /auth/v1/admin/generate_link` with the service
+> key returns a usable link directly; that is how the auth flow is tested here.
+
 ```ts
 // proxy.ts at the repo root — refresh the session and gate /admin
 export function proxy(request: NextRequest) {
