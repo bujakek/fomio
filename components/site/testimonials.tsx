@@ -27,7 +27,7 @@ const reviews = [
 
 export function Testimonials() {
   return (
-    <section id="velemenyek" className="relative px-4 py-24 sm:px-6 lg:py-32">
+    <section id="testimonials" className="relative px-4 py-24 sm:px-6 lg:py-32">
       <div className="mx-auto max-w-6xl">
         <Reveal className="text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">

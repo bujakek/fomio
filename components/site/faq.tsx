@@ -44,7 +44,7 @@ export function Faq() {
   const [open, setOpen] = useState<number | null>(0)
 
   return (
-    <section id="gyik" className="relative px-4 py-24 sm:px-6 lg:py-32">
+    <section id="faq" className="relative px-4 py-24 sm:px-6 lg:py-32">
       <div className="mx-auto max-w-3xl">
         <Reveal className="text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">

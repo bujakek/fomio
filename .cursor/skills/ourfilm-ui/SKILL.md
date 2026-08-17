@@ -100,6 +100,12 @@ The landing page holds a real standard — match it:
 
 All user-facing text is Hungarian; code and comments stay English.
 
+**Identifiers are English, always** — section ids and anchors, routes, storage
+keys, state values, CSS class names. Only what a person reads is Hungarian. An
+anchor like `#zaro-cta` ends up in the address bar, which is not the place for
+it; the nav label above it stays `Vélemények` while the target is
+`#testimonials`.
+
 - **Address the reader informally** (tegezés): "Töltsd fel", "Nézd meg", "Olvasd be". Never formal _Ön_.
 - Vocabulary is fixed — reuse it: **esemény** (event), **vendég** (guest), **házigazda** (host), **közös album / galéria**, **feltöltés** (upload), **QR-kód**.
 - Hyphenate suffixed abbreviations the Hungarian way: `QR-kódot`, `ZIP-ben`, `ZIP-fájl`.

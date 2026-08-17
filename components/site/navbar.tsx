@@ -5,10 +5,10 @@ import { Aperture, Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 const navLinks = [
-  { label: 'Hogyan működik', href: '#hogyan-mukodik' },
-  { label: 'Alkalmak', href: '#alkalmak' },
-  { label: 'Vélemények', href: '#velemenyek' },
-  { label: 'GYIK', href: '#gyik' },
+  { label: 'Hogyan működik', href: '#how-it-works' },
+  { label: 'Alkalmak', href: '#occasions' },
+  { label: 'Vélemények', href: '#testimonials' },
+  { label: 'GYIK', href: '#faq' },
 ]
 
 export function Navbar() {
@@ -71,7 +71,7 @@ export function Navbar() {
         </ul>
 
         <a
-          href="#zaro-cta"
+          href="#get-started"
           className={cn(
             'btn-shine hidden shrink-0 rounded-full bg-primary font-semibold text-primary-foreground transition-all duration-200 hover:scale-[1.03] md:inline-flex',
             scrolled ? 'px-3.5 py-1.5 text-[13px]' : 'px-4 py-2 text-sm',
@@ -113,7 +113,7 @@ export function Navbar() {
             </a>
           ))}
           <a
-            href="#zaro-cta"
+            href="#get-started"
             onClick={() => setOpen(false)}
             className="btn-shine mt-2 rounded-2xl bg-primary px-5 py-4 text-center text-lg font-semibold text-primary-foreground"
           >

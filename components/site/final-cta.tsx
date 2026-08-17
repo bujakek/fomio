@@ -27,7 +27,7 @@ const floatingPhotos = [
 
 export function FinalCta() {
   return (
-    <section id="zaro-cta" className="relative px-4 py-20 sm:px-6 lg:py-28">
+    <section id="get-started" className="relative px-4 py-20 sm:px-6 lg:py-28">
       <div className="mx-auto max-w-6xl">
         <Reveal>
           <div className="glass-strong relative overflow-hidden rounded-[2.5rem] px-6 py-20 text-center sm:px-10 sm:py-28">
