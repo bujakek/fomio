@@ -22,11 +22,11 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
         // Must also be listed under Redirect URLs in the Supabase dashboard,
         // or the link comes back rejected.
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-        // No self-signup: the host account is created deliberately. Without
-        // this, anyone who guesses /admin/login could mint an account — which
-        // would still see an empty admin thanks to owner_id scoping, but there
-        // is no reason to allow it.
-        shouldCreateUser: false,
+        // The same link signs in and signs up. Safe because owner_id scoping
+        // is enforced in the database, not the UI: a brand-new account sees an
+        // empty admin, never anyone else's events. Verified with a second real
+        // account.
+        shouldCreateUser: true,
       },
     })
 

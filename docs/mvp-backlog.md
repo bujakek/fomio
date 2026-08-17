@@ -438,9 +438,19 @@ Do not reopen these without a reason; the tickets below already assume them.
       fabricated, on a live domain, for a product with no users. Decide before
       real traffic — invented review counts are an EU consumer-protection
       exposure, not only a taste question.
-- [ ] **6.4 Wire the CTAs.** Every landing CTA is an anchor to `#zaro-cta`; a
-      visitor cannot currently become a pilot host. Also drop the leftover
-      `generator: 'v0.app'` from `app/layout.tsx`.
+- [x] **6.4 Wire the CTAs.** Done. Every "Esemény létrehozása" now goes to
+      `/admin/login`; previously they scrolled to the closing section whose only
+      link scrolled back to the hero — a literal loop with no exit.
+      Magic link now signs up as well as in (`shouldCreateUser: true`), and the
+      login page says so, since "Belépés" reads as members-only to someone
+      arriving from a create-an-event button. Safe because ownership scoping is
+      enforced in the database: a new account sees an empty admin, verified with
+      a second real account.
+      Verified end to end against Resend — a brand-new address returned 200 and
+      the account was created. `generator: 'v0.app'` was already removed.
+      **Open consequence:** anyone can now create events that accept anonymous
+      uploads, against a shared storage tier. 6.6 matters more than it did.
+
 - [ ] **6.5 Privacy policy.** No legal pages exist, the FAQ makes explicit
       data-handling claims, and this is an EU consumer product handling photos
       of identifiable people. Must name Switzerland as the storage location
@@ -450,15 +460,11 @@ Do not reopen these without a reason; the tickets below already assume them.
 - [ ] **6.7 Real-device matrix.** iPhone Safari (HEIC path), Android Chrome (JPEG
       path), one multi-select of 10+ photos, one throttled connection.
       Simulators reproduce none of these.
-- [ ] **6.7b Turn off Vercel Deployment Protection. Blocking launch gate.**
-      The project currently sits behind Vercel SSO: every request 302s to
-      `vercel.com/sso-api`, so only someone logged into the Vercel team can
-      load it. Guests would hit a login wall after scanning the QR code. This
-      is the single thing standing between the deployment and a working pilot.
-- [ ] **6.7c Register and point `ourfilm.app`. Blocking launch gate.**
-      The domain is NXDOMAIN — not registered, or not configured. Every printed
-      QR code encodes `ourfilm.app/e/…`, so the cards are worthless until it
-      resolves. Do this _before_ anything goes to print.
+- [x] **6.7b Turn off Vercel Deployment Protection.** Done — `ourfilm.app`,
+      `/e/[slug]` and `/robots.txt` all return 200 publicly, no SSO redirect.
+- [x] **6.7c Point the domain.** Done — `ourfilm.app` resolves and serves the
+      app. (Registered as `ourfilm.app` rather than the originally planned
+      `fomio.io`; the product was renamed to match.)
 - [ ] **6.7d Configure custom SMTP via Resend. Blocking launch gate.**
       Supabase's built-in service refuses delivery to anyone outside the project
       team and allows 2 messages/hour with no SLA. Magic link is the only way

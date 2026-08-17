@@ -29,7 +29,7 @@ export default async function EventPage({ params }: Props) {
   const canUpload = uploadsAreOpen(event)
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col px-4 py-10 sm:py-16">
+    <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col px-4 py-10 sm:justify-center sm:py-16">
       <header className="text-center">
         <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-wide text-accent">
           KÖZÖS FOTÓALBUM
@@ -47,9 +47,10 @@ export default async function EventPage({ params }: Props) {
         </p>
       </header>
 
-      {/* The primary action sits at the bottom of the screen, where a thumb
-          actually reaches on a phone held one-handed. */}
-      <div className="mt-auto flex flex-col gap-3 pt-12">
+      {/* On a phone the action sits at the bottom, where a thumb actually
+          reaches one-handed. On anything taller that same rule opens a canyon
+          of dead space, so from `sm` up the whole group centres instead. */}
+      <div className="mt-auto flex flex-col gap-3 pt-12 sm:mt-0">
         {canUpload ? (
           <Link
             href={`/e/${event.slug}/upload`}

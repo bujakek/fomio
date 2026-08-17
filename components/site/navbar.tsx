@@ -71,7 +71,7 @@ export function Navbar() {
         </ul>
 
         <a
-          href="#get-started"
+          href="/admin/login"
           className={cn(
             'btn-shine hidden shrink-0 rounded-full bg-primary font-semibold text-primary-foreground transition-all duration-200 hover:scale-[1.03] md:inline-flex',
             scrolled ? 'px-3.5 py-1.5 text-[13px]' : 'px-4 py-2 text-sm',
@@ -113,7 +113,7 @@ export function Navbar() {
             </a>
           ))}
           <a
-            href="#get-started"
+            href="/admin/login"
             onClick={() => setOpen(false)}
             className="btn-shine mt-2 rounded-2xl bg-primary px-5 py-4 text-center text-lg font-semibold text-primary-foreground"
           >

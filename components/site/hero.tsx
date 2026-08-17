@@ -41,7 +41,7 @@ export function Hero() {
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
-              href="#get-started"
+              href="/admin/login"
               className="btn-shine inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03]"
             >
               Esemény létrehozása

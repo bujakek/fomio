@@ -19,11 +19,11 @@ export default async function LoginPage({
       <BackgroundGlow />
       <main className="relative z-10 w-full max-w-sm">
         <h1 className="text-3xl font-semibold tracking-tight text-balance">
-          Belépés
+          Belépés vagy regisztráció
         </h1>
         <p className="mt-3 mb-8 leading-relaxed text-pretty text-muted-foreground">
           Add meg az e-mail-címed, és küldünk egy belépési linket. Jelszó nem
-          kell.
+          kell — ha még nincs fiókod, a link egyben létre is hozza.
         </p>
         <LoginForm linkError={error === 'link'} />
       </main>
