@@ -422,6 +422,13 @@ Do not reopen these without a reason; the tickets below already assume them.
       who reloads counts twice; for one wedding the number is directional, not
       exact. Good enough to answer "did guests use the QR", which is the whole
       question.
+      **One manual step, and it is load-bearing:** `<Analytics />` is already in
+      the root layout, but it collects nothing until Web Analytics is enabled
+      for the project in the Vercel dashboard (Project → Analytics → Enable).
+      Without it `/_vercel/insights/script.js` 404s and the whole measurement
+      silently produces zero — the same failure mode custom events were
+      rejected for. Confirm it is on, and confirm a real page view lands once
+      6.7b turns off deployment protection.
 
 - [ ] **6.2 Verify ownership scoping holds.** Sign up a throwaway second account
       and confirm it sees an empty admin — no events, no photos, no export, no
