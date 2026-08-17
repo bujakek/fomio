@@ -7,7 +7,7 @@ import 'client-only'
  * Browser-side photo pipeline. Everything here runs on a guest's phone, on
  * venue wifi, with whatever memory the device has left.
  *
- * See `.cursor/skills/fomio-upload/SKILL.md` for why the numbers are what they
+ * See `.cursor/skills/ourfilm-upload/SKILL.md` for why the numbers are what they
  * are. The short version: 4096px at q0.92 stays print-ready while cutting a
  * 48MP iPhone photo from ~8MB to under ~2.5MB.
  */

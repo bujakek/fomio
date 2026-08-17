@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { NewEventForm } from './new-event-form'
 
 export const metadata: Metadata = {
-  title: 'Új esemény — Fomio',
+  title: 'Új esemény — OurFilm',
   robots: { index: false, follow: false },
 }
 

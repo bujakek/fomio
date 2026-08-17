@@ -93,7 +93,7 @@ export async function GET(
   return new NextResponse(downloadZip(entries()).body, {
     headers: {
       'Content-Type': 'application/zip',
-      'Content-Disposition': `attachment; filename="${event.slug}-fomio.zip"`,
+      'Content-Disposition': `attachment; filename="${event.slug}-ourfilm.zip"`,
       'Cache-Control': 'no-store',
     },
   })

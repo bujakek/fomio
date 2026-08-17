@@ -1,9 +1,9 @@
 ---
-name: fomio-upload
-description: Fomio's client-side photo upload pipeline — HEIC to JPEG conversion with heic-to, resizing to a 4096px bounding box at 92% JPEG quality, direct browser-to-Supabase-Storage upload, per-file progress states, and manual retry. Use when building or debugging the guest upload flow, the file picker, image compression, EXIF handling, or mobile browser upload issues in Fomio.
+name: ourfilm-upload
+description: OurFilm's client-side photo upload pipeline — HEIC to JPEG conversion with heic-to, resizing to a 4096px bounding box at 92% JPEG quality, direct browser-to-Supabase-Storage upload, per-file progress states, and manual retry. Use when building or debugging the guest upload flow, the file picker, image compression, EXIF handling, or mobile browser upload issues in OurFilm.
 ---
 
-# Fomio Upload Pipeline
+# OurFilm Upload Pipeline
 
 Guests upload from a phone browser on congested venue wifi, straight to Supabase Storage — the file **never** passes through a Next.js route. Everything below runs in the browser.
 
@@ -112,7 +112,7 @@ if (insertError) throw insertError
 
 Order matters: upload the object first, insert the row second. A failed insert leaves an orphaned object (harmless, cleanable); the reverse would put a broken tile in the gallery.
 
-Guests are anonymous, so RLS allows insert only — see `fomio-supabase` for the policies and the upload window.
+Guests are anonymous, so RLS allows insert only — see `ourfilm-supabase` for the policies and the upload window.
 
 ## Progress and retry
 

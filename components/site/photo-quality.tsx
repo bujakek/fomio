@@ -87,7 +87,7 @@ export function PhotoQuality() {
                 Csevegőappban
               </span>
               <span className="glass absolute top-3 right-3 rounded-full px-3 py-1 text-xs font-medium text-accent">
-                Fomióval
+                OurFilmmel
               </span>
 
               {/* Divider + handle */}
@@ -111,10 +111,10 @@ export function PhotoQuality() {
               max={100}
               value={pos}
               onChange={(e) => setPos(Number(e.target.value))}
-              aria-label="Összehasonlítás csúszka a csevegőappban összenyomott és a Fomióval feltöltött fotó között"
+              aria-label="Összehasonlítás csúszka a csevegőappban összenyomott és az OurFilmmel feltöltött fotó között"
               className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-border accent-accent"
             />
-            <span className="text-xs text-accent">Fomióval</span>
+            <span className="text-xs text-accent">OurFilmmel</span>
           </label>
         </Reveal>
       </div>

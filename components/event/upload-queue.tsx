@@ -14,7 +14,7 @@ import {
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const NAME_KEY = 'fomio:uploader-name'
+const NAME_KEY = 'ourfilm:uploader-name'
 
 /** Keep `.heic`/`.heif` listed. Excluding them makes iOS hand over a
  *  transcoded JPEG sometimes, but on other paths it just makes the file

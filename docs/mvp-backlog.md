@@ -1,4 +1,4 @@
-# Fomio MVP backlog
+# OurFilm MVP backlog
 
 Ordered build plan for the pilot. Derived from the build order and MVP scope in
 `CLAUDE.md`; the technical detail for each area lives in `.cursor/skills/`.
@@ -464,7 +464,7 @@ Do not reopen these without a reason; the tickets below already assume them.
       Then in Supabase → Authentication → SMTP Settings:
       host `smtp.resend.com`, port `465` (implicit TLS) or `587` (STARTTLS),
       username `resend`, password = the Resend API key, sender something like
-      `Fomio <noreply@ourfilm.app>`. Supabase's own rate limit starts at 30/hour
+      `OurFilm <noreply@ourfilm.app>`. Supabase's own rate limit starts at 30/hour
       once custom SMTP is on, which is ample.
       Until then, sign in with `POST /auth/v1/admin/generate_link` and the
       service key — it returns a working login link without sending mail.

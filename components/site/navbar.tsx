@@ -49,7 +49,9 @@ export function Navbar() {
           >
             <Aperture className="size-4 text-accent" strokeWidth={1.6} />
           </span>
-          <span className="text-base font-semibold tracking-tight">Fomio</span>
+          <span className="text-base font-semibold tracking-tight">
+            OurFilm
+          </span>
         </a>
 
         <ul className="hidden flex-1 items-center justify-center gap-0.5 md:flex">

@@ -1,6 +1,8 @@
-# Project: Fomio — QR-code shared photo album for events
+# Project: OurFilm — QR-code shared photo album for events
 
-> Product name: **Fomio**. Domain: `ourfilm.app`. (Earlier working names "Moments" and "Pillanatok" are deprecated — never use them in code or copy.)
+> Product name: **OurFilm**. Domain: `ourfilm.app`. (Earlier working names "Fomio", "Moments" and "Pillanatok" are deprecated — never use them in code or copy.)
+>
+> Hungarian suffixes attach directly: **az** OurFilm (vowel-initial, so `az` not `a`), OurFilm**mel** (instrumental, assimilating like _filmmel_).
 
 ## Read this first
 
@@ -25,11 +27,11 @@ Never use npm or yarn — this project is **pnpm**. Never re-add `typescript.ign
 
 Project skills live in `.cursor/skills/`. Read the relevant one _before_ writing code in that area:
 
-| Skill            | Load when                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------ |
-| `fomio-ui`       | Building or restyling any page or component (glass surfaces, tokens, Hungarian copy conventions) |
-| `fomio-supabase` | Touching the database, migrations, RLS, storage buckets, or auth                                 |
-| `fomio-upload`   | Working on the photo upload pipeline (HEIC, compression, direct-to-Storage)                      |
+| Skill              | Load when                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `ourfilm-ui`       | Building or restyling any page or component (glass surfaces, tokens, Hungarian copy conventions) |
+| `ourfilm-supabase` | Touching the database, migrations, RLS, storage buckets, or auth                                 |
+| `ourfilm-upload`   | Working on the photo upload pipeline (HEIC, compression, direct-to-Storage)                      |
 
 ## Tech stack
 
@@ -86,7 +88,7 @@ The `/e/` prefix is what the landing page already advertises in `qr-preview.tsx`
 
 ## Data model (settled)
 
-Details, DDL, and RLS live in `.cursor/skills/fomio-supabase/SKILL.md`. Shape:
+Details, DDL, and RLS live in `.cursor/skills/ourfilm-supabase/SKILL.md`. Shape:
 
 - **`events`** — `id`, `slug` (unique), `event_name`, `event_date`, `uploads_close_at` (upload window; gallery stays viewable after), `gallery_hidden_at` (set = guests upload but cannot view; host togglable both ways), `owner_id` (→ `auth.users`; the host, and what every RLS host policy keys off), `created_at`
 
@@ -139,7 +141,7 @@ Compress **client-side before upload**, in the browser, straight to Supabase Sto
 - **4096px bounding box, JPEG quality 0.90–0.92.** Below ~85% JPEG drops data exponentially and skin tones go muddy in dim venues; 92% is visually indistinguishable and keeps a 48MP iPhone photo at roughly 1.5–2.2MB instead of 8MB. Print-ready for the couple, fast on congested venue wifi.
 - **HEIC must be converted in the browser.** Only Safari can read HEIC; Chrome, Edge, and desktop break on it. Use `heic-to` (lightweight, libheif 1.18) rather than `heic2any` (600KB+ of WASM), and **dynamically import it only when an HEIC file is detected**.
 
-Full pipeline in `.cursor/skills/fomio-upload/SKILL.md`.
+Full pipeline in `.cursor/skills/ourfilm-upload/SKILL.md`.
 
 ## Landing page promises we must honor
 

@@ -12,7 +12,7 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Fomio — QR-kódos közös fotóalbum eseményekhez',
+  title: 'OurFilm — QR-kódos közös fotóalbum eseményekhez',
   description:
     'A vendégek beolvassák a QR-kódot, és a telefonjuk böngészőjéből azonnal feltöltik a képeiket. Nincs alkalmazás, nincs regisztráció — minden fotó egyetlen közös, privát galériába érkezik, nagy felbontásban.',
   keywords: [
@@ -21,15 +21,15 @@ export const metadata: Metadata = {
     'esküvői fotók',
     'esemény galéria',
     'vendég fotók',
-    'Fomio',
+    'OurFilm',
   ],
-  authors: [{ name: 'Fomio' }],
+  authors: [{ name: 'OurFilm' }],
   openGraph: {
     type: 'website',
     locale: 'hu_HU',
     url: SITE_URL,
-    siteName: 'Fomio',
-    title: 'Fomio — Az esemény minden vendég szemével',
+    siteName: 'OurFilm',
+    title: 'OurFilm — Az esemény minden vendég szemével',
     description:
       'QR-kódos közös fotóalbum eseményekhez. A vendégek a telefonjuk böngészőjéből töltik fel a képeket — app és regisztráció nélkül.',
     images: [
@@ -39,13 +39,13 @@ export const metadata: Metadata = {
         url: '/images/og-cover.jpg',
         width: 1200,
         height: 630,
-        alt: 'Esküvői első tánc a Fomio közös albumában',
+        alt: 'Esküvői első tánc az OurFilm közös albumában',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Fomio — Az esemény minden vendég szemével',
+    title: 'OurFilm — Az esemény minden vendég szemével',
     description:
       'QR-kódos közös fotóalbum eseményekhez. App és regisztráció nélkül.',
     images: ['/images/og-cover.jpg'],

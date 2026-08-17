@@ -1,9 +1,9 @@
 ---
-name: fomio-ui
-description: Fomio's dark glassmorphism design system and Hungarian UI copy conventions. Covers the glass/glass-strong surface utilities, design tokens in app/globals.css, the standard section scaffold, the Reveal scroll animation, mobile-first sizing, and accessibility patterns. Use when building or restyling any Fomio page or component — event pages, upload, gallery, admin, or marketing sections — or when writing Hungarian user-facing copy.
+name: ourfilm-ui
+description: OurFilm's dark glassmorphism design system and Hungarian UI copy conventions. Covers the glass/glass-strong surface utilities, design tokens in app/globals.css, the standard section scaffold, the Reveal scroll animation, mobile-first sizing, and accessibility patterns. Use when building or restyling any OurFilm page or component — event pages, upload, gallery, admin, or marketing sections — or when writing Hungarian user-facing copy.
 ---
 
-# Fomio UI
+# OurFilm UI
 
 Dark glassmorphism on near-black. Tailwind CSS v4 with **CSS-based config** — all tokens live in `app/globals.css` under `@theme`. There is no `tailwind.config.js`; never create one.
 

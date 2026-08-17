@@ -8,7 +8,7 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Áttekintés — Fomio',
+  title: 'Áttekintés — OurFilm',
   robots: { index: false, follow: false },
 }
 

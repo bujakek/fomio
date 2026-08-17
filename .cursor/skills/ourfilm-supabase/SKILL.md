@@ -1,9 +1,9 @@
 ---
-name: fomio-supabase
-description: Fomio's Supabase conventions — browser and server client setup with @supabase/ssr, SQL migrations via the Supabase CLI, the events and photos schema, RLS policies for anonymous guest uploads, storage bucket configuration, and Supabase Auth magic-link protection for the admin area. Use when touching the database, writing migrations, configuring RLS or storage, generating types, or wiring auth in Fomio.
+name: ourfilm-supabase
+description: OurFilm's Supabase conventions — browser and server client setup with @supabase/ssr, SQL migrations via the Supabase CLI, the events and photos schema, RLS policies for anonymous guest uploads, storage bucket configuration, and Supabase Auth magic-link protection for the admin area. Use when touching the database, writing migrations, configuring RLS or storage, generating types, or wiring auth in OurFilm.
 ---
 
-# Fomio Supabase
+# OurFilm Supabase
 
 Postgres + Storage + Auth. Guests are **anonymous** (never signed in); only the host signs in, via magic link, to reach `/admin`.
 
@@ -174,7 +174,7 @@ The bucket is public, which in Supabase means the `/storage/v1/object/public/…
 - Guest inserts are scoped to a folder belonging to a real event with an open upload window. A blanket `with check (bucket_id = 'event-photos')` would let anyone write arbitrary objects into any folder they invented.
 - Guests get insert only — no update, no delete — so knowing an exact path is not enough to overwrite or remove someone else's photo.
 - **Public objects are CDN-cached, so removal is not instant.** A deleted file keeps answering `200` from the edge for a while, and hiding a photo (`hidden_at`) only drops it from the gallery — the object itself stays fetchable at its URL to anyone who already has it. Fine for moderation, where the point is that guests stop seeing it in the album; worth stating plainly if a deletion is ever requested under GDPR, where 5.8 must remove the object and you should expect cache lag.
-- Only `image/jpeg` is allowed because the client always converts and compresses to JPEG first (see `fomio-upload`). HEIC never reaches the bucket.
+- Only `image/jpeg` is allowed because the client always converts and compresses to JPEG first (see `ourfilm-upload`). HEIC never reaches the bucket.
 - Public bucket = privacy comes from unguessable event slugs, not from storage ACLs. Slugs carry a random suffix (`lib/slug.ts`, `generateEventSlug()`); add `noindex` to event routes.
 - Guests can insert but never update or delete an object, so nobody can overwrite someone else's photo by guessing its path.
 

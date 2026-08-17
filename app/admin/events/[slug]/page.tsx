@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const event = await getOwnedEventBySlug(slug)
   return {
-    title: event ? `${event.event_name} — Fomio` : 'Esemény — Fomio',
+    title: event ? `${event.event_name} — OurFilm` : 'Esemény — OurFilm',
     robots: { index: false, follow: false },
   }
 }
