@@ -1,6 +1,5 @@
+import { SITE_URL } from '@/lib/site'
 import type { MetadataRoute } from 'next'
-
-const BASE_URL = 'https://fomio.io'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -17,6 +16,6 @@ export default function robots(): MetadataRoute.Robots {
       // asking crawlers politely.
       disallow: '/admin',
     },
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   }
 }

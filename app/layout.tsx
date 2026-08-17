@@ -1,3 +1,4 @@
+import { SITE_URL } from '@/lib/site'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Manrope } from 'next/font/google'
@@ -10,7 +11,7 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://fomio.io'),
+  metadataBase: new URL(SITE_URL),
   title: 'Fomio — QR-kódos közös fotóalbum eseményekhez',
   description:
     'A vendégek beolvassák a QR-kódot, és a telefonjuk böngészőjéből azonnal feltöltik a képeiket. Nincs alkalmazás, nincs regisztráció — minden fotó egyetlen közös, privát galériába érkezik, nagy felbontásban.',
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'hu_HU',
-    url: 'https://fomio.io',
+    url: SITE_URL,
     siteName: 'Fomio',
     title: 'Fomio — Az esemény minden vendég szemével',
     description:

@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { CalendarPlus, Images, Link2, Lock, QrCode } from 'lucide-react'
 import Image from 'next/image'
+import { SITE_HOST } from '@/lib/site'
 import { Reveal } from './reveal'
 
 const steps = [
@@ -108,7 +109,7 @@ export function HowItWorks() {
                             <div className="pr-2">
                               <p className="flex items-center gap-1 text-xs font-semibold">
                                 <Link2 className="size-3 text-accent" />
-                                fomio.io/e/…
+                                {SITE_HOST}/e/…
                               </p>
                               <p className="text-[10px] text-muted-foreground">
                                 Koppints a csatlakozáshoz

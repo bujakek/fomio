@@ -340,7 +340,7 @@ Do not reopen these without a reason; the tickets below already assume them.
       regardless of where the page is rendered: a card generated in development
       must not encode `localhost`, and that mistake stays invisible until
       someone scans one at the venue. Confirmed the rendered QR encodes
-      `https://fomio.io/e/…` with no localhost anywhere on the page.
+      `https://ourfilm.app/e/…` with no localhost anywhere on the page.
       Rendered as SVG, not canvas, so it prints at the printer's resolution
       rather than the screen's. Error correction stays at M — higher levels
       pack in more modules, and a denser code is harder for an older phone to
@@ -448,9 +448,9 @@ Do not reopen these without a reason; the tickets below already assume them.
       `vercel.com/sso-api`, so only someone logged into the Vercel team can
       load it. Guests would hit a login wall after scanning the QR code. This
       is the single thing standing between the deployment and a working pilot.
-- [ ] **6.7c Register and point `fomio.io`. Blocking launch gate.**
+- [ ] **6.7c Register and point `ourfilm.app`. Blocking launch gate.**
       The domain is NXDOMAIN — not registered, or not configured. Every printed
-      QR code encodes `fomio.io/e/…`, so the cards are worthless until it
+      QR code encodes `ourfilm.app/e/…`, so the cards are worthless until it
       resolves. Do this _before_ anything goes to print.
 - [ ] **6.7d Configure custom SMTP via Resend. Blocking launch gate.**
       Supabase's built-in service refuses delivery to anyone outside the project
@@ -459,12 +459,12 @@ Do not reopen these without a reason; the tickets below already assume them.
       **Resend chosen** — free tier is 3,000/month and 100/day with 1 domain,
       against a real need of maybe a dozen login links ever.
       **Ordering matters: this depends on 6.7c.** Resend SMTP requires a
-      _verified domain_, so `fomio.io` must be registered and its DNS records
+      _verified domain_, so `ourfilm.app` must be registered and its DNS records
       in place first. Attempting this before that is wasted effort.
       Then in Supabase → Authentication → SMTP Settings:
       host `smtp.resend.com`, port `465` (implicit TLS) or `587` (STARTTLS),
       username `resend`, password = the Resend API key, sender something like
-      `Fomio <noreply@fomio.io>`. Supabase's own rate limit starts at 30/hour
+      `Fomio <noreply@ourfilm.app>`. Supabase's own rate limit starts at 30/hour
       once custom SMTP is on, which is ample.
       Until then, sign in with `POST /auth/v1/admin/generate_link` and the
       service key — it returns a working login link without sending mail.

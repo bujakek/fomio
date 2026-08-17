@@ -1,6 +1,5 @@
+import { SITE_URL } from '@/lib/site'
 import type { MetadataRoute } from 'next'
-
-const BASE_URL = 'https://fomio.io'
 
 /**
  * The marketing homepage, and nothing else.
@@ -14,7 +13,7 @@ const BASE_URL = 'https://fomio.io'
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: BASE_URL,
+      url: SITE_URL,
       changeFrequency: 'monthly',
       priority: 1,
     },

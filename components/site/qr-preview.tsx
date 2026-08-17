@@ -1,6 +1,7 @@
 'use client'
 
 import { EXAMPLE_SLUG_SUFFIX, slugify } from '@/lib/slug'
+import { eventUrl } from '@/lib/site'
 import { QRCodeSVG } from 'qrcode.react'
 import { useMemo, useState } from 'react'
 import { Reveal } from './reveal'
@@ -13,7 +14,7 @@ export function QrPreview() {
   // suffix has to be *shown* though — a mockup that omits it teaches hosts to
   // expect a shorter URL than the one they will actually be given.
   const slug = useMemo(() => `${slugify(name)}-${EXAMPLE_SLUG_SUFFIX}`, [name])
-  const url = `https://fomio.io/e/${slug}`
+  const url = eventUrl(slug)
   const displayName = name.trim() || 'Az esemény neve'
 
   return (

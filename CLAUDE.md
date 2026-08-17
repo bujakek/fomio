@@ -1,6 +1,6 @@
 # Project: Fomio — QR-code shared photo album for events
 
-> Product name: **Fomio**. Domain: `fomio.io`. (Earlier working names "Moments" and "Pillanatok" are deprecated — never use them in code or copy.)
+> Product name: **Fomio**. Domain: `ourfilm.app`. (Earlier working names "Moments" and "Pillanatok" are deprecated — never use them in code or copy.)
 
 ## Read this first
 
