@@ -9,9 +9,21 @@ import { readCaptureTime } from './exif'
  * Browser-side photo pipeline. Everything here runs on a guest's phone, on
  * venue wifi, with whatever memory the device has left.
  *
- * See `.cursor/skills/ourfilm-upload/SKILL.md` for why the numbers are what they
- * are. The short version: 4096px at q0.92 stays print-ready while cutting a
- * 48MP iPhone photo from ~8MB to under ~2.5MB.
+ * See `.cursor/skills/ourfilm-upload/SKILL.md` for why the numbers are what
+ * they are. The short version: 4096px at q0.92 stays print-ready while cutting
+ * a 48MP iPhone photo from ~8MB to under ~2.5MB.
+ *
+ * This runs on the main thread. Moving it to a worker was tried and reverted:
+ * Turbopack (Next 16.3) does not compile `new Worker(new URL('./x.ts',
+ * import.meta.url))` into a worker bundle — it emits the file as a *static
+ * asset* and hands the raw TypeScript URL to the Worker constructor, which
+ * fails on MIME type and on the un-transpiled source. Verified against four
+ * variants: with and without the `.ts` extension, with and without
+ * `{ type: 'module' }`, and at the top level rather than inside a try. Every
+ * one produced `/_next/static/media/image-worker.<hash>.ts`. The failure is
+ * silent at build time and would have looked like a working worker while
+ * quietly running everything here anyway, so check the emitted asset before
+ * trusting any future attempt.
  */
 
 /** Long-edge cap. Also keeps the canvas under iOS Safari's ~16.7M pixel
@@ -55,7 +67,7 @@ export function isHeic(file: File): boolean {
  * pixels, so a canvas re-encode cannot leave the photo sideways.
  *
  * The HEIC branch asks `heic-to` for a bitmap rather than a JPEG blob. The
- * skill sketches blob → `createImageBitmap`, but that encodes a full-size JPEG
+ * skill sketches blob -> `createImageBitmap`, but that encodes a full-size JPEG
  * and immediately decodes it again — two expensive passes over a 48MP image on
  * a phone, for an intermediate we throw away.
  */
@@ -83,6 +95,46 @@ function scaledSize(bitmap: ImageBitmap, maxEdge: number) {
   }
 }
 
+/**
+ * Resample to an exact size using the browser's own scaler.
+ *
+ * The alternative — handing the full bitmap to `drawImage` and letting it
+ * shrink — is both the most expensive step in the pipeline and the worst
+ * looking. The thumbnail is a 10x reduction, and a single-pass canvas
+ * downscale aliases badly on exactly the detail guests notice, because the
+ * grid is the only thing most of them ever look at. `createImageBitmap`
+ * resizes on the browser's own thread with a real filter, and hands back a
+ * bitmap the encoder then blits 1:1.
+ *
+ * Returns null rather than throwing when the browser will not honour the
+ * request, because the caller has a working fallback. The dimension check is
+ * the important part: Safari has historically accepted `resizeWidth` and
+ * `resizeHeight` while ignoring `resizeQuality`, and an implementation that
+ * ignored the size options too would silently hand back the full-size bitmap —
+ * which the encoder would happily turn into a 4096px "thumbnail" and put in
+ * the gallery grid. Verify, never assume.
+ */
+async function resizedBitmap(
+  bitmap: ImageBitmap,
+  width: number,
+  height: number,
+): Promise<ImageBitmap | null> {
+  try {
+    const resized = await createImageBitmap(bitmap, {
+      resizeWidth: width,
+      resizeHeight: height,
+      resizeQuality: 'high',
+    })
+    if (resized.width !== width || resized.height !== height) {
+      resized.close()
+      return null
+    }
+    return resized
+  } catch {
+    return null
+  }
+}
+
 async function toJpeg(
   bitmap: ImageBitmap,
   width: number,
@@ -100,6 +152,9 @@ async function toJpeg(
     // to sRGB, so this is safe to ask for unconditionally.
     const ctx = canvas.getContext('2d', { colorSpace: 'display-p3' })
     if (!ctx) throw new Error('2D context unavailable')
+    // Only matters when `resizedBitmap` declined and this draw is doing the
+    // downscale itself, but the default 'low' visibly aliases when it is.
+    ctx.imageSmoothingQuality = 'high'
     ctx.drawImage(bitmap, 0, 0, width, height)
     return canvas.convertToBlob({ type: 'image/jpeg', quality })
   }
@@ -109,6 +164,7 @@ async function toJpeg(
   canvas.height = height
   const ctx = canvas.getContext('2d', { colorSpace: 'display-p3' })
   if (!ctx) throw new Error('2D context unavailable')
+  ctx.imageSmoothingQuality = 'high'
   ctx.drawImage(bitmap, 0, 0, width, height)
 
   return new Promise<Blob>((resolve, reject) => {
@@ -121,12 +177,34 @@ async function toJpeg(
   })
 }
 
+/** Encode at an exact size, resampling first when the source is larger. */
+async function encodeAt(
+  bitmap: ImageBitmap,
+  width: number,
+  height: number,
+  quality: number,
+): Promise<Blob> {
+  if (width === bitmap.width && height === bitmap.height) {
+    return toJpeg(bitmap, width, height, quality)
+  }
+
+  const resized = await resizedBitmap(bitmap, width, height)
+  try {
+    // Falling back to `bitmap` means the encoder does the downscale itself,
+    // which is the old behaviour and still correct — just slower and softer.
+    return await toJpeg(resized ?? bitmap, width, height, quality)
+  } finally {
+    resized?.close()
+  }
+}
+
 /**
  * Decode once, encode twice. Producing the thumbnail from the bitmap already
  * in memory costs a resize rather than a second decode of a large file.
  *
- * Call this **sequentially** across a selection. A parallel loop over ten 48MP
- * photos will run mobile Safari out of memory and take the tab with it.
+ * Call this **sequentially** across a selection. One photo may be preparing
+ * while another uploads, but two decodes at once will run mobile Safari out of
+ * memory and take the tab with it.
  */
 export async function prepareForUpload(file: File): Promise<PreparedPhoto> {
   // Before `decode`, and emphatically before the re-encode below, which is what
@@ -151,10 +229,10 @@ export async function prepareForUpload(file: File): Promise<PreparedPhoto> {
     // compressed JPEG at q0.92 usually produces a slightly larger file
     // (measured: 1.35MB in, 1.40MB out). Roughly 4% more bytes buys a
     // guarantee that no location data leaves the device.
-    const full = await toJpeg(bitmap, width, height, QUALITY)
+    const full = await encodeAt(bitmap, width, height, QUALITY)
 
     const thumbSize = scaledSize(bitmap, THUMB_EDGE)
-    const thumb = await toJpeg(
+    const thumb = await encodeAt(
       bitmap,
       thumbSize.width,
       thumbSize.height,

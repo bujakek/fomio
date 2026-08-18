@@ -488,12 +488,16 @@ Do not reopen these without a reason; the tickets below already assume them.
       single-sender verification (SendGrid does) avoids the domain requirement;
       Resend does not._
 - [ ] **6.8 Print and scan.** Full physical loop with a real printed card.
-- [ ] **6.11 Delete `/pipeline-test`.** Dev harness for the browser photo
-      pipeline (`app/pipeline-test/`, page + report route). Kept because opening
-      it on a real iPhone is the cheapest way to answer the `OffscreenCanvas`
-      question in 6.7 — remove it once that is done. It ships publicly
-      otherwise. (The `/upload-test` harness it shipped alongside is already
-      deleted; the real upload screen supersedes it.)
+- [x] **6.11 Delete `/pipeline-test`.** Done — the page and its report route
+      are gone, so nothing unlisted ships publicly any more. Note it went
+      **before** 6.7 rather than after: this ticket had kept it because opening
+      it on a real iPhone was the cheapest way to answer the `OffscreenCanvas`
+      question, and that answer is still outstanding. Whoever runs the
+      real-device matrix now tests through the real upload screen instead, which
+      is a fair substitute for the pipeline but gives no per-stage readout — put
+      the harness back from git history if that turns out to matter. (The
+      `/upload-test` harness it shipped alongside was already deleted; the real
+      upload screen supersedes it.)
 - [x] **6.9 Fix `backdrop-filter` prefixing.** Done. The build was emitting
       only `-webkit-backdrop-filter` for `.glass`, `.glass-strong` and
       `.glass-nav`, so Firefox got no blur anywhere on the site.

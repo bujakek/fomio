@@ -1,6 +1,6 @@
 'use client'
 
-import { prepareForUpload } from '@/lib/image'
+import { prepareForUpload, type PreparedPhoto } from '@/lib/image'
 import { uploadPhoto } from '@/lib/upload-photo'
 import { cn } from '@/lib/utils'
 import {
@@ -57,10 +57,6 @@ export function UploadQueue({
   const runningRef = useRef(false)
   const nameRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    itemsRef.current = items
-  }, [items])
-
   // The nickname is deliberately not React state. It is only read at upload
   // time, and holding it in state would mean either seeding it during render
   // (localStorage does not exist on the server, so: hydration mismatch) or
@@ -91,40 +87,85 @@ export function UploadQueue({
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [busy])
 
+  // Ref and state move together, synchronously. runQueue scans the ref to pick
+  // the next file and cannot wait for a React commit: with a prepare running
+  // ahead of an upload there are two scans inside one render, and a stale ref
+  // would hand both of them the same photo.
   const patch = useCallback((key: string, next: Partial<Item>) => {
-    setItems((prev) => prev.map((i) => (i.key === key ? { ...i, ...next } : i)))
+    itemsRef.current = itemsRef.current.map((i) =>
+      i.key === key ? { ...i, ...next } : i,
+    )
+    setItems(itemsRef.current)
   }, [])
 
   const runQueue = useCallback(async () => {
-    // One at a time. A parallel loop over ten 48MP photos runs mobile Safari
-    // out of memory and takes the tab down with it.
     if (runningRef.current) return
     runningRef.current = true
-    try {
-      for (;;) {
-        const next = itemsRef.current.find((i) => i.status === 'queued')
-        if (!next) break
 
-        patch(next.key, { status: 'preparing', error: undefined })
+    const reason = (e: unknown) =>
+      e instanceof Error ? e.message : 'Ismeretlen hiba'
+
+    // Claim the next queued file and start decoding it. Marking it `preparing`
+    // is what stops the following scan claiming the same one.
+    const startNext = () => {
+      const item = itemsRef.current.find((i) => i.status === 'queued')
+      if (!item) return null
+
+      patch(item.key, { status: 'preparing', error: undefined })
+      const work = prepareForUpload(item.file)
+      // Awaited an upload later, so a rejection would otherwise spend that
+      // whole window looking unhandled to the browser. This observes it
+      // without consuming it — the await still sees the rejection.
+      work.catch(() => {})
+      return { item, work }
+    }
+
+    try {
+      let ahead: { item: Item; work: Promise<PreparedPhoto> } | null = null
+
+      for (;;) {
+        // Scan here rather than trusting the lookahead below: files the guest
+        // added while the previous photo was uploading are only visible now.
+        ahead ??= startNext()
+        if (!ahead) break
+
+        const { item, work } = ahead
+        ahead = null
+
+        let prepared: PreparedPhoto
         try {
-          const prepared = await prepareForUpload(next.file)
-          patch(next.key, { status: 'uploading' })
+          prepared = await work
+        } catch (e) {
+          patch(item.key, { status: 'error', error: reason(e) })
+          continue
+        }
+
+        patch(item.key, { status: 'uploading' })
+
+        // The point of the exercise: start decoding the next photo now, so the
+        // CPU chews through it while this one is on the wire. Uploads dominate
+        // on venue wifi and the two used to strictly alternate, leaving the
+        // radio idle through every decode and the CPU idle through every send.
+        //
+        // Depth of exactly one. Two decodes at once is what runs mobile Safari
+        // out of memory, and one photo already prepared is at most a couple of
+        // megabytes of blob waiting its turn.
+        ahead = startNext()
+
+        try {
           await uploadPhoto({
             eventId,
             prepared,
             uploaderName: nameRef.current?.value.trim() || null,
           })
-          patch(next.key, { status: 'done' })
+          patch(item.key, { status: 'done' })
         } catch (e) {
-          patch(next.key, {
-            status: 'error',
-            error: e instanceof Error ? e.message : 'Ismeretlen hiba',
-          })
+          patch(item.key, { status: 'error', error: reason(e) })
         }
-        // Let the state commit land before scanning the queue again.
-        await new Promise((r) => setTimeout(r, 0))
       }
     } finally {
+      // Nothing awaits between the scan that ends the loop and this line, so a
+      // file added by the guest cannot slip in behind a still-true flag.
       runningRef.current = false
     }
   }, [eventId, patch])
@@ -137,23 +178,13 @@ export function UploadQueue({
       previewUrl: URL.createObjectURL(file),
       status: 'queued' as const,
     }))
-    setItems((prev) => {
-      const next = [...prev, ...added]
-      itemsRef.current = next
-      return next
-    })
+    itemsRef.current = [...itemsRef.current, ...added]
+    setItems(itemsRef.current)
     void runQueue()
   }
 
   const retry = (key: string) => {
     patch(key, { status: 'queued', error: undefined })
-    setItems((prev) => {
-      const next = prev.map((i) =>
-        i.key === key ? { ...i, status: 'queued' as const } : i,
-      )
-      itemsRef.current = next
-      return next
-    })
     void runQueue()
   }
 

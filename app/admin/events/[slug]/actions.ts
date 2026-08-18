@@ -61,6 +61,21 @@ export async function setGalleryHidden(slug: string, hidden: boolean) {
   revalidatePath(`/e/${slug}/gallery`)
 }
 
+/** One page of a Storage listing. `list()` returns a page, not a total — the
+ *  API caps what it will hand back however large a `limit` you ask for, so the
+ *  loop below is what makes the enumeration complete, not this number. */
+const LIST_PAGE = 100
+
+/** Bound on the paging loop. 20k objects is an order of magnitude past any
+ *  real album, so reaching it means `offset` is not advancing rather than that
+ *  someone shot ten thousand photos — and without the bound that is an
+ *  infinite loop. Treated as a failure, never as "done". */
+const MAX_LIST_PAGES = 200
+
+/** `remove()` carries every path in one request body, so a large album goes in
+ *  batches rather than a single enormous call. */
+const REMOVE_BATCH = 100
+
 /**
  * Erase an event: every object, every row, permanently.
  *
@@ -78,6 +93,16 @@ export async function setGalleryHidden(slug: string, hidden: boolean) {
  * remove. Reversed, the files would be orphaned in the bucket forever, still
  * fetchable at their public URLs, which is precisely what an erasure request
  * is asking you not to do.
+ *
+ * That last paragraph is also why every step below is verified rather than
+ * assumed. A single unpaginated `list()` sees one page — about 500 photos,
+ * since each is two objects — and everything past it would be orphaned in a
+ * *public* bucket with the only record of its existence cascaded away. Erasure
+ * that silently half-succeeds is worse than erasure that fails, because the
+ * host is told the photos are gone. So: page until the listing is exhausted,
+ * check that every removal actually removed, and confirm the folder is empty
+ * before the rows go. Any doubt throws with the rows still intact, which keeps
+ * the objects findable for a retry.
  */
 export async function deleteEvent(slug: string) {
   const supabase = await createClient()
@@ -90,17 +115,62 @@ export async function deleteEvent(slug: string) {
   if (eventError) throw eventError
   if (!event) throw new Error('Nincs ilyen esemény.')
 
-  const { data: listed, error: listError } = await supabase.storage
-    .from(PHOTO_BUCKET)
-    .list(event.id, { limit: 1000 })
-  if (listError) throw listError
+  // Collect every path first, remove second. Deleting inside the paging loop
+  // would shift the offsets out from under it and skip whole pages.
+  const paths: string[] = []
+  let listingComplete = false
 
-  if (listed && listed.length > 0) {
-    const paths = listed.map((object) => `${event.id}/${object.name}`)
-    const { error: removeError } = await supabase.storage
+  for (let page = 0; page < MAX_LIST_PAGES; page++) {
+    const { data: listed, error: listError } = await supabase.storage
       .from(PHOTO_BUCKET)
-      .remove(paths)
+      .list(event.id, {
+        limit: LIST_PAGE,
+        offset: paths.length,
+        // Explicit, so the ordering the offsets index into cannot change
+        // between one page and the next.
+        sortBy: { column: 'name', order: 'asc' },
+      })
+    if (listError) throw listError
+
+    // Advance by what came back, not by LIST_PAGE, and stop only on an empty
+    // page. A short page must not end the loop: the API is free to return
+    // fewer objects than asked for, and treating that as the end is exactly
+    // the bug that left albums half-deleted.
+    if (!listed || listed.length === 0) {
+      listingComplete = true
+      break
+    }
+    paths.push(...listed.map((object) => `${event.id}/${object.name}`))
+  }
+
+  if (!listingComplete) {
+    throw new Error('Nem sikerült végigolvasni a képeket. Próbáld újra.')
+  }
+
+  for (let i = 0; i < paths.length; i += REMOVE_BATCH) {
+    const batch = paths.slice(i, i + REMOVE_BATCH)
+    const { data: removed, error: removeError } = await supabase.storage
+      .from(PHOTO_BUCKET)
+      .remove(batch)
     if (removeError) throw removeError
+    // `remove()` reports what it deleted and silently omits what it could not,
+    // so the count is the only signal that a path survived. Throwing here
+    // leaves the rows in place, so a retry can still find the stragglers.
+    if (!removed || removed.length !== batch.length) {
+      throw new Error('Nem sikerült minden képet törölni. Próbáld újra.')
+    }
+  }
+
+  // Uploads stay open throughout, so a guest can land a photo after the
+  // listing above and before the rows go. Confirm the folder is empty instead
+  // of assuming it — this is the last moment at which an object left behind is
+  // still findable.
+  const { data: leftover, error: leftoverError } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .list(event.id, { limit: 1 })
+  if (leftoverError) throw leftoverError
+  if (leftover && leftover.length > 0) {
+    throw new Error('Közben új kép érkezett. Indítsd újra a törlést.')
   }
 
   // Cascades the photo rows.
