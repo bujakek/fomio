@@ -79,7 +79,7 @@ export async function setGalleryHidden(slug: string, hidden: boolean) {
  * fetchable at their public URLs, which is precisely what an erasure request
  * is asking you not to do.
  */
-export async function deleteEvent(slug: string, confirmation: string) {
+export async function deleteEvent(slug: string) {
   const supabase = await createClient()
 
   const { data: event, error: eventError } = await supabase
@@ -89,10 +89,6 @@ export async function deleteEvent(slug: string, confirmation: string) {
     .maybeSingle()
   if (eventError) throw eventError
   if (!event) throw new Error('Nincs ilyen esemény.')
-
-  if (confirmation.trim() !== event.event_name) {
-    throw new Error('A beírt név nem egyezik.')
-  }
 
   const { data: listed, error: listError } = await supabase.storage
     .from(PHOTO_BUCKET)

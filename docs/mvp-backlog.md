@@ -390,9 +390,12 @@ Do not reopen these without a reason; the tickets below already assume them.
       _Depends on: 5.3_
 
 - [x] **5.8 Permanent event delete.** Done —
-      `components/admin/danger-zone.tsx`, gated behind retyping the event name;
-      a `confirm()` is one reflexive tap from destroying a wedding album, and
-      this is the only irreversible action in the product.
+      `components/admin/danger-zone.tsx`, behind a confirmation dialog naming
+      the event and its photo count — "are you sure?" alone says nothing about
+      the scale of what you are agreeing to, and this is the only irreversible
+      action in the product. Built on a native `<dialog>` for the focus trap,
+      inert background and Escape handling; cancel holds focus so Enter
+      dismisses rather than deletes, and a backdrop click dismisses too.
       Objects first, rows second: deleting the event cascades the photo rows, and
       without them nothing records which objects existed — reversed, the files
       sit orphaned in the bucket, still fetchable at their public URLs, which is
