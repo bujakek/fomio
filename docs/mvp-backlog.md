@@ -433,9 +433,22 @@ Do not reopen these without a reason; the tickets below already assume them.
       rejected for. Confirm it is on, and confirm a real page view lands once
       6.7b turns off deployment protection.
 
-- [ ] **6.2 Verify ownership scoping holds.** Sign up a throwaway second account
-      and confirm it sees an empty admin — no events, no photos, no export, no
-      delete. Disabling public signups is still worth doing as defence in depth.
+- [x] **6.2 Verify ownership scoping holds.** Done, against two real accounts
+      that each own events. At the HTTP layer a signed-in host gets 404 on
+      another host's event page and export, and `/admin` lists only their own.
+      At the database layer, with that host's real JWT, hiding another host's
+      photo, hiding their gallery and deleting their event all leave the data
+      untouched — and all three return **success** status codes (200, 204, 204)
+      while changing nothing. That silence is the point: it is why every host
+      action asserts affected-rows > 0 rather than trusting the absence of an
+      error. `rls.py` and `storage.py` also re-run clean after the `taken_at`
+      migration (19/19 and 16/16). Not covered: the four cross-owner write
+      checks were run ad hoc, not added to `rls.py`, which still only exercises
+      anon-vs-host. Worth folding in if that file is touched again.
+- [ ] **6.2b Disable public signups.** Split out of 6.2, which it was buried in.
+      Defence in depth rather than a fix — ownership scoping holds without it —
+      but there is no reason for a stranger to be able to create an account on a
+      single-wedding pilot.
 - [ ] **6.3 Landing page truthfulness.** The 3.2M photos / 12,400 events /
       "4,9 / 5 · 2 800+ értékelés" stats and the three named testimonials are
       fabricated, on a live domain, for a product with no users. Decide before
