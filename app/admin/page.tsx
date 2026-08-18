@@ -1,7 +1,7 @@
-import { getOwnedEvents } from '@/lib/events'
-import { formatEventDate } from '@/lib/format'
+import { EventList } from '@/components/admin/event-list'
+import { eventIsActive, getOwnedEventsWithPreviews } from '@/lib/events'
 import { createClient } from '@/lib/supabase/server'
-import { CalendarPlus, EyeOff, Lock, LogOut, Plus } from 'lucide-react'
+import { CalendarPlus, LogOut, Plus } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
@@ -17,7 +17,7 @@ export default async function AdminPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  const events = await getOwnedEvents()
+  const events = await getOwnedEventsWithPreviews()
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-16">
@@ -58,43 +58,10 @@ export default async function AdminPage() {
           </p>
         </div>
       ) : (
-        <ul className="mt-8 flex flex-col gap-3">
-          {events.map((event) => {
-            const closed =
-              event.uploads_close_at !== null &&
-              new Date(event.uploads_close_at) <= new Date()
-            return (
-              <li key={event.id}>
-                <Link
-                  href={`/admin/events/${event.slug}`}
-                  className="glass glass-hover flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl px-5 py-4"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold">{event.event_name}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {formatEventDate(event.event_date) ?? 'Nincs dátum'} · /e/
-                      {event.slug}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {event.gallery_hidden_at ? (
-                      <span className="glass inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs text-muted-foreground">
-                        <EyeOff className="size-3" />
-                        Rejtett galéria
-                      </span>
-                    ) : null}
-                    {closed ? (
-                      <span className="glass inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs text-muted-foreground">
-                        <Lock className="size-3" />
-                        Feltöltés lezárva
-                      </span>
-                    ) : null}
-                  </div>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+        <EventList
+          active={events.filter(eventIsActive)}
+          closed={events.filter((e) => !eventIsActive(e))}
+        />
       )}
     </main>
   )

@@ -6,8 +6,20 @@ import { createEvent, type CreateEventState } from './actions'
 
 const initial: CreateEventState = { error: null }
 
+/** Event types rather than personalised titles: we have no host name to
+ *  interpolate, and a type is a usable title on its own. The point is removing
+ *  the blank-field pause, not writing the name for them. */
+const SUGGESTIONS = [
+  'Esküvő',
+  'Szülinap',
+  'Céges buli',
+  'Ballagás',
+  'Évforduló',
+]
+
 export function NewEventForm() {
   const [state, action, pending] = useActionState(createEvent, initial)
+  const [name, setName] = useState('')
   // A datetime-local value has no timezone. Converting it here means the
   // browser's zone is used — which is the host's — instead of the server's.
   const [closesIso, setClosesIso] = useState('')
@@ -27,9 +39,25 @@ export function NewEventForm() {
           required
           maxLength={80}
           autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           placeholder="Anna &amp; Péter"
           className="glass min-h-14 w-full rounded-2xl px-5 text-base outline-none placeholder:text-muted-foreground/60 focus:border-accent"
         />
+
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {SUGGESTIONS.map((suggestion) => (
+            <li key={suggestion}>
+              <button
+                type="button"
+                onClick={() => setName(suggestion)}
+                className="glass glass-hover min-h-11 rounded-full px-4 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {suggestion}
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div>

@@ -504,6 +504,49 @@ Do not reopen these without a reason; the tickets below already assume them.
 
 ---
 
+## Adopted from Once (competitor review, 2026-08-18)
+
+Screenshots of Once's create flow and logged-in home were reviewed. Three
+things were taken; the rest was rejected on purpose.
+
+- [x] **Name suggestion chips** on `/admin/events/new` — event types
+      (Esküvő, Szülinap, Céges buli, Ballagás, Évforduló) rather than
+      personalised titles, since there is no host name to interpolate. Removes
+      the blank-field pause.
+- [x] **Guest-view preview** on the admin event page — a live iframe of
+      `/e/[slug]` at phone width. The QR card shows the _address_; this shows
+      the _destination_. A wrong date is invisible on a QR code and obvious
+      here, and after cards are printed it is too late. A live frame rather
+      than a mock so it cannot drift from the real page.
+- [x] **Thumbnails and an active/finished split** in the admin list, with a
+      `+N` overflow. Hidden photos are excluded from the strip but counted in
+      the overflow, so the number matches the moderation grid.
+
+**Deliberately not taken**, each because it contradicts something already
+settled:
+
+- _Shots per person_ (5/10/16/24/∞) — a scarcity mechanic for a
+  disposable-camera product; contradicts "chat apps crush your photos, we
+  don't".
+- _Automated delayed reveal_ (During / After / Additional delay) — the exact
+  feature ruled out in `CLAUDE.md`. The manual toggle already covers the need.
+- _Paid participant tiers_ — implies a pricing model there isn't one for.
+- _The film/tape metaphor and its tab bar_ — it exists to justify shot limits
+  and reveals. Taking the vocabulary without the mechanics is hollow; taking
+  the mechanics means becoming Once.
+- _A six-step wizard_ — right for their eight decisions, wrong for three
+  fields.
+
+Their guest flow is an in-app camera, so guests install an app and get an
+account. Not having that is the whole wedge here, so none of their guest-side
+design transfers — only host-side polish.
+
+Still open from that review: a **countdown** on the guest page
+("még 3 óra 20 perc"), which would use `uploads_close_at` to create the urgency
+the pilot is measuring, and fill the space the centred layout leaves.
+
+---
+
 ## Out of scope
 
 Flag and ask before starting any of these — they are deliberately excluded:

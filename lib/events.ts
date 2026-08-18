@@ -104,3 +104,58 @@ export async function getOwnedEventBySlug(
   if (error) throw error
   return data
 }
+
+export type EventWithPreview = OwnedEvent & {
+  photoCount: number
+  /** A few thumbnails for the list, newest first. */
+  previews: string[]
+}
+
+/**
+ * The admin list, with enough of each album to recognise it at a glance.
+ *
+ * Two queries, not one per event: fetching photos per row would be an N+1 that
+ * grows with the number of events. It does pull every photo row the host owns
+ * (three small columns), which is fine at pilot scale and would want a
+ * per-event aggregate — an RPC or a view — before it is thousands.
+ */
+export async function getOwnedEventsWithPreviews(): Promise<
+  EventWithPreview[]
+> {
+  const supabase = await createClient()
+  const events = await getOwnedEvents()
+  if (events.length === 0) return []
+
+  const { data: photos, error } = await supabase
+    .from('photos')
+    .select('event_id, thumb_path, hidden_at, created_at')
+    .in(
+      'event_id',
+      events.map((e) => e.id),
+    )
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+
+  return events.map((event) => {
+    const own = (photos ?? []).filter((p) => p.event_id === event.id)
+    return {
+      ...event,
+      photoCount: own.length,
+      // Hidden photos are excluded from the strip — a moderated shot should not
+      // be the thumbnail representing the album.
+      previews: own
+        .filter((p) => p.hidden_at === null)
+        .slice(0, 4)
+        .map((p) => p.thumb_path),
+    }
+  })
+}
+
+/** Uploads still open? Mirrors the database rule; used only for display. */
+export function eventIsActive(event: {
+  uploads_close_at: string | null
+}): boolean {
+  if (!event.uploads_close_at) return true
+  return new Date(event.uploads_close_at) > new Date()
+}
