@@ -24,6 +24,13 @@ export function CallbackExchange() {
       tokenHash: params.get('token_hash'),
       type: params.get('type'),
       next: params.get('next'),
+    }).catch(() => {
+      // A transport failure never reaches the action's own error redirect.
+      // Release the Strict Mode guard before leaving so a failed navigation
+      // cannot strand a remount on the spinner with retries permanently
+      // disabled.
+      started = false
+      window.location.replace('/admin/login?error=link')
     })
   }, [])
 

@@ -13,11 +13,11 @@ export function LoadingStatus({
 }) {
   return (
     <div className="flex flex-col items-center gap-3 text-center">
-      <span className="flex size-14 items-center justify-center rounded-full bg-accent/20">
+      <div className="flex size-14 items-center justify-center rounded-full bg-accent/20">
         <div className="animate-spin">
           <Loader2 className="size-7 text-accent" strokeWidth={2.2} />
         </div>
-      </span>
+      </div>
       <p className="text-lg font-semibold" role="status" aria-live="polite">
         {title}
       </p>

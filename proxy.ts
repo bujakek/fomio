@@ -25,11 +25,14 @@ export async function proxy(request: NextRequest) {
   const supabase = createServerClient(url, anonKey, {
     cookies: {
       getAll: () => request.cookies.getAll(),
-      setAll: (cookiesToSet) => {
+      setAll: (cookiesToSet, cacheHeaders) => {
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value),
         )
         response = NextResponse.next({ request })
+        Object.entries(cacheHeaders).forEach(([name, value]) =>
+          response.headers.set(name, value),
+        )
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options),
         )

@@ -63,28 +63,6 @@ export type OwnedEvent = {
 }
 
 /**
- * Events belonging to the signed-in host.
- *
- * Reads the table directly rather than an RPC — unlike guests, a host has a
- * read policy, and it is scoped to `owner_id = auth.uid()`. There is
- * deliberately no owner filter in this query: adding one would imply the
- * database is not already enforcing it, and the day someone removes the
- * `.eq()` believing RLS has their back, it should still be true.
- */
-export async function getOwnedEvents(): Promise<OwnedEvent[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('events')
-    .select(
-      'id, slug, event_name, event_date, uploads_close_at, gallery_hidden_at, created_at',
-    )
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-  return data ?? []
-}
-
-/**
  * One of the host's own events, by slug. Returns null when it does not exist
  * *or* belongs to someone else — RLS makes those indistinguishable here, which
  * is the correct answer to give either way.
@@ -117,42 +95,23 @@ export type EventWithPreview = OwnedEvent & {
 /**
  * The admin list, with enough of each album to recognise it at a glance.
  *
- * Two queries, not one per event: fetching photos per row would be an N+1 that
- * grows with the number of events. It does pull every photo row the host owns
- * (three small columns), which is fine at pilot scale and would want a
- * per-event aggregate — an RPC or a view — before it is thousands.
+ * Aggregated in Postgres rather than pulling every photo row into the server:
+ * each event returns only its count and four recent visible thumbnail paths.
+ * The function is SECURITY INVOKER, so the same ownership RLS policies that
+ * protect direct table reads also scope this result.
  */
 export async function getOwnedEventsWithPreviews(): Promise<
   EventWithPreview[]
 > {
   const supabase = await createClient()
-  const events = await getOwnedEvents()
-  if (events.length === 0) return []
-
-  const { data: photos, error } = await supabase
-    .from('photos')
-    .select('event_id, thumb_path, hidden_at, created_at')
-    .in(
-      'event_id',
-      events.map((e) => e.id),
-    )
-    .order('created_at', { ascending: false })
+  const { data, error } = await supabase.rpc('owned_events_with_previews')
 
   if (error) throw error
 
-  return events.map((event) => {
-    const own = (photos ?? []).filter((p) => p.event_id === event.id)
-    return {
-      ...event,
-      photoCount: own.length,
-      // Hidden photos are excluded from the strip — a moderated shot should not
-      // be the thumbnail representing the album.
-      previews: own
-        .filter((p) => p.hidden_at === null)
-        .slice(0, 4)
-        .map((p) => p.thumb_path),
-    }
-  })
+  return (data ?? []).map(({ photo_count, ...event }) => ({
+    ...event,
+    photoCount: photo_count,
+  }))
 }
 
 /** Uploads still open? Mirrors the database rule; used only for display. */

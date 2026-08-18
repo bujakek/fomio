@@ -159,6 +159,20 @@ export type Database = {
           width: number
         }[]
       }
+      owned_events_with_previews: {
+        Args: never
+        Returns: {
+          created_at: string
+          event_date: string
+          event_name: string
+          gallery_hidden_at: string
+          id: string
+          photo_count: number
+          previews: string[]
+          slug: string
+          uploads_close_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

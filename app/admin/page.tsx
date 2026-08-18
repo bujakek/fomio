@@ -1,7 +1,6 @@
 import { EventList } from '@/components/admin/event-list'
 import { EventListSkeleton } from '@/components/admin/skeletons'
 import { eventIsActive, getOwnedEventsWithPreviews } from '@/lib/events'
-import { getAuthUser } from '@/lib/supabase/user'
 import { CalendarPlus, LogOut, Plus } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -18,16 +17,7 @@ export default function AdminPage() {
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-16">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Eseményeid</h1>
-          <Suspense
-            fallback={
-              <div className="mt-2 h-5 w-40 animate-pulse rounded-md bg-muted-foreground/20" />
-            }
-          >
-            <UserEmail />
-          </Suspense>
-        </div>
+        <h1 className="text-3xl font-semibold tracking-tight">Eseményeid</h1>
         <div className="flex items-center gap-2">
           <Link
             href="/admin/events/new"
@@ -53,12 +43,6 @@ export default function AdminPage() {
       </Suspense>
     </main>
   )
-}
-
-async function UserEmail() {
-  const user = await getAuthUser()
-  if (!user?.email) return null
-  return <p className="mt-2 text-sm text-muted-foreground">{user.email}</p>
 }
 
 async function OwnedEventList() {

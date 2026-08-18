@@ -4,7 +4,7 @@ import { safeNext } from '@/lib/safe-next'
 import { createClient } from '@/lib/supabase/server'
 import { type EmailOtpType } from '@supabase/supabase-js'
 import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { redirect, RedirectType } from 'next/navigation'
 
 async function requestOrigin(): Promise<string> {
   const h = await headers()
@@ -45,8 +45,8 @@ export async function completeMagicLink({
       : { error: new Error('Hiányzó belépési kód') }
 
   if (error) {
-    redirect('/admin/login?error=link')
+    redirect('/admin/login?error=link', RedirectType.replace)
   }
 
-  redirect(safeNext(next, await requestOrigin()))
+  redirect(safeNext(next, await requestOrigin()), RedirectType.replace)
 }
