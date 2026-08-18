@@ -1,4 +1,5 @@
 import { getOwnedEventBySlug } from '@/lib/events'
+import { exifDateSegment, withExifDate } from '@/lib/exif-write'
 import { eventWallClock, formatFileStamp } from '@/lib/format'
 import { getAllEventPhotos } from '@/lib/photos'
 import { photoPublicUrl } from '@/lib/storage'
@@ -82,6 +83,16 @@ export async function GET(
         continue
       }
 
+      // Put the capture time back into the file itself. The ZIP entry date
+      // below only becomes the *modification* date on extract, and Photos
+      // ignores that in favour of DateTimeOriginal — so without this the whole
+      // album collapses onto the day it was unzipped the moment it is
+      // imported. Untouched when the capture time is unknown.
+      const input =
+        photo.taken_at && response.body
+          ? withExifDate(response.body, exifDateSegment(photo.taken_at))
+          : response
+
       yield {
         name,
         // The date the file carries on extract. Upload time here would stamp
@@ -89,7 +100,7 @@ export async function GET(
         // and a bare `new Date` would render it in the server's zone — UTC on
         // Vercel — rather than the event's.
         lastModified: eventWallClock(photo.taken_at ?? photo.created_at),
-        input: response,
+        input,
       }
     }
 

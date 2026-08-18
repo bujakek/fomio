@@ -15,6 +15,7 @@
  * *here*, not the one Apple writes. A real iPhone HEIC is still the only thing
  * that can confirm that path — see the open ticket in `docs/mvp-backlog.md`.
  */
+import { exifDateSegment, withExifDate } from '../lib/exif-write.ts'
 import { readCaptureTime } from '../lib/exif.ts'
 
 const n16 = (v: number, le: boolean) =>
@@ -260,6 +261,30 @@ const cases: [string, Blob, string | null][] = [
     null,
   ],
 ]
+
+// Round trip: what the export writes must be what the reader reads back. These
+// two modules are the only places in the codebase that know the EXIF byte
+// layout, and nothing else would notice if they drifted apart.
+async function stamped(iso: string, base: Blob): Promise<Blob> {
+  const stream = base.stream() as ReadableStream<Uint8Array>
+  const out = withExifDate(stream, exifDateSegment(iso))
+  return new Blob([await new Response(out).arrayBuffer()])
+}
+
+// A canvas-encoded upload carries an Exif APP1 holding only pixel dimensions,
+// so the writer has to replace one rather than add the first.
+const canvasLike = jpeg(tiff({}), JFIF)
+const plain = jpeg(null, JFIF)
+
+cases.push(
+  ['written date reads back', await stamped(EXACT, plain), EXACT],
+  ['replaces an existing Exif APP1', await stamped(EXACT, canvasLike), EXACT],
+  [
+    'winter date keeps its own offset',
+    await stamped('2026-01-15T12:32:10.000Z', plain),
+    '2026-01-15T12:32:10.000Z',
+  ],
+)
 
 let failed = 0
 console.log(`\n  lib/exif.ts — TZ=${process.env.TZ ?? '(system)'}\n`)

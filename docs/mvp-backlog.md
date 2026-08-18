@@ -534,6 +534,21 @@ Do not reopen these without a reason; the tickets below already assume them.
       event's wall clock via `eventWallClock` — verified identical with the
       server running UTC, New York and Budapest, which local testing had hidden.
 
+- [x] **Write the capture time back into the exported file.** `lib/exif-write.ts`
+      splices a minimal Exif APP1 into each JPEG as it streams out of the
+      export. The ZIP entry date alone is not enough and the reason is worth
+      remembering: it lands as the file's _modification_ date, and Photos reads
+      `DateTimeOriginal` instead — falling back, when there is none, to the
+      creation date, which is the instant the archive was unzipped. So an album
+      imported into iCloud collapsed onto a single day even though the ZIP
+      listing looked right. Writes `DateTimeOriginal`, `DateTimeDigitized` and
+      IFD0 `DateTime`, each with its own offset tag, because readers disagree
+      about which they trust; replaces the canvas's existing Exif block rather
+      than adding a second, since readers take the first. Time tags only — there
+      is no code path here that could emit a location, and the coordinates never
+      reached the server in the first place. Verified with ImageMagick on an
+      extracted file: seven tags, all time, ICC profile intact, no GPS.
+
 - [x] **Leave the guest gallery on upload order.** Deliberate, not an omission.
       Newest-upload-first is what shows a guest their own photo the instant it
       lands; ordering by capture time would drop it into the middle of the grid

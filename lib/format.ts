@@ -70,6 +70,33 @@ export function formatFileStamp(iso: string): string {
   return `${p.year}-${p.month}-${p.day}_${p.hour}${p.minute}`
 }
 
+/** `2026:08:15 14:32:10` — the EXIF spelling of a timestamp, in the event's
+ *  zone. Colons in the date half are not a typo; that is the format. */
+export function eventStamp(iso: string): string {
+  const p = eventParts(iso)
+  return `${p.year}:${p.month}:${p.day} ${p.hour}:${p.minute}:${p.second}`
+}
+
+const OFFSET = new Intl.DateTimeFormat('en-US', {
+  timeZone: EVENT_TIME_ZONE,
+  timeZoneName: 'longOffset',
+})
+
+/**
+ * `+02:00` — the event zone's UTC offset **on that date**, which is the whole
+ * reason this is computed per timestamp rather than stored as a constant.
+ * Budapest is +01:00 in January and +02:00 in July, so a wedding and a
+ * Christmas party cannot share one answer.
+ */
+export function eventUtcOffset(iso: string): string {
+  const name = OFFSET.formatToParts(new Date(iso)).find(
+    (part) => part.type === 'timeZoneName',
+  )?.value
+  // A zone sitting exactly on UTC formats as a bare "GMT" with no offset.
+  const found = name ? /GMT([+-]\d{2}:\d{2})/.exec(name) : null
+  return found ? found[1] : '+00:00'
+}
+
 /**
  * The same instant as a `Date` whose **local** fields read as the event's wall
  * clock.

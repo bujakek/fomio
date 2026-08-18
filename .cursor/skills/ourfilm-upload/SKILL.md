@@ -111,6 +111,13 @@ const { error: insertError } = await supabase.from('photos').insert({
 if (insertError) throw insertError
 ```
 
+The reverse trip matters just as much: the **export** writes the time back into
+the file (`lib/exif-write.ts`), because a date held only in the database is
+invisible to Photos, Lightroom and Finder. A ZIP entry's timestamp does not
+substitute — it becomes the file's modification date, and Photos reads
+`DateTimeOriginal`, falling back to the creation date, i.e. when the archive was
+unzipped. Time tags only; never write a location back.
+
 **Read the capture time before you touch the pixels.** `readCaptureTime()` in
 `lib/exif.ts` must run on the original `File`; the canvas re-encode below is what
 strips EXIF, and after it there is nothing left to read. This is a one-way door
