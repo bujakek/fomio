@@ -13,7 +13,8 @@
     "verify": "pnpm typecheck && pnpm lint && pnpm build",
     "types:gen": "supabase gen types typescript --linked > lib/supabase/database.types.ts",
     "types:check": "supabase gen types typescript --linked | diff -u lib/supabase/database.types.ts - && echo 'types match the remote schema'",
-    "seed": "node --env-file=.env.local --experimental-strip-types scripts/seed.ts"
+    "seed": "node --env-file=.env.local --experimental-strip-types scripts/seed.ts",
+    "test:exif": "node --experimental-strip-types tests/exif.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

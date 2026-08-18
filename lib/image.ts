@@ -3,6 +3,8 @@
 // error instead, mirroring `server-only` on the query modules.
 import 'client-only'
 
+import { readCaptureTime } from './exif'
+
 /**
  * Browser-side photo pipeline. Everything here runs on a guest's phone, on
  * venue wifi, with whatever memory the device has left.
@@ -28,6 +30,9 @@ export type PreparedPhoto = {
   /** Dimensions of `full`, stored so the gallery can reserve grid space. */
   width: number
   height: number
+  /** When the shutter fired, or null when the file carried no EXIF — a
+   *  screenshot, a download, or anything already through a chat app. */
+  takenAt: Date | null
 }
 
 /**
@@ -124,6 +129,10 @@ async function toJpeg(
  * photos will run mobile Safari out of memory and take the tab with it.
  */
 export async function prepareForUpload(file: File): Promise<PreparedPhoto> {
+  // Before `decode`, and emphatically before the re-encode below, which is what
+  // destroys it. Reading it afterwards would always return null.
+  const takenAt = await readCaptureTime(file)
+
   const bitmap = await decode(file)
 
   try {
@@ -152,7 +161,7 @@ export async function prepareForUpload(file: File): Promise<PreparedPhoto> {
       THUMB_QUALITY,
     )
 
-    return { full, thumb, width, height }
+    return { full, thumb, width, height, takenAt }
   } finally {
     // Phones are memory-tight and the next file is queued right behind this
     // one. Release in `finally` so a mid-pipeline throw cannot leak it.

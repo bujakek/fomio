@@ -57,6 +57,7 @@ export async function uploadPhoto({
     height: prepared.height,
     byte_size: prepared.full.size,
     mime_type: 'image/jpeg',
+    taken_at: prepared.takenAt?.toISOString() ?? null,
   })
   if (error) throw error
 }

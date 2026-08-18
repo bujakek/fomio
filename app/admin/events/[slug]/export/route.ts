@@ -1,4 +1,5 @@
 import { getOwnedEventBySlug } from '@/lib/events'
+import { eventWallClock, formatFileStamp } from '@/lib/format'
 import { getAllEventPhotos } from '@/lib/photos'
 import { photoPublicUrl } from '@/lib/storage'
 import { downloadZip } from 'client-zip'
@@ -41,8 +42,17 @@ export async function GET(
     })
   }
 
-  // Oldest first, so the numbering follows the order the night happened in.
-  const ordered = [...photos].reverse()
+  // Oldest first, so the numbering follows the order the night actually
+  // happened in — which is `taken_at`, not `created_at`. Guests shoot all
+  // evening and upload in a batch the next morning, so upload order would
+  // number one guest's whole camera roll as if the night were theirs alone.
+  // `created_at` is the fallback for photos whose file carried no EXIF.
+  const when = (photo: (typeof photos)[number]) =>
+    Date.parse(photo.taken_at ?? photo.created_at)
+  const ordered = [...photos].sort(
+    (a, b) =>
+      when(a) - when(b) || Date.parse(a.created_at) - Date.parse(b.created_at),
+  )
   const missing: string[] = []
 
   // An async generator rather than an array of promises: client-zip pulls one
@@ -58,7 +68,11 @@ export async function GET(
       // Hidden photos ship too, but in their own folder: the host keeps
       // everything without a moderated shot turning up among the rest.
       const folder = photo.hidden_at ? 'rejtett/' : ''
-      const name = `${folder}${n}${who}.jpg`
+      // The capture time goes in the name too, not only in `lastModified`: a
+      // file dragged out of the folder keeps its place in the day, and the
+      // couple can still tell when a shot was taken years from now.
+      const stamp = photo.taken_at ? `-${formatFileStamp(photo.taken_at)}` : ''
+      const name = `${folder}${n}${stamp}${who}.jpg`
 
       const response = await fetch(photoPublicUrl(photo.storage_path))
       if (!response.ok || !response.body) {
@@ -68,7 +82,15 @@ export async function GET(
         continue
       }
 
-      yield { name, lastModified: new Date(photo.created_at), input: response }
+      yield {
+        name,
+        // The date the file carries on extract. Upload time here would stamp
+        // every photo in the album with the morning someone got round to it,
+        // and a bare `new Date` would render it in the server's zone — UTC on
+        // Vercel — rather than the event's.
+        lastModified: eventWallClock(photo.taken_at ?? photo.created_at),
+        input: response,
+      }
     }
 
     // Silent data loss is the thing to avoid: if anything was skipped, the ZIP

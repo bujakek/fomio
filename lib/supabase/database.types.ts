@@ -82,6 +82,7 @@ export type Database = {
           id: string
           mime_type: string | null
           storage_path: string
+          taken_at: string | null
           thumb_path: string
           uploader_name: string | null
           width: number | null
@@ -95,6 +96,7 @@ export type Database = {
           id?: string
           mime_type?: string | null
           storage_path: string
+          taken_at?: string | null
           thumb_path: string
           uploader_name?: string | null
           width?: number | null
@@ -108,6 +110,7 @@ export type Database = {
           id?: string
           mime_type?: string | null
           storage_path?: string
+          taken_at?: string | null
           thumb_path?: string
           uploader_name?: string | null
           width?: number | null

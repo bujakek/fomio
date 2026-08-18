@@ -106,9 +106,15 @@ const { error: insertError } = await supabase.from('photos').insert({
   height,
   byte_size: blob.size,
   mime_type: 'image/jpeg',
+  taken_at: takenAt?.toISOString() ?? null,
 })
 if (insertError) throw insertError
 ```
+
+**Read the capture time before you touch the pixels.** `readCaptureTime()` in
+`lib/exif.ts` must run on the original `File`; the canvas re-encode below is what
+strips EXIF, and after it there is nothing left to read. This is a one-way door
+— a photo uploaded without its capture time can never get it back.
 
 Order matters: upload the object first, insert the row second. A failed insert leaves an orphaned object (harmless, cleanable); the reverse would put a broken tile in the gallery.
 

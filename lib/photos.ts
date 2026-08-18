@@ -39,6 +39,9 @@ export type HostPhoto = {
   width: number | null
   height: number | null
   created_at: string
+  /** EXIF capture time; null for files that carried none. Readers must fall
+   *  back to `created_at`. */
+  taken_at: string | null
 }
 
 /**
@@ -53,7 +56,7 @@ export async function getAllEventPhotos(eventId: string): Promise<HostPhoto[]> {
   const { data, error } = await supabase
     .from('photos')
     .select(
-      'id, storage_path, thumb_path, uploader_name, hidden_at, width, height, created_at',
+      'id, storage_path, thumb_path, uploader_name, hidden_at, width, height, created_at, taken_at',
     )
     .eq('event_id', eventId)
     .order('created_at', { ascending: false })

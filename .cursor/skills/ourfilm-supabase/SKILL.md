@@ -60,6 +60,12 @@ create table public.photos (
   height        integer,
   byte_size     integer,
   mime_type     text,
+  -- When the shutter fired, not when the file arrived; the two differ by hours
+  -- at a real event. Read by `lib/exif.ts` before the canvas re-encode strips
+  -- EXIF. Commonly null (screenshots, downloads, many Android pickers), so
+  -- every reader falls back to created_at. No default: now() would be a
+  -- plausible-looking lie.
+  taken_at      timestamptz,
   created_at    timestamptz not null default now()
 );
 

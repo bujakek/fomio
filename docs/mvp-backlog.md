@@ -507,6 +507,42 @@ Do not reopen these without a reason; the tickets below already assume them.
 
 ---
 
+## Capture time (2026-08-18)
+
+- [x] **Keep the EXIF capture time.** `photos.taken_at`, read in the browser by
+      `lib/exif.ts` before `prepareForUpload` re-encodes and destroys the EXIF.
+      Parses JPEG (APP1 → TIFF → sub-IFD, both byte orders, not assuming APP1
+      comes first) and HEIC (`meta`/`iinf`/`iloc`), pairs each timestamp with
+      its own offset tag, and rejects unset clocks — a camera with a dead
+      battery writes 1980 rather than omitting the tag. Returns null on anything
+      malformed: unreadable metadata must never cost a guest their photo. Done
+      now rather than later because it is a one-way door — the data exists only
+      on the guest's device at the moment they pick the file, and every photo
+      already uploaded has lost it. Covered by `pnpm test:exif`, 15 fixtures
+      built byte by byte with no new dependency.
+
+- [x] **Spend it on the ZIP export.** The export previously claimed a chronology
+      it did not have: it numbered by upload order under a comment promising
+      "the order the night happened in", and stamped every extracted file with
+      the morning someone got round to uploading. Now ordered by
+      `coalesce(taken_at, created_at)` and named `001-2026-08-15_1432-Anna.jpg`.
+      A ZIP's DOS timestamp carries no zone, so `lastModified` goes in as the
+      event's wall clock via `eventWallClock` — verified identical with the
+      server running UTC, New York and Budapest, which local testing had hidden.
+
+- [x] **Leave the guest gallery on upload order.** Deliberate, not an omission.
+      Newest-upload-first is what shows a guest their own photo the instant it
+      lands; ordering by capture time would drop it into the middle of the grid
+      and read as a failed upload — the exact signal this pilot exists to
+      measure. Revisit only after the pilot answers that question.
+
+- [ ] **Verify capture time against a real iPhone.** The HEIC path is tested
+      against a hand-built fixture, which proves the box walker handles the
+      layout _I_ wrote — not the one Apple writes. Fold into 6.7 (real-device
+      matrix): upload one HEIC and one camera JPEG straight from a phone and
+      confirm `taken_at` matches the Photos app. Until then, treat HEIC capture
+      time as unproven on real hardware.
+
 ## Adopted from Once (competitor review, 2026-08-18)
 
 Screenshots of Once's create flow and logged-in home were reviewed. Three
