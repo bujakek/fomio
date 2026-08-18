@@ -46,7 +46,7 @@ export async function createEvent(
     // Only a slug collision is worth retrying — a fresh random suffix clears
     // it. Anything else is a real failure and should surface.
     if (error.code !== UNIQUE_VIOLATION) {
-      return { error: `Nem sikerült létrehozni: ${error.message}` }
+      return { error: 'Nem sikerült létrehozni. Próbáld újra.' }
     }
   }
 

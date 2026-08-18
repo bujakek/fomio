@@ -41,7 +41,7 @@ export function NewEventForm() {
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Anna &amp; Péter"
+          placeholder="Anna & Péter"
           className="glass min-h-14 w-full rounded-2xl px-5 text-base outline-none placeholder:text-muted-foreground/60 focus:border-accent"
         />
 

@@ -52,7 +52,7 @@ export function InstantAccess() {
                   <p className="text-sm font-semibold">Közös galéria</p>
                   <span className="flex items-center gap-1.5 text-[10px] text-accent">
                     <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-                    Élő
+                    Gyűlik
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 px-3 pb-4">

@@ -34,7 +34,7 @@ type Item = {
 
 const STATUS_LABEL: Record<Status, string> = {
   queued: 'várakozik',
-  preparing: 'előkészítés…',
+  preparing: 'feltöltés…',
   uploading: 'feltöltés…',
   done: 'kész',
   error: 'nem sikerült',

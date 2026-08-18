@@ -57,8 +57,9 @@ export function DangerZone({
     <section className="print-hidden border-destructive/30 mt-12 rounded-2xl border px-5 py-4">
       <h2 className="text-destructive font-semibold">Esemény törlése</h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-        Végleg törli az eseményt és mind a {photoCount} képet. Ez nem vonható
-        vissza — a vendégek képei sem állíthatók vissza utána.
+        {photoCount > 0
+          ? `Végleg törli az eseményt és mind a ${photoCount} képet. Ez nem vonható vissza.`
+          : 'Végleg törli az eseményt. Ez nem vonható vissza.'}
       </p>
 
       {error ? <p className="text-destructive mt-3 text-sm">{error}</p> : null}
@@ -96,7 +97,7 @@ export function DangerZone({
             />
           </span>
           <h3 id="delete-title" className="text-lg font-semibold text-balance">
-            Törlöd a(z) „{eventName}” eseményt?
+            Törlöd az „{eventName}” eseményt?
           </h3>
           <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
             {photoCount > 0

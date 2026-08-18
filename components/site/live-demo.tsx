@@ -47,7 +47,7 @@ export function LiveDemo() {
         <Reveal className="max-w-2xl">
           <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-wide text-accent">
             <span className="size-1.5 animate-pulse rounded-full bg-accent" />
-            ÉLŐ BEMUTATÓ
+            PRÓBÁLD KI
           </span>
           <h2 className="mt-6 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Nézd meg, milyen egy közös album

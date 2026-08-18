@@ -9,8 +9,8 @@ const benefits = [
   },
   {
     icon: Zap,
-    title: 'Egyből a helyén',
-    text: 'A feltöltött fotó egyből bekerül a közös galériába, ahol minden vendég megnézheti.',
+    title: 'Egy közös helyen',
+    text: 'A feltöltött fotó bekerül a közös galériába, ahol minden vendég megnézheti.',
   },
   {
     icon: ShieldCheck,
@@ -33,8 +33,8 @@ export function Benefits() {
             Minden megvan, semmit nem kell megtanulni
           </h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Az OurFilm úgy működik, ahogy a vendégeid amúgy is használják a
-            telefonjukat. Nulla súrlódás, maximális élmény.
+            A vendégeid a telefonjukból küldik a képeket — ahogy mindig is.
+            Semmit nem kell letölteniük vagy megtanulniuk.
           </p>
         </Reveal>
 

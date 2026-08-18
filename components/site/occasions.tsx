@@ -41,7 +41,7 @@ const occasions = [
     image: '/images/party.webp',
     alt: 'Esti buli',
     title: 'Az éjszaka, ahogy tényleg megtörtént',
-    text: 'A vendégek élőben töltik fel a képeket, te pedig másnap reggel az egészet egyben kapod meg.',
+    text: 'A vendégek az este folyamán töltik fel a képeket, te pedig másnap az egészet egyben kapod meg.',
   },
   {
     id: 'hetkoznapok',

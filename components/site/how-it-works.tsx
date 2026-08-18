@@ -27,9 +27,9 @@ const steps = [
     number: '03',
     icon: Images,
     title: 'Gyűjtsétek együtt a pillanatokat',
-    text: 'A képek élőben érkeznek a közös galériába. Az esemény után nagy felbontásban töltheted le az egészet.',
+    text: 'A képek a közös galériába gyűlnek. Az esemény után nagy felbontásban töltheted le az egészet.',
     image: '/images/evening-party.webp',
-    alt: 'Közös galéria élőben',
+    alt: 'Közös galéria',
     note: null,
   },
 ]

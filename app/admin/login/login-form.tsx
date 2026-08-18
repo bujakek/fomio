@@ -32,7 +32,7 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
 
     if (error) {
       setState('error')
-      setMessage(error.message)
+      setMessage('Nem sikerült elküldeni. Próbáld újra egy kicsit később.')
       return
     }
     setState('sent')
