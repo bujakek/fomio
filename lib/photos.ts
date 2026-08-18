@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { cache } from 'react'
+
 import { createClient } from './supabase/server'
 import type { Database } from './supabase/database.types'
 
@@ -50,17 +52,22 @@ export type HostPhoto = {
  * Reads the table rather than `event_photos()`, because that RPC exists to
  * hide exactly what a host needs to see here. RLS scopes the result to events
  * the caller owns, so the `event_id` filter narrows rather than protects.
+ *
+ * Wrapped in React `cache()` so the moderation grid and the danger zone can
+ * each read the list without a second round trip.
  */
-export async function getAllEventPhotos(eventId: string): Promise<HostPhoto[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('photos')
-    .select(
-      'id, storage_path, thumb_path, uploader_name, hidden_at, width, height, created_at, taken_at',
-    )
-    .eq('event_id', eventId)
-    .order('created_at', { ascending: false })
+export const getAllEventPhotos = cache(
+  async (eventId: string): Promise<HostPhoto[]> => {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('photos')
+      .select(
+        'id, storage_path, thumb_path, uploader_name, hidden_at, width, height, created_at, taken_at',
+      )
+      .eq('event_id', eventId)
+      .order('created_at', { ascending: false })
 
-  if (error) throw error
-  return data ?? []
-}
+    if (error) throw error
+    return data ?? []
+  },
+)

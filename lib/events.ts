@@ -88,22 +88,25 @@ export async function getOwnedEvents(): Promise<OwnedEvent[]> {
  * One of the host's own events, by slug. Returns null when it does not exist
  * *or* belongs to someone else — RLS makes those indistinguishable here, which
  * is the correct answer to give either way.
+ *
+ * Wrapped in React `cache()` like `getEventBySlug`: `generateMetadata` and the
+ * page both need this row, and without it that is two identical round trips.
  */
-export async function getOwnedEventBySlug(
-  slug: string,
-): Promise<OwnedEvent | null> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('events')
-    .select(
-      'id, slug, event_name, event_date, uploads_close_at, gallery_hidden_at, created_at',
-    )
-    .eq('slug', slug)
-    .maybeSingle()
+export const getOwnedEventBySlug = cache(
+  async (slug: string): Promise<OwnedEvent | null> => {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('events')
+      .select(
+        'id, slug, event_name, event_date, uploads_close_at, gallery_hidden_at, created_at',
+      )
+      .eq('slug', slug)
+      .maybeSingle()
 
-  if (error) throw error
-  return data
-}
+    if (error) throw error
+    return data
+  },
+)
 
 export type EventWithPreview = OwnedEvent & {
   photoCount: number

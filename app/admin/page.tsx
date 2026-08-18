@@ -1,9 +1,11 @@
 import { EventList } from '@/components/admin/event-list'
+import { EventListSkeleton } from '@/components/admin/skeletons'
 import { eventIsActive, getOwnedEventsWithPreviews } from '@/lib/events'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthUser } from '@/lib/supabase/user'
 import { CalendarPlus, LogOut, Plus } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,19 +14,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function AdminPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  const events = await getOwnedEventsWithPreviews()
-
+export default function AdminPage() {
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-16">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Eseményeid</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{user?.email}</p>
+          <Suspense
+            fallback={
+              <div className="mt-2 h-5 w-40 animate-pulse rounded-md bg-muted-foreground/20" />
+            }
+          >
+            <UserEmail />
+          </Suspense>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -46,23 +48,41 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      {events.length === 0 ? (
-        <div className="glass mt-10 flex flex-col items-center gap-3 rounded-3xl px-6 py-10 text-center">
-          <span className="flex size-14 items-center justify-center rounded-full bg-accent/20">
-            <CalendarPlus className="size-7 text-accent" strokeWidth={1.8} />
-          </span>
-          <p className="text-lg font-semibold">Még nincs eseményed</p>
-          <p className="max-w-sm text-sm leading-relaxed text-pretty text-muted-foreground">
-            Hozz létre egyet, és megkapod hozzá a QR-kódot, amit az asztalokra
-            tehetsz.
-          </p>
-        </div>
-      ) : (
-        <EventList
-          active={events.filter(eventIsActive)}
-          closed={events.filter((e) => !eventIsActive(e))}
-        />
-      )}
+      <Suspense fallback={<EventListSkeleton />}>
+        <OwnedEventList />
+      </Suspense>
     </main>
+  )
+}
+
+async function UserEmail() {
+  const user = await getAuthUser()
+  if (!user?.email) return null
+  return <p className="mt-2 text-sm text-muted-foreground">{user.email}</p>
+}
+
+async function OwnedEventList() {
+  const events = await getOwnedEventsWithPreviews()
+
+  if (events.length === 0) {
+    return (
+      <div className="glass mt-10 flex flex-col items-center gap-3 rounded-3xl px-6 py-10 text-center">
+        <span className="flex size-14 items-center justify-center rounded-full bg-accent/20">
+          <CalendarPlus className="size-7 text-accent" strokeWidth={1.8} />
+        </span>
+        <p className="text-lg font-semibold">Még nincs eseményed</p>
+        <p className="max-w-sm text-sm leading-relaxed text-pretty text-muted-foreground">
+          Hozz létre egyet, és megkapod hozzá a QR-kódot, amit az asztalokra
+          tehetsz.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <EventList
+      active={events.filter(eventIsActive)}
+      closed={events.filter((e) => !eventIsActive(e))}
+    />
   )
 }

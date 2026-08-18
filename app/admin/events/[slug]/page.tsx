@@ -2,6 +2,7 @@ import { DangerZone } from '@/components/admin/danger-zone'
 import { GalleryToggle } from '@/components/admin/gallery-toggle'
 import { ModerationGrid } from '@/components/admin/moderation-grid'
 import { QrCard } from '@/components/admin/qr-card'
+import { ModerationGridSkeleton } from '@/components/admin/skeletons'
 import { getOwnedEventBySlug } from '@/lib/events'
 import { getAllEventPhotos } from '@/lib/photos'
 import { formatEventDate } from '@/lib/format'
@@ -10,6 +11,7 @@ import { ArrowLeft, Download, ExternalLink, Images } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +31,6 @@ export default async function AdminEventPage({ params }: Props) {
   const event = await getOwnedEventBySlug(slug)
   if (!event) notFound()
 
-  const photos = await getAllEventPhotos(event.id)
   const url = eventUrl(event.slug)
   const closed =
     event.uploads_close_at !== null &&
@@ -97,7 +98,9 @@ export default async function AdminEventPage({ params }: Props) {
           Az elrejtett képek eltűnnek a galériából, de nem vesznek el — bármikor
           visszaállíthatod őket.
         </p>
-        <ModerationGrid photos={photos} slug={event.slug} />
+        <Suspense fallback={<ModerationGridSkeleton />}>
+          <EventPhotos slug={event.slug} eventId={event.id} />
+        </Suspense>
       </section>
 
       <section className="print-hidden mt-10">
@@ -118,11 +121,39 @@ export default async function AdminEventPage({ params }: Props) {
         </a>
       </section>
 
-      <DangerZone
-        slug={event.slug}
-        eventName={event.event_name}
-        photoCount={photos.length}
-      />
+      <Suspense fallback={null}>
+        <EventDangerZone
+          slug={event.slug}
+          eventName={event.event_name}
+          eventId={event.id}
+        />
+      </Suspense>
     </main>
+  )
+}
+
+async function EventPhotos({
+  slug,
+  eventId,
+}: {
+  slug: string
+  eventId: string
+}) {
+  const photos = await getAllEventPhotos(eventId)
+  return <ModerationGrid photos={photos} slug={slug} />
+}
+
+async function EventDangerZone({
+  slug,
+  eventName,
+  eventId,
+}: {
+  slug: string
+  eventName: string
+  eventId: string
+}) {
+  const photos = await getAllEventPhotos(eventId)
+  return (
+    <DangerZone slug={slug} eventName={eventName} photoCount={photos.length} />
   )
 }
