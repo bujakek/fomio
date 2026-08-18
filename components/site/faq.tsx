@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     q: 'Milyen minőségben érkeznek a fotók?',
-    a: 'Nagy felbontásban: a képek hosszabb éle legfeljebb 4096 pixel, alig észrevehető tömörítéssel. Így nagyíthatók és nyomtathatók maradnak, de a helyszíni wifin is gyorsan feltöltődnek.',
+    a: 'Nyomtatható minőségben. Nagyíthatók, vághatók, és szépen mutatnak papíron — nem úgy, mint a csevegőappokban.',
   },
   {
     q: 'Meddig érhetők el a képek?',
@@ -29,10 +29,6 @@ const faqs = [
   {
     q: 'Moderálhatom, mi kerül az albumba?',
     a: 'Igen. Házigazdaként elrejtheted vagy törölheted a nem kívánt képeket.',
-  },
-  {
-    q: 'Mi történik, ha gyenge a wifi a helyszínen?',
-    a: 'A telefon a feltöltés előtt lekicsinyíti a képet, így gyenge wifin is gyorsan feltöltődik. Ha egy feltöltés mégis megszakad, egyetlen koppintással újrapróbálható.',
   },
   {
     q: 'Hogyan kezelitek az adatokat?',

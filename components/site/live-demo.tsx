@@ -1,14 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import {
-  Check,
-  Download,
-  ImagePlus,
-  Loader2,
-  RotateCcw,
-  Wifi,
-} from 'lucide-react'
+import { Check, Download, ImagePlus, Loader2, RotateCcw } from 'lucide-react'
 import Image from 'next/image'
 import { useState } from 'react'
 import { Reveal } from './reveal'
@@ -168,10 +161,6 @@ export function LiveDemo() {
                           </>
                         )}
                       </button>
-                      <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Wifi className="size-3.5" />A feltöltés állapotát végig
-                        látod, gyenge wifi mellett is.
-                      </p>
                       {uploaded && (
                         <button
                           type="button"

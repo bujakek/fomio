@@ -40,8 +40,7 @@ export default async function UploadPage({ params }: Props) {
         <>
           <p className="mt-3 leading-relaxed text-pretty text-muted-foreground">
             Válaszd ki a képeket a telefonodról. Egyszerre többet is
-            kijelölhetsz — mi lekicsinyítjük őket, hogy gyenge wifin is
-            felmenjenek.
+            kijelölhetsz.
           </p>
           <div className="mt-8">
             <UploadQueue
