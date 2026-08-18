@@ -2,7 +2,7 @@ import 'client-only'
 
 import type { PreparedPhoto } from './image'
 import { PHOTO_BUCKET, photoStoragePaths } from './storage'
-import { createClient } from './supabase/client'
+import { createGuestClient } from './supabase/client'
 
 /**
  * Puts one prepared photo into Storage and records it.
@@ -24,7 +24,7 @@ export async function uploadPhoto({
   prepared: PreparedPhoto
   uploaderName: string | null
 }): Promise<void> {
-  const supabase = createClient()
+  const supabase = createGuestClient()
   const photoId = crypto.randomUUID()
   const paths = photoStoragePaths(eventId, photoId)
 

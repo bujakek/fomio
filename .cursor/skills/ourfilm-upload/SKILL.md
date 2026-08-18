@@ -88,7 +88,7 @@ Notes:
 Generate the id client-side so the storage path and the database row agree:
 
 ```ts
-const supabase = createClient() // lib/supabase/client.ts
+const supabase = createGuestClient() // lib/supabase/client.ts — not createClient(); that one rides the host session
 const photoId = crypto.randomUUID()
 const path = `${eventId}/${photoId}.jpg`
 

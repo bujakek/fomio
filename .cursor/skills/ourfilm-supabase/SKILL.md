@@ -89,7 +89,7 @@ create policy "host manages own events"
   with check (owner_id = auth.uid());
 
 create policy "guests add photos while uploads are open"
-  on public.photos for insert to anon
+  on public.photos for insert to anon, authenticated
   with check (
     hidden_at is null
     and public.event_accepts_uploads(event_id)
@@ -129,7 +129,7 @@ All three are `security definer`, `stable`, and `set search_path = ''` (so fully
 
 Why the rest is shaped this way:
 
-- Guests get **insert only**. No update, no delete — a guest can't edit or remove someone else's photo, and can't un-hide a moderated one (`hidden_at is null` is enforced in `with check`).
+- Guests get **insert only**. No update, no delete — a guest can't edit or remove someone else's photo, and can't un-hide a moderated one (`hidden_at is null` is enforced in `with check`). The insert policies are `to anon, authenticated`, not `anon` alone: a leftover `/admin` session (iOS Camera opens a scanned QR in Safari, which shares those cookies) must not refuse a guest-shaped upload.
 - **An insert must not ask for the row back.** `supabase-js` `.insert()` alone sends `Prefer: return=minimal` and succeeds; chaining `.select()` asks to read what it just wrote, which guests have no policy for.
 - **RLS makes anon `update` and `delete` no-ops, not errors.** They return `204` having matched zero rows. When testing, assert on the row's state afterwards — a status code alone will convince you the table is wide open when it isn't.
 - `events.gallery_hidden_at` closes the gallery to guests while uploads continue; `event_photos()` returns nothing while it is set, and `event_by_slug()` exposes it as `gallery_private` so the UI can explain the state instead of showing an empty album. Host-togglable both ways.
@@ -147,7 +147,7 @@ on conflict (id) do nothing;
 
 -- No select policy for anon. See "Public download, but no listing".
 create policy "guests upload into an open event folder"
-  on storage.objects for insert to anon
+  on storage.objects for insert to anon, authenticated
   with check (
     bucket_id = 'event-photos'
     and public.event_folder_accepts_uploads((storage.foldername(name))[1])
@@ -188,16 +188,34 @@ The bucket is public, which in Supabase means the `/storage/v1/object/public/…
 
 Two files, two purposes. Never import the server client from a Client Component.
 
-`lib/supabase/client.ts` — browser (guest uploads, gallery interactivity):
+`lib/supabase/client.ts` — two browser helpers:
+
+- `createClient()` — `createBrowserClient` from `@supabase/ssr`. Reads the auth cookies. Use this for `/admin` sign-in and anything that should see the host session.
+- `createGuestClient()` — `@supabase/supabase-js` with `persistSession: false`. Always the anon key, no cookies. **Guest uploads must use this**, so a leftover admin session on the phone cannot change the role Storage sees. The QR-opened page and the shared-link page then hit the API as the same role.
 
 ```ts
 import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
 
 export function createClient() {
   return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  )
+}
+
+export function createGuestClient() {
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    },
   )
 }
 ```

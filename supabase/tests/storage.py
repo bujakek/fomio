@@ -109,6 +109,22 @@ try:
                  raw_body=b'hello', headers={'Content-Type': 'text/plain'})
     check('bucket rejects non-jpeg', st >= 400, f'{st}')
 
+    # iOS Camera opens a scanned QR in Safari, which still has the host's
+    # /admin cookies. Storage then sees `authenticated`, not `anon`. A leftover
+    # session must not refuse a guest-shaped upload into an open event.
+    print("\nsigned-in guest:")
+    signed_in = f'{a}/{uuid.uuid4()}.jpg'
+    st, r = call('POST', f'/storage/v1/object/event-photos/{signed_in}', ANON,
+                 raw_body=PIXEL, headers={'Content-Type': 'image/jpeg'},
+                 bearer=host_b)
+    check('signed-in non-owner uploads into an open event', st in (200, 201),
+          f'{st} {str(r)[:70]}')
+
+    st, r = call('POST', f'/storage/v1/object/event-photos/{ghost}/y.jpg', ANON,
+                 raw_body=PIXEL, headers={'Content-Type': 'image/jpeg'},
+                 bearer=host_b)
+    check('signed-in non-owner still cannot invent a folder', st >= 400, f'{st}')
+
     print("\npublic download vs listing:")
     st, r = call('GET', f'/storage/v1/object/public/event-photos/{obj}', ANON)
     check('public URL serves the file with no select policy', st == 200 and len(r) == len(PIXEL),
@@ -134,7 +150,7 @@ try:
     print("\nhost ownership (real signed-in JWT, not service_role):")
     st, r = call('POST', '/storage/v1/object/list/event-photos', ANON,
                  {'prefix': f'{a}/', 'limit': 100}, bearer=host_a)
-    check('host lists objects in their own event', isinstance(r, list) and len(r) == 2,
+    check('host lists objects in their own event', isinstance(r, list) and len(r) == 3,
           f'{st} {len(r) if isinstance(r, list) else r}')
 
     st, r = call('POST', '/storage/v1/object/list/event-photos', ANON,
@@ -157,7 +173,7 @@ try:
     st2, listing = call('POST', '/storage/v1/object/list/event-photos', ANON,
                         {'prefix': f'{a}/', 'limit': 100}, bearer=host_a)
     check('owning host can delete the object',
-          st in (200, 204) and isinstance(listing, list) and len(listing) == 1,
+          st in (200, 204) and isinstance(listing, list) and len(listing) == 2,
           f'delete={st} remaining={len(listing) if isinstance(listing, list) else listing}')
 
 finally:
