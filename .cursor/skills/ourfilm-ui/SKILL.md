@@ -118,6 +118,6 @@ it; the nav label above it stays `Vélemények` while the target is
 These are not marketing pages — tighten the rhythm:
 
 - Vertical padding drops to `py-10 sm:py-16`; sections stack in a single column.
-- One clear primary action per screen, thumb-reachable near the bottom.
+- One clear primary action per screen, thumb-reachable near the bottom — **but only when the screen has enough content to justify it.** Pinning the action down with `mt-auto` on a sparse page leaves a screen-height gap that reads as a page which failed to load. The guest event page is five short lines; it centres instead. Bottom-anchor the upload queue and the gallery, where content actually fills the viewport.
 - Photo grids: `grid-cols-2 sm:grid-cols-3` with `gap-2`, `aspect-square`, `rounded-2xl`, `object-cover`. Reserve space with the stored `width`/`height` to avoid layout shift.
 - Keep `<BackgroundGlow />` for continuity with the landing page, but skip heavy `Reveal` staggering — guests are here to act, not to scroll a pitch.
