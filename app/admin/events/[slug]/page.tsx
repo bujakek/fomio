@@ -107,18 +107,9 @@ export default async function AdminEventPage({ params }: Props) {
         <h2 className="mb-3 text-lg font-semibold tracking-tight">
           Album letöltése
         </h2>
-        <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-          Az összes kép eredeti méretben, egyetlen ZIP-fájlban. Az elrejtett
-          képek külön mappába kerülnek. Nagy albumnál a letöltés indulása
-          eltarthat egy ideig.
-        </p>
-        <a
-          href={`/admin/events/${event.slug}/export`}
-          className="btn-shine inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground"
-        >
-          <Download className="size-5" strokeWidth={1.8} />
-          ZIP letöltése
-        </a>
+        <Suspense fallback={<AlbumDownloadSkeleton />}>
+          <AlbumDownload slug={event.slug} eventId={event.id} />
+        </Suspense>
       </section>
 
       <Suspense fallback={null}>
@@ -129,6 +120,54 @@ export default async function AdminEventPage({ params }: Props) {
         />
       </Suspense>
     </main>
+  )
+}
+
+function AlbumDownloadSkeleton() {
+  return (
+    <div aria-hidden="true">
+      <p className="mb-4 h-10 animate-pulse rounded-md bg-muted-foreground/15" />
+      <div className="h-14 w-full animate-pulse rounded-full bg-muted-foreground/15" />
+    </div>
+  )
+}
+
+async function AlbumDownload({
+  slug,
+  eventId,
+}: {
+  slug: string
+  eventId: string
+}) {
+  const photos = await getAllEventPhotos(eventId)
+  const empty = photos.length === 0
+
+  return (
+    <>
+      <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+        {empty
+          ? 'Még nincs kép az albumban — a letöltés akkor lesz elérhető, ha a vendégek feltöltenek.'
+          : 'Az összes kép eredeti méretben, egyetlen ZIP-fájlban. Az elrejtett képek külön mappába kerülnek. Nagy albumnál a letöltés indulása eltarthat egy ideig.'}
+      </p>
+      {empty ? (
+        <button
+          type="button"
+          disabled
+          className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          <Download className="size-5" strokeWidth={1.8} />
+          ZIP letöltése
+        </button>
+      ) : (
+        <a
+          href={`/admin/events/${slug}/export`}
+          className="btn-shine inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground"
+        >
+          <Download className="size-5" strokeWidth={1.8} />
+          ZIP letöltése
+        </a>
+      )}
+    </>
   )
 }
 
