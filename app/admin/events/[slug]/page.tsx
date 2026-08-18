@@ -59,34 +59,6 @@ export default async function AdminEventPage({ params }: Props) {
         <QrCard name={event.event_name} url={url} />
       </div>
 
-      {/* What the QR actually opens.
-          The card shows the address; this shows the destination. A wrong date
-          or a name that reads badly is invisible on a QR code and obvious here
-          — and by the time cards are printed it is too late to notice.
-          A live iframe rather than a mock, so it cannot drift from the real
-          page: it is the same public URL a guest gets. */}
-      <section className="print-hidden mt-10">
-        <h2 className="mb-1 text-lg font-semibold tracking-tight">
-          Amit a vendégek látnak
-        </h2>
-        <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-          Ez nyílik meg a QR-kód beolvasásakor. Nyomtatás előtt érdemes ránézni.
-        </p>
-        <div className="glass mx-auto w-[390px] max-w-full overflow-hidden rounded-[2rem] p-2">
-          <div className="h-[560px] overflow-hidden rounded-[1.6rem]">
-            <iframe
-              src={`/e/${event.slug}`}
-              title="Vendégnézet előnézet"
-              loading="lazy"
-              // 390px is the phone width the guest pages are designed against;
-              // scaling the frame keeps the preview honest rather than
-              // rendering a squeezed desktop layout.
-              className="h-[800px] w-[390px] origin-top scale-[0.7] border-0"
-            />
-          </div>
-        </div>
-      </section>
-
       <div className="print-hidden mt-8 flex flex-col gap-3">
         <p className="text-sm text-muted-foreground">
           Ezt a linket olvassák be a vendégek:

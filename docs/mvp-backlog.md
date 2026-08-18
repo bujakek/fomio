@@ -516,11 +516,11 @@ things were taken; the rest was rejected on purpose.
       (Esküvő, Szülinap, Céges buli, Ballagás, Évforduló) rather than
       personalised titles, since there is no host name to interpolate. Removes
       the blank-field pause.
-- [x] **Guest-view preview** on the admin event page — a live iframe of
-      `/e/[slug]` at phone width. The QR card shows the _address_; this shows
-      the _destination_. A wrong date is invisible on a QR code and obvious
-      here, and after cards are printed it is too late. A live frame rather
-      than a mock so it cannot drift from the real page.
+- [ ] ~~**Guest-view preview**~~ — built, then removed. A live iframe of
+      `/e/[slug]` on the admin event page, intended as a pre-print check.
+      Rejected in use: the host has just filled in the name and date, and a
+      "Vendégnézet" link to the real page already sits alongside the QR card, so
+      the embedded copy earned no room it took.
 - [x] **Thumbnails and an active/finished split** in the admin list, with a
       `+N` overflow. Hidden photos are excluded from the strip but counted in
       the overflow, so the number matches the moderation grid.
