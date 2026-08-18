@@ -555,6 +555,22 @@ Do not reopen these without a reason; the tickets below already assume them.
       and read as a failed upload — the exact signal this pilot exists to
       measure. Revisit only after the pilot answers that question.
 
+- [ ] ~~**Write the capture time at upload instead of at export.**~~ Considered
+      and declined. It would make each stored object self-describing, which
+      would close one real gap: the lightbox serves the full object from a
+      public bucket, so a guest who saves a photo out of the gallery gets an
+      undated file — only ZIP downloads carry dates. Declined anyway on three
+      counts. It cannot replace `taken_at`: the export numbers files in capture
+      order and builds each name before fetching a byte, so ordering a 600-photo
+      album from file bodies would mean parsing 600 headers first — it would be
+      a third home for the date, not a simplification. It freezes a timezone
+      decision made on the guest's device, so someone uploading after flying
+      home would bake a foreign offset into a Hungarian wedding photo, whereas a
+      `timestamptz` rendered at export stays correctable. And guests hold
+      insert-only rights on storage, so a wrong baked date needs service-role
+      object rewriting where a column needs one `UPDATE`. Revisit only if guests
+      turn out to save photos out of the gallery often.
+
 - [ ] **Verify capture time against a real iPhone.** The HEIC path is tested
       against a hand-built fixture, which proves the box walker handles the
       layout _I_ wrote — not the one Apple writes. Fold into 6.7 (real-device
