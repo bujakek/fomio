@@ -1,5 +1,6 @@
 import { NamePrompt } from '@/components/event/name-prompt'
 import { getEventBySlug, uploadsAreOpen } from '@/lib/events'
+import { getEventPhotos, summarisePhotos } from '@/lib/photos'
 import { formatEventDate } from '@/lib/format'
 import { Images, Lock, Upload } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -29,6 +30,15 @@ export default async function EventPage({ params }: Props) {
   const eventDate = formatEventDate(event.event_date)
   const canUpload = uploadsAreOpen(event)
 
+  // Costs a full row fetch for two numbers, which is the honest trade at pilot
+  // scale — a dedicated count needs a `security definer` function, since
+  // guests cannot read the table. Revisit if an album ever gets large enough
+  // for this to show up. `event_photos` returns nothing while the gallery is
+  // hidden, so skip it rather than render a confident zero.
+  const summary = event.gallery_private
+    ? null
+    : summarisePhotos(await getEventPhotos(event.id))
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center px-4 py-10 sm:py-16">
       <header className="text-center">
@@ -47,6 +57,29 @@ export default async function EventPage({ params }: Props) {
             : 'A feltöltés lezárult, de az album megmarad — nézd meg, mi gyűlt össze.'}
         </p>
       </header>
+
+      {/* Social proof, and a signal that the album is alive. Hidden at zero:
+          "0 kép" reads as broken rather than as an empty album waiting for
+          you. The contributor count is suppressed until at least one guest
+          has given a name — see summarisePhotos for why it is a floor. */}
+      {summary && summary.photoCount > 0 ? (
+        <div className="glass mt-6 flex items-stretch justify-center divide-x divide-border rounded-2xl py-3">
+          <div className="px-7 text-center">
+            <p className="text-xl font-semibold tracking-tight">
+              {summary.photoCount}
+            </p>
+            <p className="text-xs text-muted-foreground">kép</p>
+          </div>
+          {summary.hasNamedContributors ? (
+            <div className="px-7 text-center">
+              <p className="text-xl font-semibold tracking-tight">
+                {summary.contributorCount}
+              </p>
+              <p className="text-xs text-muted-foreground">vendég</p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* Sits above the actions rather than in front of them — see the
           component for why this is not a modal. */}

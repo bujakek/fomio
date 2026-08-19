@@ -32,6 +32,45 @@ export async function getEventPhotos(eventId: string): Promise<GalleryPhoto[]> {
   return data ?? []
 }
 
+export type PhotoSummary = {
+  photoCount: number
+  /** Named contributors, plus one bucket for all anonymous uploads. */
+  contributorCount: number
+  /** False when nobody has given a name — the count is meaningless then. */
+  hasNamedContributors: boolean
+}
+
+/**
+ * Counts worth showing a guest on the event page: how much is in the album,
+ * and roughly how many people put it there.
+ *
+ * `contributorCount` is a **floor, not a headcount**. Guests who skip the name
+ * field are indistinguishable from one another, so every anonymous upload
+ * collapses into a single bucket — twenty unnamed photos from twenty people
+ * count as one. Undercounting is the right direction to be wrong in: it never
+ * inflates participation, which is the number the pilot exists to measure.
+ *
+ * Names are compared case-insensitively so "Réka" and "réka" are one person.
+ * Two different guests who share a first name still merge, which is the same
+ * roughness the backlog already accepts for the funnel metric.
+ */
+export function summarisePhotos(photos: GalleryPhoto[]): PhotoSummary {
+  const named = new Set<string>()
+  let anonymous = false
+
+  for (const photo of photos) {
+    const name = photo.uploader_name?.trim()
+    if (name) named.add(name.toLocaleLowerCase('hu'))
+    else anonymous = true
+  }
+
+  return {
+    photoCount: photos.length,
+    contributorCount: named.size + (anonymous ? 1 : 0),
+    hasNamedContributors: named.size > 0,
+  }
+}
+
 export type HostPhoto = {
   id: string
   storage_path: string

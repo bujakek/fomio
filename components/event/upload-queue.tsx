@@ -12,6 +12,7 @@ import { uploadPhoto } from '@/lib/upload-photo'
 import { cn } from '@/lib/utils'
 import {
   AlertCircle,
+  Camera,
   Check,
   ImagePlus,
   Images,
@@ -313,35 +314,61 @@ export function UploadQueue({
         </p>
       ) : null}
 
-      <label
-        className={cn(
-          'btn-shine inline-flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground transition-transform',
-          busy ? 'pointer-events-none opacity-60' : 'hover:scale-[1.02]',
-        )}
-      >
-        <ImagePlus className="size-5" strokeWidth={1.8} />
-        {busy
-          ? 'Feltöltés folyamatban…'
-          : items.length > 0
-            ? 'Még több kép'
-            : 'Képek kiválasztása'}
-        <input
-          type="file"
-          accept={ACCEPT}
-          multiple
-          disabled={busy}
-          className="sr-only"
-          onChange={(e) => {
-            addFiles(e.target.files)
-            // Reset so picking the same file twice still fires a change.
-            e.target.value = ''
-          }}
-        />
-      </label>
+      {/* Two entry points, not one input with `capture` bolted on. Adding
+          `capture` to the picker would *replace* gallery access rather than
+          add to it, and most of what a guest uploads is already in their
+          camera roll. Camera leads because the other half of the job is the
+          shot they are about to take. */}
+      <div className="flex gap-2">
+        <label
+          className={cn(
+            'btn-shine inline-flex min-h-14 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-base font-semibold text-primary-foreground transition-transform',
+            busy ? 'pointer-events-none opacity-60' : 'hover:scale-[1.02]',
+          )}
+        >
+          <Camera className="size-5" strokeWidth={1.8} />
+          Kamera
+          <input
+            type="file"
+            accept={ACCEPT}
+            // No `multiple`: a capture session produces one shot, and the
+            // attribute only muddies what the OS offers.
+            capture="environment"
+            disabled={busy}
+            className="sr-only"
+            onChange={(e) => {
+              addFiles(e.target.files)
+              e.target.value = ''
+            }}
+          />
+        </label>
+
+        <label
+          className={cn(
+            'glass glass-hover inline-flex min-h-14 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full px-5 text-base font-semibold transition-transform',
+            busy && 'pointer-events-none opacity-60',
+          )}
+        >
+          <ImagePlus className="size-5" strokeWidth={1.8} />
+          Galéria
+          <input
+            type="file"
+            accept={ACCEPT}
+            multiple
+            disabled={busy}
+            className="sr-only"
+            onChange={(e) => {
+              addFiles(e.target.files)
+              // Reset so picking the same file twice still fires a change.
+              e.target.value = ''
+            }}
+          />
+        </label>
+      </div>
 
       {busy ? (
         <p className="text-center text-xs leading-relaxed text-muted-foreground">
-          Ne zárd be az oldalt, amíg a feltöltés tart.
+          Feltöltés folyamatban — ne zárd be az oldalt.
         </p>
       ) : null}
     </div>
