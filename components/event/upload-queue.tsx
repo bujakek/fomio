@@ -1,12 +1,7 @@
 'use client'
 
 import { CreateOwnAlbum } from '@/components/event/create-own-album'
-import {
-  GUEST_NAME_MAX_LENGTH,
-  markUploadedTo,
-  readGuestName,
-  writeGuestName,
-} from '@/lib/guest-name'
+import { markUploadedTo, readGuestName } from '@/lib/guest-name'
 import { prepareForUpload, type PreparedPhoto } from '@/lib/image'
 import { uploadPhoto } from '@/lib/upload-photo'
 import { cn } from '@/lib/utils'
@@ -61,18 +56,6 @@ export function UploadQueue({
   const [items, setItems] = useState<Item[]>([])
   const itemsRef = useRef<Item[]>([])
   const runningRef = useRef(false)
-  const nameRef = useRef<HTMLInputElement>(null)
-
-  // The nickname is deliberately not React state. It is only read at upload
-  // time, and holding it in state would mean either seeding it during render
-  // (localStorage does not exist on the server, so: hydration mismatch) or
-  // setting state inside an effect, which cascades a second render on every
-  // mount. Writing straight to the input avoids both.
-  useEffect(() => {
-    const stored = readGuestName()
-    if (stored && nameRef.current) nameRef.current.value = stored
-  }, [])
-
   // Revoke previews on unmount. Object URLs live until the document dies, so
   // a guest who uploads forty photos and stays on the page would otherwise
   // pin forty full-size images in memory on a phone.
@@ -162,7 +145,9 @@ export function UploadQueue({
           await uploadPhoto({
             eventId,
             prepared,
-            uploaderName: nameRef.current?.value.trim() || null,
+            // The join gate guarantees this is set. `|| null` covers the
+            // guest who cleared site data mid-session rather than trusting it.
+            uploaderName: readGuestName() || null,
           })
           patch(item.key, { status: 'done' })
           markUploadedTo(eventId)
@@ -201,26 +186,6 @@ export function UploadQueue({
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <label
-          htmlFor="uploader-name"
-          className="mb-2 block text-sm text-muted-foreground"
-        >
-          A neved — nem kötelező
-        </label>
-        <input
-          id="uploader-name"
-          ref={nameRef}
-          type="text"
-          defaultValue=""
-          maxLength={GUEST_NAME_MAX_LENGTH}
-          autoComplete="name"
-          placeholder="Például: Réka"
-          onChange={(e) => writeGuestName(e.target.value)}
-          className="glass min-h-14 w-full rounded-2xl px-5 text-base text-foreground transition-colors outline-none placeholder:text-muted-foreground/60 focus:border-accent"
-        />
-      </div>
-
       {allSettled && doneCount > 0 ? (
         <div className="glass-strong flex flex-col items-center gap-3 rounded-3xl px-6 py-8 text-center">
           <span className="flex size-14 items-center justify-center rounded-full bg-accent/20">
