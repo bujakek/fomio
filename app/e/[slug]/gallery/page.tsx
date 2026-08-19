@@ -55,7 +55,7 @@ export default async function GalleryPage({ params }: Props) {
         <div className="flex items-center gap-2">
           {canUpload ? (
             <Link
-              href={`/e/${event.slug}/upload`}
+              href={`/e/${event.slug}`}
               aria-label="Képek feltöltése"
               className="btn-shine inline-flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:scale-[1.05]"
             >
@@ -92,7 +92,7 @@ export default async function GalleryPage({ params }: Props) {
           </p>
           {canUpload ? (
             <Link
-              href={`/e/${event.slug}/upload`}
+              href={`/e/${event.slug}`}
               className="btn-shine mt-3 inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground"
             >
               <ImagePlus className="size-5" strokeWidth={1.8} />

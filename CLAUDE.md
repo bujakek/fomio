@@ -70,13 +70,12 @@ Deployed builds are unaffected: Vercel injects all of these at build and runtime
 
 ## Routing (settled — QR codes get printed, so this is expensive to change)
 
-| Route               | Purpose                                            |
-| ------------------- | -------------------------------------------------- |
-| `/`                 | Marketing homepage. Permanent. Don't repurpose it. |
-| `/e/[slug]`         | Event page guests land on from the QR code         |
-| `/e/[slug]/upload`  | Upload screen (camera or gallery picker)           |
-| `/e/[slug]/gallery` | Shared gallery                                     |
-| `/admin`            | Host/admin area, Supabase Auth magic link          |
+| Route               | Purpose                                                                 |
+| ------------------- | ----------------------------------------------------------------------- |
+| `/`                 | Marketing homepage. Permanent. Don't repurpose it.                      |
+| `/e/[slug]`         | Event page guests land on from the QR code, and where uploading happens |
+| `/e/[slug]/gallery` | Shared gallery                                                          |
+| `/admin`            | Host/admin area, Supabase Auth magic link                               |
 
 The `/e/` prefix is what the landing page already advertises in `qr-preview.tsx` and `how-it-works.tsx`, and it keeps the root namespace free for marketing pages.
 
@@ -104,8 +103,8 @@ Storage layout: `event-photos/{event_id}/{photo_id}.jpg` plus `event-photos/{eve
 
 **Building:**
 
-1. Event page `/e/[slug]` — name, date, prominent upload CTA, link to gallery
-2. Upload `/e/[slug]/upload` — camera or gallery picker, client-side HEIC conversion + compression, per-file progress, manual retry
+1. Event page `/e/[slug]` — name, date, participation counts, the upload queue itself, link to gallery
+2. Upload, inline on the event page — OS picker, client-side HEIC conversion + compression, per-file progress, manual retry
 3. Gallery `/e/[slug]/gallery` — responsive grid, lightbox, hidden photos excluded
 4. Admin `/admin` — create events, generate/print QR, hide photos, **ZIP download of the whole album**
 5. QR code generated from the final event URL

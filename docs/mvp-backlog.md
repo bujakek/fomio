@@ -419,6 +419,13 @@ Do not reopen these without a reason; the tickets below already assume them.
       views per route: `/e/[slug]` (landed) versus `/e/[slug]/upload` (opened
       the picker). Uploads over landings is the participation rate the pilot is
       measuring.
+      **Superseded in part:** `/e/[slug]/upload` no longer exists — the queue
+      was inlined onto the event page, so landing and opening the picker are
+      one page view. The headline rate survives unchanged, because the
+      numerator was never that route: it is rows in `photos` over page views of
+      `/e/[slug]`. What is lost is the middle signal that separated "saw the
+      page and did nothing" from "opened the picker and gave up", so a
+      disappointing result will be harder to diagnose than to detect.
       Two honest limits. Vercel **custom events** need a paid plan and no-op
       silently without one, which is why none are used — plain page views are
       included and do work. And page views are not unique visitors, so a guest
