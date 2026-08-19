@@ -1,5 +1,10 @@
+import createMDX from '@next/mdx'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Lets a blog post be an .mdx file that *is* the page, rather than a
+  // markdown string parsed at runtime by a loader we would have to write.
+  pageExtensions: ['ts', 'tsx', 'mdx'],
   images: {
     // Optimization is ON so the landing page's local assets get responsive
     // srcsets — a 1024px source has no business being downloaded into a 140px
@@ -14,4 +19,6 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+const withMDX = createMDX()
+
+export default withMDX(nextConfig)

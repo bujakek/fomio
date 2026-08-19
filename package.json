@@ -19,8 +19,12 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@next/mdx": "^16.3.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
+    "@types/mdx": "^2.0.14",
     "@vercel/analytics": "1.6.1",
     "class-variance-authority": "^0.7.1",
     "client-only": "^0.0.1",

@@ -48,6 +48,7 @@ const columns: FooterColumn[] = [
     heading: 'Cég',
     links: [
       { label: 'Rólunk', href: '/rolunk' },
+      { label: 'Blog', href: '/blog' },
       { label: 'Adatkezelés', href: '/adatvedelem' },
       { label: 'ÁSZF', href: '/aszf' },
     ],
