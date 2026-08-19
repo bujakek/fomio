@@ -1,10 +1,47 @@
+import { CONTACT_EMAIL } from '@/lib/site'
 import { Aperture } from 'lucide-react'
+import Link from 'next/link'
 
-const links = [
-  { label: 'Hogyan működik', href: '#how-it-works' },
-  { label: 'Alkalmak', href: '#occasions' },
-  { label: 'Vélemények', href: '#testimonials' },
-  { label: 'GYIK', href: '#faq' },
+interface FooterColumn {
+  heading: string
+  links: { label: string; href: string }[]
+}
+
+/**
+ * Every href here must resolve to something that exists — a section that is
+ * actually on the homepage, or a route with a page behind it. Links to pages
+ * we have not written yet belong in the backlog, not in the footer.
+ *
+ * Homepage anchors are absolute (`/#faq`, not `#faq`) because the footer also
+ * renders on /arak, /rolunk and the rest, where a bare fragment points at
+ * nothing.
+ */
+const columns: FooterColumn[] = [
+  {
+    heading: 'Termék',
+    links: [
+      { label: 'Hogyan működik', href: '/#how-it-works' },
+      { label: 'Alkalmak', href: '/#occasions' },
+      { label: 'Fotóminőség', href: '/#photo-quality' },
+      { label: 'Árak', href: '/arak' },
+    ],
+  },
+  {
+    heading: 'Támogatás',
+    links: [
+      { label: 'Gyakori kérdések', href: '/#faq' },
+      { label: 'Kapcsolat', href: '/kapcsolat' },
+      { label: 'Esemény létrehozása', href: '/admin/login' },
+    ],
+  },
+  {
+    heading: 'Cég',
+    links: [
+      { label: 'Rólunk', href: '/rolunk' },
+      { label: 'Adatkezelés', href: '/adatvedelem' },
+      { label: 'ÁSZF', href: '/aszf' },
+    ],
+  },
 ]
 
 export function Footer() {
@@ -12,33 +49,59 @@ export function Footer() {
     <footer className="relative px-4 pt-16 pb-10 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="glass rounded-[2rem] p-8 sm:p-12">
-          <div className="flex flex-col gap-10 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-12 lg:flex-row lg:justify-between">
             <div className="max-w-xs">
-              <div className="flex items-center gap-2.5">
+              <Link
+                href="/"
+                className="flex items-center gap-2.5"
+                aria-label="OurFilm — vissza a főoldalra"
+              >
                 <span className="glass flex size-9 items-center justify-center rounded-xl">
-                  <Aperture className="size-5 text-accent" strokeWidth={1.6} />
+                  <Aperture
+                    className="size-5 text-accent"
+                    strokeWidth={1.6}
+                    aria-hidden="true"
+                  />
                 </span>
                 <span className="text-lg font-semibold tracking-tight">
                   OurFilm
                 </span>
-              </div>
+              </Link>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                 Közös albumok, minden vendég szemével.
               </p>
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="mt-4 inline-block text-sm text-foreground/80 underline underline-offset-4 transition-colors hover:text-foreground"
+              >
+                {CONTACT_EMAIL}
+              </a>
             </div>
 
-            <ul className="flex flex-col gap-3 sm:items-end">
-              {links.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-foreground/80 transition-colors hover:text-foreground"
-                  >
-                    {link.label}
-                  </a>
-                </li>
+            <nav
+              aria-label="Lábléc"
+              className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:gap-16"
+            >
+              {columns.map((column) => (
+                <div key={column.heading}>
+                  <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                    {column.heading}
+                  </h2>
+                  <ul className="mt-4 flex flex-col gap-3">
+                    {column.links.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          className="text-sm text-foreground/80 transition-colors hover:text-foreground"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </nav>
           </div>
 
           <div className="mt-12 border-t border-border pt-6">

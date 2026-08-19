@@ -32,7 +32,10 @@ export function PhotoQuality() {
   }
 
   return (
-    <section className="relative px-4 py-24 sm:px-6 lg:py-32">
+    <section
+      id="photo-quality"
+      className="relative px-4 py-24 sm:px-6 lg:py-32"
+    >
       <div className="mx-auto max-w-6xl">
         <Reveal className="max-w-2xl">
           <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-wide text-accent">
