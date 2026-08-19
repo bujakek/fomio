@@ -82,7 +82,7 @@ export function FinalCta() {
                   href="/admin/login"
                   className="btn-shine inline-flex items-center justify-center rounded-full bg-primary px-8 py-4 text-base font-semibold text-primary-foreground transition-transform hover:scale-[1.03]"
                 >
-                  Esemény létrehozása
+                  Esemény létrehozása — ingyen
                 </a>
               </div>
               <p className="mt-5 text-sm text-muted-foreground">

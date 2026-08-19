@@ -25,18 +25,18 @@ export function Hero() {
             QR-kódos közös fotóalbum
           </span>
 
-          <h1 className="mt-6 text-5xl leading-[1.03] font-semibold tracking-tight text-balance sm:text-6xl lg:text-[5rem]">
-            <span className="text-gradient">Az esemény</span>
+          <h1 className="mt-6 text-[2rem] leading-[1.05] font-semibold tracking-tight text-balance sm:text-5xl xl:text-[3.5rem]">
+            <span className="text-gradient">Nincs app.</span>
             <br />
-            minden vendég
+            Nincs regisztráció.
             <br />
-            <span className="text-gradient-accent">szemével</span>
+            <span className="text-gradient-accent">Csak a fotók.</span>
           </h1>
 
           <p className="mt-7 max-w-lg text-base leading-relaxed text-pretty text-muted-foreground sm:text-lg">
             A vendégek beolvassák a QR-kódot, és a telefonjuk böngészőjéből
-            azonnal feltöltik a képeiket. Nincs alkalmazás, nincs regisztráció —
-            minden fotó egyetlen közös galériába érkezik.
+            azonnal feltöltik a képeiket — minden fotó egyetlen közös galériába
+            érkezik.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -44,7 +44,7 @@ export function Hero() {
               href="/admin/login"
               className="btn-shine inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.03]"
             >
-              Esemény létrehozása
+              Esemény létrehozása — ingyen
             </a>
             <a
               href="#live-demo"

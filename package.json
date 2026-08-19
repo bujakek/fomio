@@ -14,6 +14,7 @@
     "types:gen": "supabase gen types typescript --linked > lib/supabase/database.types.ts",
     "types:check": "supabase gen types typescript --linked | diff -u lib/supabase/database.types.ts - && echo 'types match the remote schema'",
     "seed": "node --env-file=.env.local --experimental-strip-types scripts/seed.ts",
+    "seed:demo": "node --env-file=.env.local --experimental-strip-types scripts/seed-demo.ts",
     "test:exif": "node --experimental-strip-types tests/exif.ts"
   },
   "dependencies": {

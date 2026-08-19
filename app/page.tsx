@@ -14,6 +14,13 @@ import { QrPreview } from '@/components/site/qr-preview'
 import { Stats } from '@/components/site/stats'
 import { Testimonials } from '@/components/site/testimonials'
 
+/**
+ * The sample album in <LiveDemo /> is read from the database, so the page is
+ * revalidated rather than fully static. An hour is plenty: the album is
+ * seeded, not user-generated, and changes only when someone re-runs the seed.
+ */
+export const revalidate = 3600
+
 export default function Page() {
   return (
     <div className="relative min-h-screen">
