@@ -145,7 +145,11 @@ export function Hero() {
             <div className="absolute top-8 -right-2 w-[34%] max-w-[132px] animate-float-slower [animation-delay:-8s]">
               <div className="glass-strong relative overflow-hidden rounded-2xl p-3">
                 <div className="flex items-center justify-center rounded-xl bg-white p-2">
-                  <QrCode className="size-full text-black" strokeWidth={1.2} />
+                  <QrCode
+                    className="size-full text-black"
+                    strokeWidth={1.2}
+                    aria-hidden="true"
+                  />
                 </div>
                 <p className="mt-2 text-center text-[9px] font-medium text-muted-foreground">
                   Olvasd be a képekhez

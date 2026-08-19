@@ -119,7 +119,8 @@ export function LiveDemo() {
                     />
                     {uploaded && p.src === newPhoto.src && (
                       <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
-                        <Check className="size-3" /> Most érkezett
+                        <Check className="size-3" aria-hidden="true" /> Most
+                        érkezett
                       </span>
                     )}
                   </div>
@@ -153,7 +154,8 @@ export function LiveDemo() {
                           </>
                         ) : uploaded ? (
                           <>
-                            <Check className="size-4" /> Fent van a galériában
+                            <Check className="size-4" aria-hidden="true" /> Fent
+                            van a galériában
                           </>
                         ) : (
                           <>
@@ -192,7 +194,8 @@ export function LiveDemo() {
                         type="button"
                         className="btn-shine flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
                       >
-                        <Download className="size-4" /> Összes letöltése (ZIP)
+                        <Download className="size-4" aria-hidden="true" />{' '}
+                        Összes letöltése (ZIP)
                       </button>
                     </div>
                   </>

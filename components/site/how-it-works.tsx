@@ -11,7 +11,7 @@ const steps = [
     title: 'Hozd létre az eseményt',
     text: 'Adj nevet és dátumot az eseménynek. Egy perc alatt kész, kártya és regisztráció nélkül indulhatsz.',
     image: '/images/wedding-portrait.webp',
-    alt: 'Esemény létrehozása telefonon',
+    alt: 'Esküvői portré a párról',
     note: null,
   },
   {
@@ -20,7 +20,7 @@ const steps = [
     title: 'Hívd meg a vendégeket QR-kóddal',
     text: 'Nyomtatható QR-kódot és megosztható linket kapsz. Tedd az asztalokra, küldd el üzenetben — bárki egy koppintással csatlakozik.',
     image: '/images/garden-party.webp',
-    alt: 'QR-kód az asztalokon',
+    alt: 'Kerti buli fényfüzérek alatt',
     note: 'Csak azok látják a képeket, akiket meghívtok — az album nem nyilvános, és nem jelenik meg a keresőkben. A fotókat nem osztjuk meg és nem adjuk el senkinek, és bármikor véglegesen törölheted őket.',
   },
   {
@@ -29,7 +29,7 @@ const steps = [
     title: 'Gyűjtsétek együtt a pillanatokat',
     text: 'A képek a közös galériába gyűlnek. Az esemény után nagy felbontásban töltheted le az egészet.',
     image: '/images/evening-party.webp',
-    alt: 'Közös galéria',
+    alt: 'Esti buli vendégekkel',
     note: null,
   },
 ]
@@ -76,7 +76,10 @@ export function HowItWorks() {
                     </p>
                     {step.note && (
                       <div className="glass mt-6 flex max-w-md items-start gap-3 rounded-2xl p-4">
-                        <Lock className="mt-0.5 size-4 shrink-0 text-accent" />
+                        <Lock
+                          className="mt-0.5 size-4 shrink-0 text-accent"
+                          aria-hidden="true"
+                        />
                         <p className="text-xs leading-relaxed text-muted-foreground">
                           {step.note}
                         </p>
@@ -101,11 +104,15 @@ export function HowItWorks() {
                               <QrCode
                                 className="size-full text-black"
                                 strokeWidth={1.2}
+                                aria-hidden="true"
                               />
                             </span>
                             <div className="pr-2">
                               <p className="flex items-center gap-1 text-xs font-semibold">
-                                <Link2 className="size-3 text-accent" />
+                                <Link2
+                                  className="size-3 text-accent"
+                                  aria-hidden="true"
+                                />
                                 {SITE_HOST}/e/…
                               </p>
                               <p className="text-[10px] text-muted-foreground">

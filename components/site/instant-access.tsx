@@ -70,7 +70,7 @@ export function InstantAccess() {
                         className="object-cover"
                       />
                       <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-medium text-white backdrop-blur-sm">
-                        <Clock className="size-2.5" />
+                        <Clock className="size-2.5" aria-hidden="true" />
                         {p.label}
                       </span>
                     </div>

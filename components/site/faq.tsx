@@ -73,6 +73,7 @@ export function Faq() {
                           'size-5 shrink-0 text-accent transition-transform duration-300',
                           isOpen && 'rotate-45',
                         )}
+                        aria-hidden="true"
                       />
                     </button>
                   </h3>
