@@ -1,5 +1,6 @@
 'use client'
 
+import { GUEST_FALLBACK_NAME } from '@/lib/guest-name'
 import type { GalleryPhoto } from '@/lib/photos'
 import { photoPublicUrl } from '@/lib/storage'
 import Image from 'next/image'
@@ -36,6 +37,17 @@ export function PhotoGrid({ photos }: { photos: GalleryPhoto[] }) {
                 unoptimized
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
+              {/* Photo credit. The scrim is not decoration — the caption sits
+                  over whatever the guest happened to photograph, and white
+                  text on a bright sky is unreadable without it. */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 pt-6 pb-1.5 text-left"
+              >
+                <span className="block truncate text-[11px] font-medium text-white/90">
+                  {photo.uploader_name || GUEST_FALLBACK_NAME}
+                </span>
+              </span>
             </button>
           </li>
         ))}

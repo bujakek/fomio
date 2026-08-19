@@ -1,5 +1,12 @@
 'use client'
 
+import { CreateOwnAlbum } from '@/components/event/create-own-album'
+import {
+  GUEST_NAME_MAX_LENGTH,
+  markUploadedTo,
+  readGuestName,
+  writeGuestName,
+} from '@/lib/guest-name'
 import { prepareForUpload, type PreparedPhoto } from '@/lib/image'
 import { uploadPhoto } from '@/lib/upload-photo'
 import { cn } from '@/lib/utils'
@@ -13,8 +20,6 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
-
-const NAME_KEY = 'ourfilm:uploader-name'
 
 /** Keep `.heic`/`.heif` listed. Excluding them makes iOS hand over a
  *  transcoded JPEG sometimes, but on other paths it just makes the file
@@ -63,7 +68,7 @@ export function UploadQueue({
   // setting state inside an effect, which cascades a second render on every
   // mount. Writing straight to the input avoids both.
   useEffect(() => {
-    const stored = localStorage.getItem(NAME_KEY)
+    const stored = readGuestName()
     if (stored && nameRef.current) nameRef.current.value = stored
   }, [])
 
@@ -159,6 +164,7 @@ export function UploadQueue({
             uploaderName: nameRef.current?.value.trim() || null,
           })
           patch(item.key, { status: 'done' })
+          markUploadedTo(eventId)
         } catch (e) {
           patch(item.key, { status: 'error', error: reason(e) })
         }
@@ -206,10 +212,10 @@ export function UploadQueue({
           ref={nameRef}
           type="text"
           defaultValue=""
-          maxLength={40}
+          maxLength={GUEST_NAME_MAX_LENGTH}
           autoComplete="name"
           placeholder="Például: Réka"
-          onChange={(e) => localStorage.setItem(NAME_KEY, e.target.value)}
+          onChange={(e) => writeGuestName(e.target.value)}
           className="glass min-h-14 w-full rounded-2xl px-5 text-base text-foreground transition-colors outline-none placeholder:text-muted-foreground/60 focus:border-accent"
         />
       </div>
@@ -238,6 +244,12 @@ export function UploadQueue({
               Galéria megtekintése
             </Link>
           ) : null}
+
+          {/* `alwaysShow`: the upload that qualifies them just happened, so
+              there is no need to re-read the flag we only just wrote. */}
+          <div className="w-full text-left">
+            <CreateOwnAlbum eventId={eventId} alwaysShow />
+          </div>
         </div>
       ) : null}
 

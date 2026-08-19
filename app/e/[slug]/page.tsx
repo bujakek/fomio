@@ -1,3 +1,4 @@
+import { NamePrompt } from '@/components/event/name-prompt'
 import { getEventBySlug, uploadsAreOpen } from '@/lib/events'
 import { formatEventDate } from '@/lib/format'
 import { Images, Lock, Upload } from 'lucide-react'
@@ -46,6 +47,10 @@ export default async function EventPage({ params }: Props) {
             : 'A feltöltés lezárult, de az album megmarad — nézd meg, mi gyűlt össze.'}
         </p>
       </header>
+
+      {/* Sits above the actions rather than in front of them — see the
+          component for why this is not a modal. */}
+      <NamePrompt />
 
       {/* Centred, not bottom-anchored. Pinning the action to the bottom is the
           right instinct on a dense screen, but this one is five short lines —

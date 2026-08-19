@@ -1,6 +1,9 @@
+import { CreateOwnAlbum } from '@/components/event/create-own-album'
+import { InviteButton } from '@/components/event/invite-button'
 import { PhotoGrid } from '@/components/event/photo-grid'
 import { getEventBySlug, uploadsAreOpen } from '@/lib/events'
 import { getEventPhotos } from '@/lib/photos'
+import { eventUrl } from '@/lib/site'
 import { ArrowLeft, EyeOff, ImagePlus } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -37,13 +40,18 @@ export default async function GalleryPage({ params }: Props) {
         {event.event_name}
       </Link>
 
-      <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight text-balance">
-          Galéria
-        </h1>
-        {photos.length > 0 ? (
-          <p className="text-sm text-muted-foreground">{photos.length} kép</p>
-        ) : null}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <h1 className="text-3xl font-semibold tracking-tight text-balance">
+            Galéria
+          </h1>
+          {photos.length > 0 ? (
+            <p className="text-sm text-muted-foreground">{photos.length} kép</p>
+          ) : null}
+        </div>
+        {/* Grants no access the link itself does not already grant — the
+            album has no gate. It just saves a trip to the address bar. */}
+        <InviteButton url={eventUrl(event.slug)} />
       </div>
 
       {event.gallery_private ? (
@@ -92,6 +100,8 @@ export default async function GalleryPage({ params }: Props) {
               Tölts fel te is
             </Link>
           ) : null}
+          {/* Only renders for a guest who has already uploaded here. */}
+          <CreateOwnAlbum eventId={event.id} />
         </>
       )}
     </main>

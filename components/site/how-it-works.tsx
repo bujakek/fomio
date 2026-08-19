@@ -21,7 +21,7 @@ const steps = [
     text: 'Nyomtatható QR-kódot és megosztható linket kapsz. Tedd az asztalokra, küldd el üzenetben — bárki egy koppintással csatlakozik.',
     image: '/images/garden-party.webp',
     alt: 'Kerti buli fényfüzérek alatt',
-    note: 'Csak azok látják a képeket, akiket meghívtok — az album nem nyilvános, és nem jelenik meg a keresőkben. A fotókat nem osztjuk meg és nem adjuk el senkinek, és bármikor véglegesen törölheted őket.',
+    note: 'Csak azok látják a képeket, akikhez eljut a meghívó — az album nem nyilvános, és nem jelenik meg a keresőkben. A fotókat nem osztjuk meg és nem adjuk el senkinek, és bármikor véglegesen törölheted őket.',
   },
   {
     number: '03',
