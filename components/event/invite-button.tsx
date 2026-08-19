@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from '@/lib/utils'
 import { Check, Share2 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -43,7 +44,15 @@ export function InviteButton({ url }: { url: string }) {
     <button
       type="button"
       onClick={invite}
-      className="glass glass-hover inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors"
+      // Icon-only at rest, so it needs a real name for anyone who cannot see
+      // the glyph. 44px minimum — this is a thumb target on a phone.
+      aria-label="Meghívás — az album linkjének megosztása"
+      className={cn(
+        'glass glass-hover inline-flex min-h-11 items-center justify-center gap-2 rounded-full text-sm font-medium transition-all',
+        // Grows to carry the confirmation, then collapses back. Without the
+        // text the clipboard fallback would succeed completely silently.
+        copied ? 'px-4' : 'size-11',
+      )}
     >
       {copied ? (
         <>
@@ -55,11 +64,13 @@ export function InviteButton({ url }: { url: string }) {
           Link másolva
         </>
       ) : (
-        <>
-          <Share2 className="size-4" strokeWidth={1.8} aria-hidden="true" />
-          Meghívás
-        </>
+        <Share2 className="size-5" strokeWidth={1.8} aria-hidden="true" />
       )}
+      {/* Announced rather than shown: a screen reader never sees the visible
+          swap above, so the confirmation needs its own live region. */}
+      <span aria-live="polite" className="sr-only">
+        {copied ? 'Link másolva a vágólapra' : ''}
+      </span>
     </button>
   )
 }

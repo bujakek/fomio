@@ -49,9 +49,23 @@ export default async function GalleryPage({ params }: Props) {
             <p className="text-sm text-muted-foreground">{photos.length} kép</p>
           ) : null}
         </div>
-        {/* Grants no access the link itself does not already grant — the
-            album has no gate. It just saves a trip to the address bar. */}
-        <InviteButton url={eventUrl(event.slug)} />
+        {/* Icon-only actions. Upload leads and carries the primary fill: it
+            is the point of the page, and it lost the full-width button that
+            used to sit at the bottom of the grid. */}
+        <div className="flex items-center gap-2">
+          {canUpload ? (
+            <Link
+              href={`/e/${event.slug}/upload`}
+              aria-label="Képek feltöltése"
+              className="btn-shine inline-flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform hover:scale-[1.05]"
+            >
+              <ImagePlus className="size-5" strokeWidth={1.8} />
+            </Link>
+          ) : null}
+          {/* Grants no access the link itself does not already grant — the
+              album has no gate. It just saves a trip to the address bar. */}
+          <InviteButton url={eventUrl(event.slug)} />
+        </div>
       </div>
 
       {event.gallery_private ? (
@@ -91,15 +105,6 @@ export default async function GalleryPage({ params }: Props) {
           <div className="mt-8">
             <PhotoGrid photos={photos} />
           </div>
-          {canUpload ? (
-            <Link
-              href={`/e/${event.slug}/upload`}
-              className="glass glass-hover mt-8 inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-7 text-base font-semibold"
-            >
-              <ImagePlus className="size-5" strokeWidth={1.8} />
-              Tölts fel te is
-            </Link>
-          ) : null}
           {/* Only renders for a guest who has already uploaded here. */}
           <CreateOwnAlbum eventId={event.id} />
         </>
