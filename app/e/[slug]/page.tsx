@@ -89,7 +89,7 @@ export default async function EventPage({ params }: Props) {
           files was a three-screen trip — landing, a page whose only content
           was two buttons, then the queue — for what the OS already presents
           as a single sheet. */}
-        <div className="mt-8 flex flex-col gap-3">
+        <div className="mt-10 flex flex-col gap-3">
           {canUpload ? (
             <UploadQueue
               eventId={event.id}
@@ -107,8 +107,8 @@ export default async function EventPage({ params }: Props) {
             // Say why. An empty gallery reads as "nobody bothered", which is a
             // miserable thing to tell a guest who just uploaded.
             <p className="glass rounded-2xl px-6 py-4 text-center text-sm leading-relaxed text-muted-foreground">
-              A galériát a házigazda egyelőre elrejtette. A képeid megérkeztek —
-              akkor lesznek láthatók, amikor a házigazda megnyitja az albumot.
+              A közös albumot a házigazda egyelőre elrejtette. A képeid
+              megérkeztek — akkor lesznek láthatók, amikor újra megnyitja.
             </p>
           ) : (
             <Link
@@ -116,7 +116,7 @@ export default async function EventPage({ params }: Props) {
               className="glass glass-hover inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-7 text-base font-semibold text-foreground"
             >
               <Images className="size-5" strokeWidth={1.8} />
-              Galéria megtekintése
+              Közös album megtekintése
             </Link>
           )}
         </div>

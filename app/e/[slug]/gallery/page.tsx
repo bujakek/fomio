@@ -17,7 +17,7 @@ type Props = { params: Promise<{ slug: string }> }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const event = await getEventBySlug(slug)
-  return event ? { title: `Galéria — ${event.event_name}` } : {}
+  return event ? { title: `Közös album — ${event.event_name}` } : {}
 }
 
 export default async function GalleryPage({ params }: Props) {
@@ -43,7 +43,7 @@ export default async function GalleryPage({ params }: Props) {
       <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <h1 className="text-3xl font-semibold tracking-tight text-balance">
-            Galéria
+            Közös album
           </h1>
           {photos.length > 0 ? (
             <p className="text-sm text-muted-foreground">{photos.length} kép</p>
@@ -73,7 +73,7 @@ export default async function GalleryPage({ params }: Props) {
           <span className="glass flex size-14 items-center justify-center rounded-full">
             <EyeOff className="size-6 text-accent" strokeWidth={1.6} />
           </span>
-          <p className="text-lg font-semibold">A galéria most rejtve van</p>
+          <p className="text-lg font-semibold">A közös album most rejtve van</p>
           <p className="max-w-sm text-sm leading-relaxed text-pretty text-muted-foreground">
             A házigazda egyelőre elrejtette az albumot. A feltöltött képek
             megvannak — akkor lesznek láthatók, amikor megnyitja.

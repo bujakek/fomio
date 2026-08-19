@@ -198,7 +198,7 @@ export function UploadQueue({
           </p>
           <p className="max-w-xs text-sm leading-relaxed text-pretty text-muted-foreground">
             {galleryPrivate
-              ? 'A galériát a házigazda egyelőre elrejtette — a képeid megvannak, és akkor lesznek láthatók, amikor megnyitja az albumot.'
+              ? 'A közös albumot a házigazda egyelőre elrejtette — a képeid megvannak, és akkor lesznek láthatók, amikor újra megnyitja.'
               : 'Köszönjük, hogy megosztottad! Nézd meg, mit töltöttek fel a többiek.'}
           </p>
           {!galleryPrivate ? (
@@ -207,7 +207,7 @@ export function UploadQueue({
               className="glass glass-hover mt-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold"
             >
               <Images className="size-4" strokeWidth={1.8} />
-              Galéria megtekintése
+              Közös album megtekintése
             </Link>
           ) : null}
 
@@ -315,7 +315,7 @@ export function UploadQueue({
           )}
         >
           <ImagePlus className="size-5" strokeWidth={1.8} />
-          Galéria
+          Fájlok
           <input
             type="file"
             accept={ACCEPT}
