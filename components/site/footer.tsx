@@ -1,3 +1,4 @@
+import { occasions } from '@/lib/occasions'
 import { CONTACT_EMAIL } from '@/lib/site'
 import { Aperture } from 'lucide-react'
 import Link from 'next/link'
@@ -21,10 +22,19 @@ const columns: FooterColumn[] = [
     heading: 'Termék',
     links: [
       { label: 'Hogyan működik', href: '/#how-it-works' },
-      { label: 'Alkalmak', href: '/#occasions' },
+      { label: 'Élő bemutató', href: '/#live-demo' },
       { label: 'Fotóminőség', href: '/#photo-quality' },
       { label: 'Árak', href: '/arak' },
     ],
+  },
+  {
+    // Generated from the same module the pages and the sitemap read, so a new
+    // occasion appears here without anyone remembering to add it.
+    heading: 'Alkalmak',
+    links: occasions.map((occasion) => ({
+      label: occasion.label,
+      href: `/alkalmak/${occasion.slug}`,
+    })),
   },
   {
     heading: 'Támogatás',
@@ -80,7 +90,7 @@ export function Footer() {
 
             <nav
               aria-label="Lábléc"
-              className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:gap-16"
+              className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:gap-12"
             >
               {columns.map((column) => (
                 <div key={column.heading}>
