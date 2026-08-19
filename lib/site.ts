@@ -21,3 +21,10 @@ export function eventUrl(slug: string) {
 /** Origin without the scheme, for places that show the URL rather than link it
  *  (the printed card, the landing page's mockups). */
 export const SITE_HOST = SITE_URL.replace(/^https?:\/\//, '')
+
+/**
+ * PLACEHOLDER — the public contact address shown on /kapcsolat and in the
+ * footer. Nothing verifies that this mailbox exists; confirm it (or replace it)
+ * before the pages are indexed.
+ */
+export const CONTACT_EMAIL = 'hello@ourfilm.app'
