@@ -1,4 +1,3 @@
-import { NamePrompt } from '@/components/event/name-prompt'
 import { getEventBySlug, uploadsAreOpen } from '@/lib/events'
 import { getEventPhotos, summarisePhotos } from '@/lib/photos'
 import { formatEventDate } from '@/lib/format'
@@ -80,10 +79,6 @@ export default async function EventPage({ params }: Props) {
           ) : null}
         </div>
       ) : null}
-
-      {/* Sits above the actions rather than in front of them — see the
-          component for why this is not a modal. */}
-      <NamePrompt />
 
       {/* Centred, not bottom-anchored. Pinning the action to the bottom is the
           right instinct on a dense screen, but this one is five short lines —

@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     q: 'Regisztrálniuk kell a vendégeknek?',
-    a: 'Nem. A vendégek név, e-mail-cím és fiók létrehozása nélkül tölthetik fel a képeiket.',
+    a: 'Fiókot nem kell létrehozniuk, és e-mail-címet sem kérünk. Egyetlen dolgot kérünk tőlük: a nevüket, hogy a képeik alatt lássátok, kitől érkeztek.',
   },
   {
     q: 'Ki láthatja a feltöltött képeket?',

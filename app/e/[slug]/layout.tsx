@@ -1,4 +1,6 @@
+import { JoinGate } from '@/components/event/join-gate'
 import { BackgroundGlow } from '@/components/site/background-glow'
+import { getEventBySlug } from '@/lib/events'
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
@@ -22,11 +24,29 @@ export const metadata: Metadata = {
   },
 }
 
-export default function EventLayout({ children }: { children: ReactNode }) {
+export default async function EventLayout({
+  children,
+  params,
+}: {
+  children: ReactNode
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+  // React-cached, so this shares the page's lookup rather than adding a
+  // round trip. A missing event falls through ungated so the page can 404 —
+  // gating a 404 would tell a stranger the slug was worth guessing again.
+  const event = await getEventBySlug(slug)
+
   return (
     <div className="relative min-h-screen">
       <BackgroundGlow />
-      <div className="relative z-10">{children}</div>
+      <div className="relative z-10">
+        {event ? (
+          <JoinGate eventName={event.event_name}>{children}</JoinGate>
+        ) : (
+          children
+        )}
+      </div>
     </div>
   )
 }

@@ -2,7 +2,7 @@
  * Everything the guest's own device remembers about them.
  *
  * There are no guest accounts, so this is the whole identity layer: a display
- * name and two "have we already asked?" flags. All of it is per-device and
+ * name and two "have we already done this?" flags. All of it is per-device and
  * disposable — clearing site data resets a guest completely, which is the
  * correct blast radius for something a wedding guest never opted into.
  *
@@ -14,7 +14,6 @@
 /** Unchanged from the original inline constant — guests already have values
  *  stored under this key and renaming it would silently forget them. */
 const NAME_KEY = 'ourfilm:uploader-name'
-const NAME_PROMPT_DISMISSED_KEY = 'ourfilm:name-prompt-dismissed'
 const UPSELL_DISMISSED_KEY = 'ourfilm:upsell-dismissed'
 const UPLOADED_KEY_PREFIX = 'ourfilm:uploaded:'
 
@@ -49,16 +48,17 @@ export function writeGuestName(name: string) {
 }
 
 /**
- * Whether to ask for a name at all. False once they have given one *or*
- * declined once — a guest who said no should not be asked again at the next
- * event they attend, which is why this is not scoped per event.
+ * Whether this device has joined. The join gate has no skip, so this is the
+ * only thing standing between a guest and the album — and it stands there in
+ * localStorage, which means it is a **UX gate, not access control**. The album
+ * data is still reachable by anyone holding the link; clearing site data walks
+ * straight past this. Nothing here protects anything.
+ *
+ * Not scoped per event: a guest who gave a name at one wedding is not asked
+ * again at the next.
  */
-export function shouldAskForName(): boolean {
-  return readGuestName() === '' && read(NAME_PROMPT_DISMISSED_KEY) !== '1'
-}
-
-export function dismissNamePrompt() {
-  write(NAME_PROMPT_DISMISSED_KEY, '1')
+export function hasGuestName(): boolean {
+  return readGuestName() !== ''
 }
 
 /**
