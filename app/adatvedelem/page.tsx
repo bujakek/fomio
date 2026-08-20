@@ -87,7 +87,7 @@ const sections: LegalSection[] = [
     body: [
       'A vendégek olyan fotókat is feltölthetnek, amelyeken mások szerepelnek — akik nem jártak az oldalunkon, és nem adtak meg semmit. Rájuk ugyanúgy vonatkoznak a fenti jogok.',
       'Ha egy rólad készült képet el szeretnél távolíttatni, szólj az esemény házigazdájának, aki azonnal elrejtheti, vagy írj nekünk közvetlenül.',
-      'TODO: ez a szakasz jogilag a legkényesebb — tisztázni kell, hogy az esemény fotói tekintetében a házigazda adatkezelő és az OurFilm adatfeldolgozó, vagy közös adatkezelésről van-e szó, és ehhez igazítani, ki válaszol egy ilyen kérésre.',
+      'TODO — ez a szakasz jogilag a legkényesebb. A hasonló szolgáltatásoknál a bevett modell az, hogy az esemény fotói tekintetében a házigazda az adatkezelő, a szolgáltató pedig az adatfeldolgozó: a házigazda dönti el, hogy az esemény létrejön, ki kapja meg a QR-kódot, és mi marad az albumban. Ha ezt választjuk, egy ilyen kérés a házigazdához tartozik, a mi dolgunk pedig az eszközök biztosítása (fotó elrejtése, végleges törlés) és a segítségnyújtás. Jogi megerősítés kell hozzá, és az ÁSZF-fel együtt kell rendezni.',
     ],
   },
   {

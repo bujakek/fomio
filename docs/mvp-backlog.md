@@ -482,9 +482,18 @@ Do not reopen these without a reason; the tickets below already assume them.
       erasure route from 5.8). Everything legal is marked TODO, the page
       carries a visible draft banner and `noindex`, and it is kept out of
       `sitemap.ts`.
-      **The open question a lawyer has to settle first:** for the photos in an
-      event, is the host the controller and OurFilm the processor, or are they
-      joint controllers? It decides who answers an erasure request from someone
+      **The open question a lawyer has to settle first — now with a
+      precedent:** for the photos in an event, is the host the controller and
+      OurFilm the processor, or are they joint controllers? Kululu publishes a
+      DPA naming the host as controller and itself as processor, which is the
+      model for this category and fits how our product works. Note none of the
+      competitors surveyed (Kululu, GuestPix, Once) address people who appear
+      in photos but never used the service — even Kululu's DPA covers the
+      processor's duties to the host, not the host's duties to guests. German
+      photography-law guidance says that duty can be shifted to the host and
+      discharged by a sign at the venue, which the printed QR card already is:
+      one line on the card turns an artefact we print anyway into the notice.
+      Recorded in `/aszf` under the host's responsibilities. It decides who answers an erasure request from someone
       photographed at a wedding — a data subject who never visited the site and
       never agreed to anything — and it changes the ÁSZF as well as this page.
       Benchmarked against once.film's policy, which runs on the same stack
@@ -492,6 +501,20 @@ Do not reopen these without a reason; the tickets below already assume them.
       That policy is US-primary with GDPR annexed, is built around guest
       accounts we do not have, names the US as the storage location, and
       retains purchase records we never create.
+- [ ] **6.5b ÁSZF — Hungarian mandatory elements.** Split out of 6.5; the
+      privacy notice and the terms are different documents with different
+      statutory sources. `/aszf` is scaffolded against 45/2014. (II. 26.) Korm.
+      rendelet and the Elker tv. rather than a competitor's terms — none of the
+      surveyed services are Hungarian, so none help here. Sections now flag the
+      mandatory identifiers (adószám, bejegyző bíróság, cégjegyzékszám,
+      kamara), gross pricing, panaszkezelés, and the békéltető testület
+      cooperation declaration.
+      **The trap to watch when payments land:** for a digital service not on a
+      tangible medium, the consumer loses the 14-day `elállási jog` only if
+      performance starts at their express prior request _and_ they separately
+      acknowledge losing the right. A host buys an event and uses it that
+      weekend, so without both declarations wired into checkout — not merely
+      written in the ÁSZF — refunds are owed for 14 days.
 - [ ] **6.6 Abuse ceiling.** Uploads are anonymous and unlimited. The bucket caps
       file size but not volume. Decide whether a per-event cap is needed.
 - [ ] **6.7 Real-device matrix.** iPhone Safari (HEIC path), Android Chrome (JPEG
