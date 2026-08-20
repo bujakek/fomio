@@ -121,3 +121,24 @@ export function eventWallClock(iso: string): Date {
     Number(p.second),
   )
 }
+
+const HU_MOMENT = new Intl.DateTimeFormat('hu-HU', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: EVENT_TIME_ZONE,
+})
+
+/**
+ * `2026. augusztus 20. 14:32` — an exact instant rendered in the event's zone.
+ *
+ * Unlike `formatEventDate`, which pins to UTC because a `date` column has no
+ * time to get wrong, this takes a `timestamptz` and so must pick a zone. UTC
+ * would be the bug rather than the fix here: a payment made at 00:30 Budapest
+ * time would show on the previous day's receipt.
+ */
+export function formatMoment(iso: string): string {
+  return HU_MOMENT.format(new Date(iso))
+}

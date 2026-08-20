@@ -45,13 +45,28 @@ Project skills live in `.cursor/skills/`. Read the relevant one _before_ writing
 
 ### Local env
 
-`.env.local` is gitignored and **must never be committed**. It is maintained **by hand** — only these three keys are needed:
+`.env.local` is gitignored and **must never be committed**. It is maintained **by hand**. Supabase needs three keys:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=       # Supabase dashboard → Project Settings → API Keys
 NEXT_PUBLIC_SUPABASE_ANON_KEY=  # the anon / public key
-SUPABASE_SERVICE_ROLE_KEY=      # service_role; server-only, admin ZIP export
+SUPABASE_SERVICE_ROLE_KEY=      # service_role; server-only, Stripe webhook
 ```
+
+Payments add three more, all server-only — Checkout is a redirect to Stripe's
+hosted page, so the browser never needs a publishable key:
+
+```bash
+STRIPE_SECRET_KEY=              # sk_test_… while piloting
+STRIPE_WEBHOOK_SECRET=          # whsec_…, from the endpoint or `stripe listen`
+STRIPE_PRICE_EVENT=             # price_… for the one-time per-event purchase
+```
+
+**There is no Stripe account yet.** Everything is written and builds without
+them; `stripeIsConfigured()` is what keeps the admin UI honest in the meantime,
+and filling these in is the whole switch. Provision with
+`vercel integration add stripe` once the account exists — it is the Marketplace
+provider for `payments` and wires the production variables itself.
 
 **`vercel env pull` does not work on this project — don't reach for it.** The Vercel–Supabase integration created all 16 of its variables as _Sensitive_, which on Vercel means write-only: the value cannot be read back by the CLI, the API or the dashboard, and a pull returns the literal string `[SENSITIVE]` for every one. This is a property of the Sensitive flag, not of the environment scope, so re-scoping them to Development does not help either. Copy the three values from the Supabase dashboard instead.
 
@@ -62,10 +77,15 @@ Deployed builds are unaffected: Vercel injects all of these at build and runtime
 ## Current state
 
 - **`docs/mvp-backlog.md` is the working plan** — the build order below, broken into ordered tickets with dependencies, plus four decisions that block Phase 1. Check it before starting work, and tick items off as they land.
-- **Marketing landing page only** — `app/page.tsx` composing `components/site/*` (hero, stats, how-it-works, occasions, testimonials, qr-preview, live-demo, photo-quality, faq, final-cta, footer). Originally v0-generated, now the permanent homepage at `/`.
+- **Marketing landing page** — `app/page.tsx` composing `components/site/*` (hero, stats, how-it-works, occasions, testimonials, qr-preview, live-demo, photo-quality, faq, final-cta, footer). Originally v0-generated, now the permanent homepage at `/`.
 - `components/site/live-demo.tsx` is a **fake simulation** with hardcoded images, not a real gallery.
-- **Phases 1–2 built** (see `docs/mvp-backlog.md`): four migrations applied, RLS and storage policies enforced and covered by `supabase/tests/*.py`, typed clients and query modules in `lib/`, and the guest event page at `/e/[slug]`. `pnpm seed` creates an event to develop against and prints its URL.
-- **The browser photo pipeline exists** (`lib/image.ts`) but no upload UI yet. No gallery, no admin, no auth screens.
+- **Phases 1–5 built** (see `docs/mvp-backlog.md`): migrations applied, RLS and storage policies enforced and covered by `supabase/tests/*.py`, typed clients and query modules in `lib/`, the guest event page and gallery, the upload pipeline and queue, and the admin area. `pnpm seed` creates an event to develop against and prints its URL.
+- **Payments and roles are written but not live.** Two migrations —
+  `20260820100000_user_roles.sql` and `20260820100100_stripe_billing.sql` — are
+  **not yet pushed**, and there is no Stripe account, so `.env.local` has no
+  `STRIPE_*` keys. Until both happen the app builds and runs exactly as before:
+  every event is uncapped because the cap function does not exist yet, and the
+  admin billing card says payment is not switched on. See Billing below.
 - `lib/slug.ts` holds the canonical `slugify()` — admin and the QR preview must both use it so printed QR codes never disagree.
 
 ## Routing (settled — QR codes get printed, so this is expensive to change)
@@ -77,12 +97,17 @@ Deployed builds are unaffected: Vercel injects all of these at build and runtime
 | `/e/[slug]/gallery` | Shared gallery                                                          |
 | `/admin`            | Host/admin area, Supabase Auth magic link                               |
 
+Plus one machine endpoint: `POST /api/stripe/webhook`, which is the only thing
+that marks a purchase paid. Under `/api/` rather than the Hungarian namespace
+because no human navigates to it and the URL is pasted into Stripe's dashboard.
+
 The `/e/` prefix is what the landing page already advertises in `qr-preview.tsx` and `how-it-works.tsx`, and it keeps the root namespace free for marketing pages.
 
 ## Access model (settled)
 
 - **Guests: no gate at all.** Anyone with the link or QR can view the gallery and upload. No passcode, no login, no nickname required. Any friction directly reduces the participation rate we're trying to measure.
 - **Host/admin: Supabase Auth magic link.** Only the admin area is protected. Every event has an `owner_id`, and RLS scopes host reads and writes to `owner_id = auth.uid()` — a signed-in user who owns nothing sees nothing. This is ownership scoping, **not** the multi-tenant dashboard ruled out below.
+- **Roles: `user` and `admin`.** Every signup gets a `profiles` row with `role = 'user'` (created by a trigger on `auth.users`), which changes nothing — ownership scoping above is still what governs them. `admin` is the operator: `public.is_admin()` is OR'd into every host policy on `events`, `photos` and the storage bucket, so an admin reads and writes every album, and an admin-owned event is exempt from the upload cap. Nobody can promote themselves — `profiles` has no self-update policy, so the role is writable only by another admin or through the service role. Expect `/admin` to list **every** event once you promote an account.
 - Privacy comes from the URL being unguessable and unindexed — add `noindex` to event routes. Slugs therefore carry a random suffix (`anna-peter-k3f9x7`); `slugify()` stays deterministic for the QR preview, and `generateEventSlug()` is what real events get. Never create an event with a bare `slugify()` result.
 
 ## Data model (settled)
@@ -95,9 +120,47 @@ Details, DDL, and RLS live in `.cursor/skills/ourfilm-supabase/SKILL.md`. Shape:
 
 **Guests never read these tables directly.** The anon key is public, so any table `anon` can `select` is a table anyone can list — a permissive read policy on `events` would hand out every album's slug and make the unguessable URL pointless. Guest reads go through `security definer` functions keyed on the slug or event id (`event_by_slug`, `event_photos`); admin reads the tables directly under ownership policies. Details in the Supabase skill.
 
+- **`profiles`** — `id` (→ `auth.users`), `role` (`user` | `admin`), `created_at`. One row per account, written by a trigger at signup. Read it through `lib/roles.ts`, never inline.
+
+- **`purchases`** — `event_id`, `owner_id`, `stripe_checkout_session_id` (unique), `stripe_payment_intent_id`, `stripe_customer_id`, `amount_minor`, `currency`, `status` (`pending` | `paid` | `refunded`), `created_at`, `paid_at`, `refunded_at`. A ledger, not a flag: abandoned checkouts leave `pending` rows on purpose, which is why `getEventPurchase()` sorts on `paid_at` before `created_at`.
+
+- **`stripe_webhook_events`** — `id` (Stripe's `evt_…`), `type`, `received_at`, `processed_at`. Idempotency plus an audit trail. RLS on with no policies at all: only the service role reaches it.
+
 Storage layout: `event-photos/{event_id}/{photo_id}.jpg` plus `event-photos/{event_id}/{photo_id}_thumb.jpg`.
 
 **The gallery must serve the thumb, never the full image.** A 4096px/~2MB file is the right artifact to download and print, and completely the wrong one to tile at 200px — a single guest scrolling a 600-photo album would pull over a gigabyte. The client already holds the decoded bitmap during upload, so the ~400px thumb is nearly free to produce there.
+
+## Billing (settled)
+
+**One-time purchase per event.** No subscription and no per-guest fee — `/arak`
+promises exactly that on a live page.
+
+- **Free:** creating an event, the QR, the gallery, ZIP export, and the first
+  **5 photos** (`public.free_photo_limit()`). The pilot measures whether guests
+  scan and upload, so nothing in the guest journey sits behind a paywall.
+- **Paying unlocks:** the photo cap, for that event, permanently.
+- **Enforced in** `event_accepts_uploads()` _and_ `event_folder_accepts_uploads()`
+  — both guest write paths. Gating only the `photos` row would let a guest fill
+  the bucket with objects no row references. Hiding the upload button is a
+  courtesy, not the enforcement.
+- **Checkout is a redirect** to Stripe's hosted page (`mode: 'payment'`). No
+  card data touches this app, which is the difference between SAQ A and a
+  compliance project.
+- **Only the webhook marks a purchase paid.** `?checkout=success` proves
+  nothing: a host can type it, and a host who closes the tab on Stripe's
+  success page still deserves their album.
+- **The cap counts hidden photos.** `hidden_at` is moderation, not deletion —
+  the object still costs storage, so reclaiming quota by hiding would be a way
+  to upload free forever.
+- **Admin-owned events are never capped**, which is how the operator runs the
+  pilot wedding without charging themselves.
+- **Invoicing is still on the never-start list.** A Hungarian company selling
+  to consumers must issue an invoice and report it to NAV Online Számla, and
+  Stripe does not do that for you. Flag it before the first real forint.
+
+Key files: `lib/stripe/*`, `lib/billing.ts`, `lib/roles.ts`,
+`app/api/stripe/webhook/route.ts`, `app/admin/events/[slug]/billing-actions.ts`,
+`components/admin/billing-card.tsx`.
 
 ## MVP scope
 
@@ -113,7 +176,8 @@ Storage layout: `event-photos/{event_id}/{photo_id}.jpg` plus `event-photos/{eve
 
 - App Clip / native app
 - Photographer or multi-tenant dashboard, per-client branding
-- Payments, token system, revenue share, invoicing
+- Token system, revenue share, invoicing (**payments themselves are now
+  built** — one-time per event via Stripe Checkout; see Billing below)
 - Guest accounts or mandatory registration
 - Film filters
 - **Automatic** delayed reveal (timed or scheduled unveiling). The host _can_ close the gallery manually at any time via `gallery_hidden_at` — guests keep uploading, they just can't browse — and can reopen it just as easily. That manual toggle is in scope; anything that schedules or automates it is not.
@@ -150,6 +214,7 @@ The marketing page is live, so guests and hosts arrive with expectations. These 
 - **High-resolution, print-ready photos** (`photo-quality.tsx` comparison slider, FAQ) — satisfied by the 4096px/92% policy above. The pitch is "chat apps crush your photos, we don't", which stays true; never re-add claims of literally uncompressed originals
 - **Private, unindexed album** (`benefits.tsx`, FAQ) — event routes need `noindex`
 - **Host can hide unwanted photos** (FAQ) — needs the `hidden_at` flag
+- **The free tier's 5-photo cap** (`/arak`) — real and enforced on every guest upload by `public.free_photo_limit()`. `/arak` is the only page that states it; if the limit changes, the migration and that copy move together
 
 If a change would falsify a landing-page claim, either honor it or update the Hungarian copy in the same change.
 

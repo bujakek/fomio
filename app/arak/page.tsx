@@ -13,8 +13,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 }
 
-// PLACEHOLDER — every figure here is invented scaffolding, not a price we have
-// agreed to charge. Replace the whole array when the real packaging exists.
+// PLACEHOLDER — every *price* here is invented scaffolding, not a figure we
+// have agreed to charge. Replace the amounts when the real packaging exists.
+//
+// The one number that is real is the free tier's 5-photo cap: it comes from
+// `public.free_photo_limit()` and is enforced on every guest upload, so this
+// list has to keep saying it. Raising the limit means changing both.
 const tiers = [
   {
     name: 'Próba',
@@ -23,6 +27,7 @@ const tiers = [
     description: 'Nézd meg, hogy működik, mielőtt bármit fizetnél.',
     features: [
       'Egy esemény',
+      '5 kép az albumban',
       'Korlátlan vendég',
       'Feltöltés QR-kóddal',
       'Közös galéria',
@@ -37,6 +42,7 @@ const tiers = [
     description: 'Egy nagy naphoz, a teljes albummal és letöltéssel.',
     features: [
       'Minden, ami a Próbában',
+      'Korlátlan számú kép',
       'Nyomtatható felbontás (4096 px)',
       'Teljes album letöltése ZIP-ben',
       'Fotók elrejtése moderáláshoz',

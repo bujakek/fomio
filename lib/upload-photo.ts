@@ -4,6 +4,46 @@ import type { PreparedPhoto } from './image'
 import { PHOTO_BUCKET, photoStoragePaths } from './storage'
 import { createGuestClient } from './supabase/client'
 
+/** Postgres' code for "a policy said no", which PostgREST passes through. */
+const RLS_REFUSED = '42501'
+
+/**
+ * The album refused the upload — the window closed, or the free photo cap is
+ * full.
+ *
+ * Worth its own type because it is the one upload failure that retrying cannot
+ * fix. Every other error here is a flaky venue wifi problem where "Újra" is
+ * exactly the right offer; this one needs the queue to stop offering it and
+ * say something true instead.
+ *
+ * The message is deliberately vague about *which* rule refused. A guest cannot
+ * act on either answer, and "the couple did not pay for more" is not a thing to
+ * put in front of a wedding guest holding a phone.
+ */
+export class UploadRefusedError extends Error {
+  constructor() {
+    super('Ez az album most nem fogad új képet.')
+    this.name = 'UploadRefusedError'
+  }
+}
+
+/**
+ * Both write paths are gated by RLS, and they report a refusal differently:
+ * PostgREST returns the Postgres code, Storage returns an HTTP 403 whose
+ * message mentions the policy. Neither is worth showing a guest raw.
+ */
+function isRefusal(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const e = error as {
+    code?: string
+    statusCode?: string | number
+    message?: string
+  }
+  if (e.code === RLS_REFUSED) return true
+  if (String(e.statusCode) === '403') return true
+  return /row-level security/i.test(e.message ?? '')
+}
+
 /**
  * Puts one prepared photo into Storage and records it.
  *
@@ -41,7 +81,7 @@ export async function uploadPhoto({
         contentType: 'image/jpeg',
         cacheControl: '31536000',
       })
-    if (error) throw error
+    if (error) throw isRefusal(error) ? new UploadRefusedError() : error
   }
 
   // No `.select()` chained on purpose. That would ask to read the row back,
@@ -59,5 +99,5 @@ export async function uploadPhoto({
     mime_type: 'image/jpeg',
     taken_at: prepared.takenAt?.toISOString() ?? null,
   })
-  if (error) throw error
+  if (error) throw isRefusal(error) ? new UploadRefusedError() : error
 }

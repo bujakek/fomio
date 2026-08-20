@@ -1,4 +1,5 @@
 import { UploadQueue } from '@/components/event/upload-queue'
+import { getEventQuotaOrNull } from '@/lib/billing'
 import { getEventBySlug, uploadsAreOpen } from '@/lib/events'
 import { getEventPhotos, summarisePhotos } from '@/lib/photos'
 import { formatEventDate } from '@/lib/format'
@@ -38,6 +39,11 @@ export default async function EventPage({ params }: Props) {
   const summary = event.gallery_private
     ? null
     : summarisePhotos(await getEventPhotos(event.id))
+
+  // Read here rather than inside the queue: the guest arrives on a server
+  // render and the number has to be right in the first paint, otherwise the
+  // pickers appear and then vanish under them on a full album.
+  const quota = canUpload ? await getEventQuotaOrNull(event.id) : null
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col px-4 py-10 sm:py-16">
@@ -95,6 +101,7 @@ export default async function EventPage({ params }: Props) {
               eventId={event.id}
               slug={event.slug}
               galleryPrivate={event.gallery_private}
+              remaining={quota?.remaining ?? null}
             />
           ) : (
             <p className="glass flex min-h-14 items-center justify-center gap-2 rounded-full px-6 text-center text-sm text-muted-foreground">

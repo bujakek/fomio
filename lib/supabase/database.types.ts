@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.17"
   }
   graphql_public: {
     Tables: {
@@ -125,6 +125,98 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          amount_minor: number | null
+          created_at: string
+          currency: string | null
+          event_id: string
+          id: string
+          owner_id: string
+          paid_at: string | null
+          refunded_at: string | null
+          status: Database["public"]["Enums"]["purchase_status"]
+          stripe_checkout_session_id: string
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          amount_minor?: number | null
+          created_at?: string
+          currency?: string | null
+          event_id: string
+          id?: string
+          owner_id: string
+          paid_at?: string | null
+          refunded_at?: string | null
+          status?: Database["public"]["Enums"]["purchase_status"]
+          stripe_checkout_session_id: string
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          amount_minor?: number | null
+          created_at?: string
+          currency?: string | null
+          event_id?: string
+          id?: string
+          owner_id?: string
+          paid_at?: string | null
+          refunded_at?: string | null
+          status?: Database["public"]["Enums"]["purchase_status"]
+          stripe_checkout_session_id?: string
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stripe_webhook_events: {
+        Row: {
+          id: string
+          processed_at: string | null
+          received_at: string
+          type: string
+        }
+        Insert: {
+          id: string
+          processed_at?: string | null
+          received_at?: string
+          type: string
+        }
+        Update: {
+          id?: string
+          processed_at?: string | null
+          received_at?: string
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -147,6 +239,14 @@ export type Database = {
         Args: { p_folder: string }
         Returns: boolean
       }
+      event_has_unlimited_uploads: {
+        Args: { p_event_id: string }
+        Returns: boolean
+      }
+      event_photo_count_capped: {
+        Args: { p_cap: number; p_event_id: string }
+        Returns: number
+      }
       event_photos: {
         Args: { p_event_id: string }
         Returns: {
@@ -159,6 +259,20 @@ export type Database = {
           width: number
         }[]
       }
+      event_upload_quota: {
+        Args: { p_event_id: string }
+        Returns: {
+          photo_limit: number
+          remaining: number
+          unlimited: boolean
+        }[]
+      }
+      event_within_photo_limit: {
+        Args: { p_event_id: string }
+        Returns: boolean
+      }
+      free_photo_limit: { Args: never; Returns: number }
+      is_admin: { Args: never; Returns: boolean }
       owned_events_with_previews: {
         Args: never
         Returns: {
@@ -175,7 +289,8 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "admin"
+      purchase_status: "pending" | "paid" | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -305,6 +420,9 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "admin"],
+      purchase_status: ["pending", "paid", "refunded"],
+    },
   },
 } as const

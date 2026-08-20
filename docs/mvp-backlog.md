@@ -6,7 +6,8 @@ Ordered build plan for the pilot. Derived from the build order and MVP scope in
 - **Goal of the pilot:** answer one question — do guests actually use the QR to
   upload? Anything that does not serve that question is out of scope.
 - **Status:** D1–D4 settled, **Phases 1–5 complete**, all verified against
-  the live database. Run `pnpm seed` for a working event to develop against; it
+  the live database. **Phase 7 (payments + roles) is written but not live** —
+  two migrations unpushed, no Stripe account. Run `pnpm seed` for a working event to develop against; it
   prints the URL. Next
   is Phase 6 (pre-pilot). Guest journey and admin both work end to end. Nothing
   has been exercised on a real phone yet (6.7), and the deployment is still
@@ -678,11 +679,79 @@ the pilot is measuring, and fill the space the centred layout leaves.
 
 ---
 
+## Phase 7 — Payments and roles
+
+Added 2026-08-20 on an explicit request, overriding the "never start it" flag
+`CLAUDE.md` carried for payments. The design decisions were confirmed before
+any code: one-time per event, the gate is a free photo cap, roles are `user`
+plus `admin`.
+
+- [x] **7.1 Roles.** `app_role` enum, `profiles` table, trigger on
+      `auth.users`, `public.is_admin()`, and the admin bypass OR'd into the
+      host policies on `events`, `photos` and `storage.objects`. No
+      self-update policy on `profiles` — nobody promotes themselves.
+      Migration `20260820100000_user_roles.sql`.
+      _Depends on: D3_
+- [x] **7.2 Billing schema.** `purchases` ledger, `stripe_webhook_events`
+      idempotency table, `free_photo_limit()` (**5**), and the cap wired into
+      both guest write paths — `event_accepts_uploads()` for the row and
+      `event_folder_accepts_uploads()` for the object.
+      Migration `20260820100100_stripe_billing.sql`.
+      _Depends on: 7.1_
+- [x] **7.3 Stripe plumbing.** `lib/stripe/{env,client}.ts`, `lib/billing.ts`,
+      `lib/roles.ts`, the checkout Server Action, and the webhook at
+      `POST /api/stripe/webhook` — signature verification, replay protection,
+      full-refund handling.
+      _Depends on: 7.2_
+- [x] **7.4 UI.** Admin billing card with quota, receipt and unlock button;
+      guest upload queue that knows its budget, refuses to queue what cannot
+      land, and explains a full album without mentioning money. `/arak` now
+      states the 5-photo cap, because it is real and enforced.
+      _Depends on: 7.3_
+- [ ] **7.5 Push the migrations.** `pnpm supabase db push --linked`, then
+      `pnpm types:gen` — `lib/supabase/database.types.ts` was extended by hand
+      offline, and `pnpm types:check` is the drift check that proves it right.
+      Then re-run `python3 supabase/tests/rls.py` and `storage.py`: this
+      changed four policies and two gate functions.
+      _Depends on: 7.2 · needs `SUPABASE_DB_PASSWORD`_
+- [ ] **7.6 Create the Stripe account.** Then `vercel integration add stripe`,
+      create the one-time Price in HUF, and fill `STRIPE_SECRET_KEY`,
+      `STRIPE_WEBHOOK_SECRET` and `STRIPE_PRICE_EVENT` locally and on Vercel.
+      Until this lands `stripeIsConfigured()` is false and the admin card says
+      so rather than offering a button that 500s.
+      _Depends on: 7.3 · **blocked: no Stripe account**_
+- [ ] **7.7 Promote your own account to `admin`.** One statement in the SQL
+      editor: `update public.profiles set role = 'admin' where id = '…'`. Do it
+      after 7.5, and expect `/admin` to start listing every event.
+      _Depends on: 7.5_
+- [ ] **7.8 Decide the actual price.** `/arak` still shows `— Ft` and is
+      `noindex` for exactly that reason. The amount lives in Stripe, so this is
+      a dashboard decision plus a copy change, not a code change.
+      _Depends on: 7.6_
+- [ ] **7.9 Test the webhook end to end.**
+      `stripe listen --forward-to localhost:3000/api/stripe/webhook`, pay with
+      `4242…`, confirm the cap lifts. Then replay the same event and confirm it
+      is a no-op, and refund the charge and confirm the cap comes back.
+      _Depends on: 7.6_
+
+---
+
 ## Out of scope
 
 Flag and ask before starting any of these — they are deliberately excluded:
 
 App Clip or native app · photographer/multi-tenant dashboard · per-client
-branding · payments, tokens, revenue share, invoicing · guest accounts or
-mandatory registration · delayed reveal · film filters · email notifications ·
+branding · tokens, revenue share, **invoicing** · guest accounts or mandatory
+registration · delayed reveal · film filters · email notifications ·
 multi-language · realtime gallery updates · resumable or background uploads.
+
+**Payments left this list on 2026-08-20** — see Phase 7. Invoicing did not: a
+Hungarian company selling to consumers must issue an invoice and report it to
+NAV Online Számla, and Stripe does not do that for you. Flag it before the
+first real forint.
+
+Note the free-photo cap is **not** the "shots per person" mechanic rejected in
+the Once review above. That was a per-guest scarcity device meant to shape how
+people shoot; this is a per-event free tier on the host's side, invisible to a
+guest until an album is full, and it does not contradict "chat apps crush your
+photos, we don't".

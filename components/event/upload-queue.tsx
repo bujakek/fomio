@@ -3,7 +3,7 @@
 import { CreateOwnAlbum } from '@/components/event/create-own-album'
 import { markUploadedTo, readGuestName } from '@/lib/guest-name'
 import { prepareForUpload, type PreparedPhoto } from '@/lib/image'
-import { uploadPhoto } from '@/lib/upload-photo'
+import { uploadPhoto, UploadRefusedError } from '@/lib/upload-photo'
 import { cn } from '@/lib/utils'
 import {
   AlertCircle,
@@ -31,6 +31,8 @@ type Item = {
   previewUrl: string
   status: Status
   error?: string
+  /** Retrying will fail the same way — the album refused it, not the network. */
+  fatal?: boolean
 }
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -48,12 +50,21 @@ export function UploadQueue({
   eventId,
   slug,
   galleryPrivate,
+  remaining: initialRemaining,
 }: {
   eventId: string
   slug: string
   galleryPrivate: boolean
+  /** How many photos the album still accepts; null when it has no cap. */
+  remaining: number | null
 }) {
   const [items, setItems] = useState<Item[]>([])
+  // Counted down here rather than re-read from the server after every photo.
+  // The number only ever shrinks while this component is mounted, and a round
+  // trip per upload on venue wifi would cost more than the count is worth.
+  // The database is still the enforcement — see UploadRefusedError below.
+  const [remaining, setRemaining] = useState(initialRemaining)
+  const [droppedForSpace, setDroppedForSpace] = useState(0)
   const itemsRef = useRef<Item[]>([])
   const runningRef = useRef(false)
   // Revoke previews on unmount. Object URLs live until the document dies, so
@@ -151,8 +162,17 @@ export function UploadQueue({
           })
           patch(item.key, { status: 'done' })
           markUploadedTo(eventId)
+          setRemaining((left) => (left === null ? null : Math.max(left - 1, 0)))
         } catch (e) {
-          patch(item.key, { status: 'error', error: reason(e) })
+          // A refusal is final, so it must not leave a "Újra" button promising
+          // otherwise. It also means the local count is stale — two guests can
+          // both spend the last slot — so trust the database and zero it.
+          if (e instanceof UploadRefusedError) setRemaining(0)
+          patch(item.key, {
+            status: 'error',
+            error: reason(e),
+            fatal: e instanceof UploadRefusedError,
+          })
         }
       }
     } finally {
@@ -164,7 +184,17 @@ export function UploadQueue({
 
   const addFiles = (files: FileList | null) => {
     if (!files?.length) return
-    const added: Item[] = Array.from(files).map((file) => ({
+
+    // Queue only what can actually land. Letting the rest through would decode
+    // and upload each one just to watch the database refuse it — slow, and it
+    // fills the list with failures that look like the guest's fault.
+    const queued = itemsRef.current.filter((i) => isBusy(i.status)).length
+    const room = remaining === null ? files.length : remaining - queued
+    const accepted = Array.from(files).slice(0, Math.max(room, 0))
+    setDroppedForSpace(files.length - accepted.length)
+    if (accepted.length === 0) return
+
+    const added: Item[] = accepted.map((file) => ({
       key: crypto.randomUUID(),
       file,
       previewUrl: URL.createObjectURL(file),
@@ -181,8 +211,14 @@ export function UploadQueue({
   }
 
   const doneCount = items.filter((i) => i.status === 'done').length
-  const failedCount = items.filter((i) => i.status === 'error').length
+  // Only the ones "Újra" can actually help. A photo the album refused would
+  // fail identically on a retry, and counting it here would send a guest
+  // tapping a button that cannot work.
+  const failedCount = items.filter(
+    (i) => i.status === 'error' && !i.fatal,
+  ).length
   const allSettled = items.length > 0 && !busy
+  const full = remaining === 0
 
   return (
     <div className="flex flex-col gap-6">
@@ -257,7 +293,7 @@ export function UploadQueue({
                   {STATUS_LABEL[item.status]}
                 </p>
               </div>
-              {item.status === 'error' ? (
+              {item.status === 'error' && !item.fatal ? (
                 <button
                   type="button"
                   onClick={() => retry(item.key)}
@@ -279,12 +315,33 @@ export function UploadQueue({
         </p>
       ) : null}
 
+      {full ? (
+        // The one thing a guest can do about this is tell the host, so that is
+        // what the copy says. It deliberately does not mention payment: the
+        // guest is not the customer, and "they did not pay" is a miserable
+        // thing to read at somebody's wedding.
+        <div className="glass rounded-2xl px-6 py-5 text-center">
+          <p className="font-semibold">Ez az album most megtelt</p>
+          <p className="mt-2 text-sm leading-relaxed text-pretty text-muted-foreground">
+            Egyelőre nem fogad több képet. Szólj a házigazdának — ha feloldja,
+            folytathatod ott, ahol abbahagytad.
+          </p>
+        </div>
+      ) : null}
+
+      {droppedForSpace > 0 ? (
+        <p className="text-center text-sm text-muted-foreground">
+          {droppedForSpace} képet nem tudtunk sorba állítani — annyi már nem fér
+          bele ebbe az albumba.
+        </p>
+      ) : null}
+
       {/* Two entry points, not one input with `capture` bolted on. Adding
           `capture` to the picker would *replace* gallery access rather than
           add to it, and most of what a guest uploads is already in their
           camera roll. Camera leads because the other half of the job is the
           shot they are about to take. */}
-      <div className="flex gap-2">
+      <div className={cn('flex gap-2', full && 'hidden')}>
         <label
           className={cn(
             'btn-shine inline-flex min-h-14 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-5 text-base font-semibold text-primary-foreground transition-transform',
@@ -330,6 +387,12 @@ export function UploadQueue({
           />
         </label>
       </div>
+
+      {remaining !== null && !full ? (
+        <p className="text-center text-xs text-muted-foreground">
+          Még {remaining} kép fér ebbe az albumba.
+        </p>
+      ) : null}
 
       {busy ? (
         <p className="text-center text-xs leading-relaxed text-muted-foreground">

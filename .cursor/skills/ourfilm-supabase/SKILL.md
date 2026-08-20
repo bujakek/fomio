@@ -117,11 +117,12 @@ The anon key ships in the browser bundle, so **anything `anon` can `select` thro
 
 So guests read through `security definer` functions that take the slug or event id as an argument. You can fetch an album whose address you already know; there is nothing to enumerate.
 
-| Function                      | Purpose                                           |
-| ----------------------------- | ------------------------------------------------- |
-| `event_by_slug(text)`         | One event by slug. Deliberately omits `owner_id`. |
-| `event_photos(uuid)`          | Visible photos for one event, newest first.       |
-| `event_accepts_uploads(uuid)` | Boolean, used inside the insert policy.           |
+| Function                      | Purpose                                                                       |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| `event_by_slug(text)`         | One event by slug. Deliberately omits `owner_id`.                             |
+| `event_photos(uuid)`          | Visible photos for one event, newest first.                                   |
+| `event_accepts_uploads(uuid)` | Boolean, used inside the insert policy. Upload window **and** free-photo cap. |
+| `event_upload_quota(uuid)`    | `(photo_limit, remaining, unlimited)` so the UI can explain the cap.          |
 
 All three are `security definer`, `stable`, and `set search_path = ''` (so fully qualify every table reference), with `execute` granted to `anon, authenticated`.
 
@@ -136,7 +137,40 @@ Why the rest is shaped this way:
 - `event_accepts_uploads()` makes the upload window a database rule, not a UI suggestion — hiding the upload button is a courtesy, not the enforcement.
 - Host policies key off **`owner_id`, never a bare `to authenticated`**. A blanket `using (true)` would make every signed-in user a host of every event — able to read hidden photos, export albums and delete them. With ownership scoping, a stray signup lands in an empty admin instead. Disabling public signups is still worth doing, but it is now defence in depth rather than the only thing standing between a stranger and someone's wedding.
 - Ownership scoping is **not** the multi-tenant dashboard that `CLAUDE.md` rules out. There is no per-client branding, no tenant switching, no sharing — just a row knowing who created it.
+- Every host policy is `owner_id = auth.uid() **or** public.is_admin()`. See Roles below.
 - `owner_id` is `not null`, so a user must exist before any event can be inserted. Create your own account in the dashboard before seeding development data.
+
+## Roles
+
+Two: `user` (the default every signup gets) and `admin` (the operator).
+
+```sql
+create type public.app_role as enum ('user', 'admin');
+
+create table public.profiles (
+  id         uuid primary key references auth.users (id) on delete cascade,
+  role       public.app_role not null default 'user',
+  created_at timestamptz not null default now()
+);
+```
+
+- Rows are written by an `after insert on auth.users` trigger, not by app code. Signup happens inside Supabase Auth, so there is no point in our request path that reliably runs for every new account — `/auth/callback` is already too late and can be abandoned.
+- `public.is_admin()` **must** be `security definer`, for a sharper version of the reason `event_accepts_uploads()` is. Inside `profiles`' own policy an inline `exists (select … from profiles)` recurses; inside `events`' policy it is filtered by `profiles`' policy. Reading a role has to bypass RLS.
+- **No self-update policy on `profiles`.** A user may read their role and may not write it — otherwise `role = 'admin'` is one PATCH away for anyone with the anon key and a session, which is everyone. Promote through another admin, or through the SQL editor for the first one.
+- The admin bypass is OR'd into the existing host policies on `events`, `photos` and `storage.objects`. The bucket check stays _outside_ the OR: an admin session must not become a general key to buckets this app never created.
+- Consequence to expect on first login as an admin: `owned_events_with_previews()` is `security invoker`, so `/admin` lists **every** event in the system.
+
+## Billing
+
+One-time purchase per event, and the free upload cap it lifts. Full rationale in `CLAUDE.md`; the database side:
+
+- `purchases` is a **ledger**, not a flag. Abandoned checkouts leave `pending` rows on purpose. There is deliberately **no** partial unique index on `(event_id) where status = 'paid'` — it reads like a good guard, but it would make the webhook unable to record a second payment Stripe already took, and money with no row explaining it is worse than a duplicate row. Refusing to _start_ a second checkout is the right place for that check.
+- Hosts can insert a `pending` row for their own event and nothing else. There is **no update policy at all**, so the only way a row reaches `paid` is the webhook running as the service role. A host who could write that column could grant themselves a free album.
+- `stripe_webhook_events` has RLS on and **no policies**: service role only. It is idempotency plus the audit trail you want during a dispute.
+- The cap is checked in `event_accepts_uploads()` _and_ `event_folder_accepts_uploads()` — the row and the object are two separate policies, and gating one leaves the other open.
+- `event_photo_count_capped(uuid, integer)` exists because this runs on every guest upload. An unbounded `count(*)` would grow with the album on the one write path the pilot is measuring; bounded by the limit it is an index-only scan of a handful of tuples.
+- The cap counts **hidden** photos. `hidden_at` is moderation, not deletion — the object still costs storage.
+- Accepted race: two guests can both pass the check for the last free slot and land one photo over. It is a commercial limit, not a safety property, and serialising every guest upload behind a lock is not a trade worth making.
 
 ## Storage
 
