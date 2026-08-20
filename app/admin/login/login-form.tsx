@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { Check, Loader2, Mail } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 type State = 'idle' | 'sending' | 'sent' | 'error'
 
@@ -10,9 +10,23 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
   const [state, setState] = useState<State>('idle')
   const [message, setMessage] = useState('')
 
+  // `disabled={state === 'sending'}` is not a lock. setState schedules a
+  // re-render, and the attribute only reaches the DOM once React commits it —
+  // so a second submit dispatched in the same tick (double-tap, or Enter held
+  // down) runs before the button is ever disabled, and Supabase sends a second
+  // magic link. Each new link invalidates the previous one, so the fast
+  // clicker ends up with two mails and the one they open first is dead.
+  //
+  // A ref flips synchronously, which is what actually closes the window. Same
+  // pattern as `runningRef` in components/event/upload-queue.tsx.
+  const sendingRef = useRef(false)
+
   async function onSubmit(formData: FormData) {
     const email = String(formData.get('email') ?? '').trim()
     if (!email) return
+
+    if (sendingRef.current) return
+    sendingRef.current = true
 
     setState('sending')
     const supabase = createClient()
@@ -31,6 +45,9 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
     })
 
     if (error) {
+      // Released only on failure. On success the form unmounts for the
+      // confirmation card, so there is nothing left to submit twice.
+      sendingRef.current = false
       setState('error')
       setMessage('Nem sikerült elküldeni. Próbáld újra egy kicsit később.')
       return
