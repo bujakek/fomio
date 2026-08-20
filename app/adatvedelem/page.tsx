@@ -9,6 +9,7 @@ import {
   hasRealCompanyDetails,
   EMAIL_PROVIDER,
   LAST_UPDATED,
+  PAYMENT_PROCESSOR,
 } from '@/lib/company'
 import { CONTACT_EMAIL } from '@/lib/site'
 import type { Metadata } from 'next'
@@ -42,6 +43,7 @@ const sections: LegalSection[] = [
       'A vendég a csatlakozáskor megadja a nevét. Ezt a saját böngészője tárolja, és minden általa feltöltött fotóhoz hozzákapcsoljuk, hogy látszódjon, kitől érkezett. Bármilyen nevet megadhat; nem ellenőrizzük.',
       'A vendégeknek nincs fiókjuk: nem kérünk e-mail-címet, jelszót és regisztrációt. A házigazda fiókjához e-mail-cím tartozik, mert a belépés e-mailben küldött linkkel történik.',
       'A fotók tartalmát nem elemezzük: nem futtatunk rajtuk arcfelismerést, és nem készítünk belőlük profilt.',
+      'Fizetés esetén a bankkártya adatait nem látjuk és nem tároljuk: a fizetés a Stripe saját, általa üzemeltetett oldalán történik. Tőlünk csak a tranzakció azonosítói, az összeg, a pénznem és a fizetés állapota kerül az adatbázisunkba.',
     ],
   },
   {
@@ -60,7 +62,8 @@ const sections: LegalSection[] = [
       'Az esemény házigazdája látja és letöltheti az album összes fotóját, és el is rejthet közülük bármelyiket.',
       'Munkatársaink csak akkor férnek hozzá, ha ez hibaelhárításhoz szükséges, és titoktartás köti őket.',
       'A fotókat nem adjuk el, nem adjuk át hirdetőknek, és nem használjuk fel marketingcélra a házigazda kifejezett engedélye nélkül.',
-      `Adatfeldolgozóink: Supabase (adatbázis és fájltárolás), Vercel (a weboldal kiszolgálása), ${EMAIL_PROVIDER} (a belépési linkek kiküldése). Mindegyikkel adatfeldolgozói szerződésünk van.`,
+      `Adatfeldolgozóink: Supabase (adatbázis és fájltárolás), Vercel (a weboldal kiszolgálása), ${EMAIL_PROVIDER} (a belépési linkek kiküldése), valamint ${PAYMENT_PROCESSOR.name} (fizetés). Mindegyikkel adatfeldolgozói szerződésünk van.`,
+      'A fizetési szolgáltató a saját adatkezelési tájékoztatója szerint önálló adatkezelőként is kezel adatokat — például csalásmegelőzés céljából.',
     ],
   },
   {
@@ -68,6 +71,7 @@ const sections: LegalSection[] = [
     body: [
       'A fotók és a hozzájuk tartozó adatok a Supabase zürichi (svájci) régiójában tárolódnak. Svájc az EGT-n kívül van, ezért ez harmadik országba történő adattovábbításnak minősül — az Európai Bizottság megfelelőségi határozata alapján, külön garanciák (SCC) nélkül.',
       'A weboldalt kiszolgáló Vercel Inc. egyesült államokbeli székhelyű. Az ide irányuló adattovábbítás jogalapja az EU–USA adatvédelmi keret (Data Privacy Framework), illetve az Európai Bizottság általános szerződési feltételei.',
+      `A fizetéseket a ${PAYMENT_PROCESSOR.name} (${PAYMENT_PROCESSOR.address}) dolgozza fel, amely az Európai Gazdasági Térségen belüli társaság. A Stripe cégcsoporton belüli, EGT-n kívülre irányuló továbbításokra a Stripe saját garanciái (általános szerződési feltételek, illetve az EU–USA adatvédelmi keret) vonatkoznak.`,
     ],
   },
   {

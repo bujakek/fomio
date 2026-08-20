@@ -9,6 +9,7 @@ import {
   hasRealCompanyDetails,
   HOSTING_PROVIDER,
   LAST_UPDATED,
+  PAYMENT_PROCESSOR,
 } from '@/lib/company'
 import { CONTACT_EMAIL } from '@/lib/site'
 import type { Metadata } from 'next'
@@ -78,7 +79,8 @@ const sections: LegalSection[] = [
     title: 'Díjak és fizetés',
     body: [
       'A mindenkori díjakat az Árak oldal tartalmazza, bruttó, áfával növelt összegben. A díj az esemény létrehozásakor esedékes.',
-      'A fizetésről elektronikus számlát állítunk ki, amelyet e-mailben küldünk meg.',
+      `A fizetést a ${PAYMENT_PROCESSOR.name} (${PAYMENT_PROCESSOR.address}) mint fizetési szolgáltató bonyolítja. A fizetés a Stripe saját, biztonságos oldalán történik: a bankkártya adatait nem látjuk, nem kezeljük és nem tároljuk. Nálunk csak a tranzakció azonosítója, az összeg, a pénznem és a fizetés állapota marad meg.`,
+      'A fizetésről számlát állítunk ki, amelyet e-mailben küldünk meg.',
       'A már megkezdett esemény díja nem kerül visszatérítésre, kivéve az alábbi elállási jogot és a hibás teljesítés eseteit.',
     ],
   },

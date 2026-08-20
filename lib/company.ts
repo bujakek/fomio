@@ -32,6 +32,27 @@ export const COMPANY = {
 export const HOSTING_PROVIDER =
   'Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA)'
 
+/**
+ * The payment processor, named in both legal pages.
+ *
+ * Stripe Payments Europe is the Irish entity EU merchants contract with, so
+ * the payment relationship itself stays inside the EEA. Verify this matches
+ * the entity on the actual Stripe agreement once the account exists — Stripe
+ * assigns it by merchant country, and the address belongs in the ÁSZF as
+ * written, not approximated.
+ *
+ * Checkout is a hosted redirect (`mode: 'payment'`), so card numbers, 3-D
+ * Secure and any wallet credentials go straight to Stripe. This system stores
+ * only Stripe's reference ids, the amount, the currency and a status — see
+ * the `purchases` table. That distinction is the whole reason the privacy
+ * notice can say we never see a card number.
+ */
+export const PAYMENT_PROCESSOR = {
+  name: 'Stripe Payments Europe, Limited',
+  address:
+    '1 Grand Canal Street Lower, Grand Canal Dock, Dublin, D02 H210, Írország',
+} as const
+
 /** Who sends the magic-link emails. Named as a processor in the privacy notice. */
 export const EMAIL_PROVIDER = 'Resend'
 
