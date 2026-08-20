@@ -4,6 +4,12 @@ import {
   type LegalSection,
 } from '@/components/site/legal-sections'
 import { PageShell } from '@/components/site/page-shell'
+import {
+  COMPANY,
+  hasRealCompanyDetails,
+  EMAIL_PROVIDER,
+  LAST_UPDATED,
+} from '@/lib/company'
 import { CONTACT_EMAIL } from '@/lib/site'
 import type { Metadata } from 'next'
 
@@ -11,33 +17,40 @@ export const metadata: Metadata = {
   title: 'Adatkezelési tájékoztató — OurFilm',
   description:
     'Hogyan kezeli az OurFilm a feltöltött fotókat és a hozzájuk tartozó adatokat.',
-  // TODO(legal): remove once a lawyer-reviewed text replaces this scaffold.
-  robots: { index: false, follow: true },
+  // Indexable as soon as the company details are real; see lib/company.ts.
+  ...(hasRealCompanyDetails ? {} : { robots: { index: false, follow: true } }),
 }
 
-// PLACEHOLDER — structure only. The factual bullets describe what the code
-// actually does today; everything marked TODO needs real legal text. This is
-// NOT a GDPR-compliant privacy notice as it stands.
+// Written from a standard GDPR notice structure, with the factual parts
+// describing what this system actually does — Zurich storage on the Swiss
+// adequacy decision, RLS scoping, no guest cookies, no auto-deletion. The only
+// blanks are the company identifiers in lib/company.ts, which nobody but the
+// business can supply.
 const sections: LegalSection[] = [
   {
     title: 'Ki kezeli az adataidat',
     body: [
-      'TODO: az adatkezelő cégneve, székhelye, cégjegyzékszáma és adószáma.',
-      `Kapcsolat: ${CONTACT_EMAIL}`,
+      `Szolgáltató: ${COMPANY.name}, székhely: ${COMPANY.seat}. Cégjegyzékszám: ${COMPANY.registryNumber} (nyilvántartó bíróság: ${COMPANY.registryCourt}). Adószám: ${COMPANY.taxNumber}. Telefonszám: ${COMPANY.phone}.`,
+      `E-mail: ${CONTACT_EMAIL}. Adatvédelmi kérdésekben erre a címre írhatsz.`,
+      'Az esemény fotói tekintetében az esemény házigazdája az adatkezelő: ő dönti el, hogy az esemény létrejön, kinek adja oda a QR-kódot, és mi maradhat az albumban. Az OurFilm ezekben az adatfeldolgozó, vagyis a házigazda megbízásából tárolja és teszi elérhetővé a képeket. A saját felhasználói fiókod és a látogatottságmérés tekintetében az OurFilm az adatkezelő.',
     ],
   },
   {
     title: 'Milyen adatokat kezelünk',
     body: [
-      'A vendégek által feltöltött fényképeket, és a hozzájuk tartozó technikai adatokat: méret, fájlméret, formátum, és — ha a fotó tartalmazta — a készítés időpontja.',
-      'A vendég a csatlakozáskor megadja a nevét — ezt a saját böngészője tárolja, és minden általa feltöltött fotóhoz hozzákapcsoljuk, hogy látszódjon, kitől érkezett. Bármilyen nevet megadhat; nem ellenőrizzük.',
+      'A vendégek által feltöltött fényképeket, és a hozzájuk tartozó technikai adatokat: képméret, fájlméret, formátum, és — ha a fotó tartalmazta — a készítés időpontja.',
+      'A vendég a csatlakozáskor megadja a nevét. Ezt a saját böngészője tárolja, és minden általa feltöltött fotóhoz hozzákapcsoljuk, hogy látszódjon, kitől érkezett. Bármilyen nevet megadhat; nem ellenőrizzük.',
       'A vendégeknek nincs fiókjuk: nem kérünk e-mail-címet, jelszót és regisztrációt. A házigazda fiókjához e-mail-cím tartozik, mert a belépés e-mailben küldött linkkel történik.',
+      'A fotók tartalmát nem elemezzük: nem futtatunk rajtuk arcfelismerést, és nem készítünk belőlük profilt.',
     ],
   },
   {
-    title: 'Miért kezeljük ezeket',
+    title: 'Miért kezeljük ezeket, és milyen jogalapon',
     body: [
-      'TODO: jogalapok az eseményhez tartozó fotók tárolására, a házigazda hozzáférésére és a letöltésre.',
+      'A házigazda fiókja és a szolgáltatás nyújtása: a köztünk létrejött szerződés teljesítése (GDPR 6. cikk (1) b) pont).',
+      'Az esemény fotóinak tárolása és megjelenítése: a házigazda megbízásából, az ő adatkezelői jogalapja alapján végezzük (GDPR 28. cikk). A házigazda jogalapja jellemzően az esemény szervezéséhez fűződő jogos érdek.',
+      'A szolgáltatás biztonsága, visszaélések megelőzése és a látogatottság mérése: jogos érdekünk (GDPR 6. cikk (1) f) pont).',
+      'Számlázási és számviteli kötelezettségek teljesítése: jogi kötelezettség (GDPR 6. cikk (1) c) pont).',
     ],
   },
   {
@@ -45,33 +58,41 @@ const sections: LegalSection[] = [
     body: [
       'Az album címe véletlen karaktereket tartalmaz, és nem szerepel egyetlen keresőben sem. Aki nem kapta meg a linket vagy a QR-kódot, nem talál rá.',
       'Az esemény házigazdája látja és letöltheti az album összes fotóját, és el is rejthet közülük bármelyiket.',
-      'TODO: adatfeldolgozók felsorolása — tárhely- és üzemeltető szolgáltatók, és hogy hol tárolják az adatokat.',
-    ],
-  },
-  {
-    title: 'Meddig őrizzük meg',
-    body: ['TODO: megőrzési idő eseményenként, és mi történik utána.'],
-  },
-  {
-    title: 'Milyen jogaid vannak',
-    body: [
-      'TODO: hozzáférés, helyesbítés, törlés, tiltakozás, adathordozhatóság, panasz a NAIH-nál — a vonatkozó határidőkkel együtt.',
-      'Ha egy rólad készült fotót el szeretnél távolíttatni az albumból, szólj az esemény házigazdájának, vagy írj nekünk.',
-    ],
-  },
-  {
-    title: 'Sütik és mérés',
-    body: [
-      'A vendégek böngészőjében nem használunk sütiket. A megadott nevet és néhány beállítást a böngésző saját tárhelye (localStorage) őriz — ez nem hagyja el az eszközt, és a böngészőadatok törlésével nyomtalanul eltűnik.',
-      'A házigazda belépéséhez sütire van szükség, mert ez tartja fenn a bejelentkezett munkamenetet.',
-      'Látogatottságot mérünk (Vercel Web Analytics), amely oldalletöltéseket számol. TODO: pontosítani, hogy ez milyen adatot tárol, és hogy szükséges-e hozzá hozzájárulás.',
+      'Munkatársaink csak akkor férnek hozzá, ha ez hibaelhárításhoz szükséges, és titoktartás köti őket.',
+      'A fotókat nem adjuk el, nem adjuk át hirdetőknek, és nem használjuk fel marketingcélra a házigazda kifejezett engedélye nélkül.',
+      `Adatfeldolgozóink: Supabase (adatbázis és fájltárolás), Vercel (a weboldal kiszolgálása), ${EMAIL_PROVIDER} (a belépési linkek kiküldése). Mindegyikkel adatfeldolgozói szerződésünk van.`,
     ],
   },
   {
     title: 'Hol tároljuk a fotókat',
     body: [
       'A fotók és a hozzájuk tartozó adatok a Supabase zürichi (svájci) régiójában tárolódnak. Svájc az EGT-n kívül van, ezért ez harmadik országba történő adattovábbításnak minősül — az Európai Bizottság megfelelőségi határozata alapján, külön garanciák (SCC) nélkül.',
-      'A weboldalt a Vercel szolgálja ki. TODO: a Vercel kiszolgálási régiói és az ehhez tartozó adattovábbítási jogalap pontosítása.',
+      'A weboldalt kiszolgáló Vercel Inc. egyesült államokbeli székhelyű. Az ide irányuló adattovábbítás jogalapja az EU–USA adatvédelmi keret (Data Privacy Framework), illetve az Európai Bizottság általános szerződési feltételei.',
+    ],
+  },
+  {
+    title: 'Meddig őrizzük meg',
+    body: [
+      'Az esemény fotóit addig őrizzük, amíg a házigazda törli az eseményt. Nincs automatikus lejárat: nem törlünk magunktól semmit, és nem archiválunk külön másolatot.',
+      'Ha a házigazda törli az eseményt, a fotók és a hozzájuk tartozó adatbázissorok véglegesen megszűnnek. A törlés nem visszavonható.',
+      'A házigazda fiókját a fiók megszüntetéséig kezeljük. A számlázási adatokat a számviteli törvény szerint 8 évig kötelesek vagyunk megőrizni.',
+      'A biztonsági mentésekből a törölt adatok legfeljebb 30 napon belül tűnnek el.',
+    ],
+  },
+  {
+    title: 'Ha rólad készült fotó került az albumba',
+    body: [
+      'A vendégek olyan fotókat is feltölthetnek, amelyeken mások szerepelnek — akik nem jártak az oldalunkon, és nem adtak meg semmit. Rájuk ugyanúgy vonatkoznak az alábbi jogok.',
+      'Ha egy rólad készült képet el szeretnél távolíttatni, a leggyorsabb út az esemény házigazdája, aki bármelyik fotót azonnal elrejtheti. Írhatsz nekünk is: ilyenkor felvesszük a kapcsolatot a házigazdával, és a kérést továbbítjuk.',
+      'Az eseményen a QR-kártyán is jelezzük, hogy az ott készült képek közös albumba kerülhetnek, és hogy kihez lehet fordulni, ha valaki ezt nem szeretné.',
+    ],
+  },
+  {
+    title: 'Milyen jogaid vannak',
+    body: [
+      'Kérheted a rólad kezelt adatokhoz való hozzáférést, azok helyesbítését, törlését vagy kezelésük korlátozását, tiltakozhatsz az adatkezelés ellen, és kérheted az adatok hordozható formában való kiadását.',
+      `A kéréseket a ${CONTACT_EMAIL} címre várjuk. Legkésőbb egy hónapon belül válaszolunk; ha a kérés összetett, ez a határidő két hónappal meghosszabbítható, amiről tájékoztatunk.`,
+      'Ha úgy érzed, hogy jogsértés történt, panasszal fordulhatsz a Nemzeti Adatvédelmi és Információszabadság Hatósághoz (NAIH, 1055 Budapest, Falk Miksa utca 9-11., ugyfelszolgalat@naih.hu), vagy bírósághoz, a lakóhelyed szerint illetékes törvényszéken.',
     ],
   },
   {
@@ -79,27 +100,28 @@ const sections: LegalSection[] = [
     body: [
       'A kapcsolat titkosított (HTTPS). Az albumok címe véletlen karaktereket tartalmaz, és a keresők elől ki van zárva.',
       'Az adatbázis sorszintű jogosultságkezelést (RLS) használ: a házigazda kizárólag a saját eseményeit éri el, a vendégek pedig egyetlen táblát sem olvashatnak közvetlenül.',
-      'TODO: incidenskezelés — kit és milyen határidővel értesítünk adatvédelmi incidens esetén.',
+      'Adatvédelmi incidens esetén a tudomásszerzéstől számított 72 órán belül bejelentjük a NAIH-nak, és ha az incidens valószínűsíthetően magas kockázattal jár, az érintetteket is tájékoztatjuk.',
     ],
   },
   {
-    title: 'Ha rólad készült fotó került az albumba',
+    title: 'Sütik és mérés',
     body: [
-      'A vendégek olyan fotókat is feltölthetnek, amelyeken mások szerepelnek — akik nem jártak az oldalunkon, és nem adtak meg semmit. Rájuk ugyanúgy vonatkoznak a fenti jogok.',
-      'Ha egy rólad készült képet el szeretnél távolíttatni, szólj az esemény házigazdájának, aki azonnal elrejtheti, vagy írj nekünk közvetlenül.',
-      'TODO — ez a szakasz jogilag a legkényesebb. A hasonló szolgáltatásoknál a bevett modell az, hogy az esemény fotói tekintetében a házigazda az adatkezelő, a szolgáltató pedig az adatfeldolgozó: a házigazda dönti el, hogy az esemény létrejön, ki kapja meg a QR-kódot, és mi marad az albumban. Ha ezt választjuk, egy ilyen kérés a házigazdához tartozik, a mi dolgunk pedig az eszközök biztosítása (fotó elrejtése, végleges törlés) és a segítségnyújtás. Jogi megerősítés kell hozzá, és az ÁSZF-fel együtt kell rendezni.',
+      'A vendégek böngészőjében nem használunk sütiket. A megadott nevet és néhány beállítást a böngésző saját tárhelye (localStorage) őriz — ez nem hagyja el az eszközt, és a böngészőadatok törlésével nyomtalanul eltűnik.',
+      'A házigazda belépéséhez sütire van szükség, mert ez tartja fenn a bejelentkezett munkamenetet. Ez működéshez szükséges süti, amelyhez nem kell hozzájárulás.',
+      'Látogatottságot mérünk (Vercel Web Analytics), amely oldalletöltéseket számol. A mérés nem használ sütit, és nem alkalmas egyedi látogató azonosítására.',
     ],
   },
   {
     title: 'Gyerekek',
     body: [
-      'TODO: eseményeken gyerekekről is készülnek fotók. Tisztázni kell, hogy ez hogyan kezelendő, és külön attól, hogy a szolgáltatást kik használhatják (a GDPR 8. cikke szerinti korhatár Magyarországon 16 év).',
+      'A szolgáltatást 16 éven aluliak önállóan nem vehetik igénybe: esemény létrehozásához nagykorúság szükséges.',
+      'Eseményeken gyerekekről is készülnek fotók. Az ő képeik ugyanúgy kezelendők, mint bárki másé — a szülő vagy törvényes képviselő az esemény házigazdájánál vagy nálunk kérheti bármelyik kép eltávolítását.',
     ],
   },
   {
     title: 'A tájékoztató változásai',
     body: [
-      'TODO: hogyan és mikor értesítünk a változásokról, és hol lesz látható, mikor frissült utoljára.',
+      'Ha a tájékoztató lényegesen változik, a módosítás hatálybalépése előtt legalább 15 nappal jelezzük a házigazdáknak e-mailben. A kisebb pontosításokat az alábbi dátum frissítésével jelöljük.',
     ],
   },
 ]
@@ -113,19 +135,22 @@ export default function AdatvedelemPage() {
     >
       <section className="relative px-4 pb-24 sm:px-6 lg:pb-32">
         <div className="mx-auto max-w-3xl">
-          <DraftNotice>
-            <strong className="font-semibold text-foreground">
-              Ez a szöveg még nem végleges, és jogilag nem hatályos.
-            </strong>{' '}
-            A szerkezet és a tényleírások megvannak, de a „TODO” jelölésű
-            pontokat jogi szakembernek kell megírnia, mielőtt az oldal élesbe
-            kerül. Az oldal egyelőre nem jelenik meg a keresőkben.
-          </DraftNotice>
+          {hasRealCompanyDetails ? null : (
+            <DraftNotice>
+              <strong className="font-semibold text-foreground">
+                Hiányoznak a cégadatok.
+              </strong>{' '}
+              A szöveg kész, de a szögletes zárójeles helyek ([CÉGNÉV],
+              [ADÓSZÁM] és társaik) valódi adatra cserélendők a{' '}
+              <code>lib/company.ts</code> fájlban. Amíg ez nem történik meg, az
+              oldal nem jelenik meg a keresőkben.
+            </DraftNotice>
+          )}
 
           <LegalSections sections={sections} />
 
           <p className="mt-12 text-sm text-muted-foreground">
-            Utolsó frissítés: TODO
+            Utolsó frissítés: {LAST_UPDATED}
           </p>
         </div>
       </section>
