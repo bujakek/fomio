@@ -474,10 +474,24 @@ Do not reopen these without a reason; the tickets below already assume them.
       **Open consequence:** anyone can now create events that accept anonymous
       uploads, against a shared storage tier. 6.6 matters more than it did.
 
-- [ ] **6.5 Privacy policy.** No legal pages exist, the FAQ makes explicit
-      data-handling claims, and this is an EU consumer product handling photos
-      of identifiable people. Must name Switzerland as the storage location
-      (see D2) and describe the erasure route built in 5.8.
+- [ ] **6.5 Privacy policy.** The FAQ makes explicit data-handling claims, and
+      this is an EU consumer product handling photos of identifiable people.
+      **Scaffolded, not written** — `/adatvedelem` now has thirteen sections
+      whose factual parts describe what the code actually does (Zurich storage
+      and the Swiss adequacy basis per D2, RLS scoping, no guest cookies, the
+      erasure route from 5.8). Everything legal is marked TODO, the page
+      carries a visible draft banner and `noindex`, and it is kept out of
+      `sitemap.ts`.
+      **The open question a lawyer has to settle first:** for the photos in an
+      event, is the host the controller and OurFilm the processor, or are they
+      joint controllers? It decides who answers an erasure request from someone
+      photographed at a wedding — a data subject who never visited the site and
+      never agreed to anything — and it changes the ÁSZF as well as this page.
+      Benchmarked against once.film's policy, which runs on the same stack
+      (Supabase + Vercel): its structure is worth following, its text is not.
+      That policy is US-primary with GDPR annexed, is built around guest
+      accounts we do not have, names the US as the storage location, and
+      retains purchase records we never create.
 - [ ] **6.6 Abuse ceiling.** Uploads are anonymous and unlimited. The bucket caps
       file size but not volume. Decide whether a per-event cap is needed.
 - [ ] **6.7 Real-device matrix.** iPhone Safari (HEIC path), Android Chrome (JPEG

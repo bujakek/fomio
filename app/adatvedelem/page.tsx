@@ -30,7 +30,7 @@ const sections: LegalSection[] = [
     title: 'Milyen adatokat kezelünk',
     body: [
       'A vendégek által feltöltött fényképeket, és a hozzájuk tartozó technikai adatokat: méret, fájlméret, formátum, és — ha a fotó tartalmazta — a készítés időpontja.',
-      'A vendég megadhat egy becenevet a feltöltéshez. Ez nem kötelező, és a böngészője tárolja, hogy ne kelljen újra beírnia.',
+      'A vendég a csatlakozáskor megadja a nevét — ezt a saját böngészője tárolja, és minden általa feltöltött fotóhoz hozzákapcsoljuk, hogy látszódjon, kitől érkezett. Bármilyen nevet megadhat; nem ellenőrizzük.',
       'A vendégeknek nincs fiókjuk: nem kérünk e-mail-címet, jelszót és regisztrációt. A házigazda fiókjához e-mail-cím tartozik, mert a belépés e-mailben küldött linkkel történik.',
     ],
   },
@@ -62,7 +62,44 @@ const sections: LegalSection[] = [
   {
     title: 'Sütik és mérés',
     body: [
-      'TODO: a látogatottságmérés leírása, és hogy pontosan mit tárol a böngésződben.',
+      'A vendégek böngészőjében nem használunk sütiket. A megadott nevet és néhány beállítást a böngésző saját tárhelye (localStorage) őriz — ez nem hagyja el az eszközt, és a böngészőadatok törlésével nyomtalanul eltűnik.',
+      'A házigazda belépéséhez sütire van szükség, mert ez tartja fenn a bejelentkezett munkamenetet.',
+      'Látogatottságot mérünk (Vercel Web Analytics), amely oldalletöltéseket számol. TODO: pontosítani, hogy ez milyen adatot tárol, és hogy szükséges-e hozzá hozzájárulás.',
+    ],
+  },
+  {
+    title: 'Hol tároljuk a fotókat',
+    body: [
+      'A fotók és a hozzájuk tartozó adatok a Supabase zürichi (svájci) régiójában tárolódnak. Svájc az EGT-n kívül van, ezért ez harmadik országba történő adattovábbításnak minősül — az Európai Bizottság megfelelőségi határozata alapján, külön garanciák (SCC) nélkül.',
+      'A weboldalt a Vercel szolgálja ki. TODO: a Vercel kiszolgálási régiói és az ehhez tartozó adattovábbítási jogalap pontosítása.',
+    ],
+  },
+  {
+    title: 'Hogyan védjük az adatokat',
+    body: [
+      'A kapcsolat titkosított (HTTPS). Az albumok címe véletlen karaktereket tartalmaz, és a keresők elől ki van zárva.',
+      'Az adatbázis sorszintű jogosultságkezelést (RLS) használ: a házigazda kizárólag a saját eseményeit éri el, a vendégek pedig egyetlen táblát sem olvashatnak közvetlenül.',
+      'TODO: incidenskezelés — kit és milyen határidővel értesítünk adatvédelmi incidens esetén.',
+    ],
+  },
+  {
+    title: 'Ha rólad készült fotó került az albumba',
+    body: [
+      'A vendégek olyan fotókat is feltölthetnek, amelyeken mások szerepelnek — akik nem jártak az oldalunkon, és nem adtak meg semmit. Rájuk ugyanúgy vonatkoznak a fenti jogok.',
+      'Ha egy rólad készült képet el szeretnél távolíttatni, szólj az esemény házigazdájának, aki azonnal elrejtheti, vagy írj nekünk közvetlenül.',
+      'TODO: ez a szakasz jogilag a legkényesebb — tisztázni kell, hogy az esemény fotói tekintetében a házigazda adatkezelő és az OurFilm adatfeldolgozó, vagy közös adatkezelésről van-e szó, és ehhez igazítani, ki válaszol egy ilyen kérésre.',
+    ],
+  },
+  {
+    title: 'Gyerekek',
+    body: [
+      'TODO: eseményeken gyerekekről is készülnek fotók. Tisztázni kell, hogy ez hogyan kezelendő, és külön attól, hogy a szolgáltatást kik használhatják (a GDPR 8. cikke szerinti korhatár Magyarországon 16 év).',
+    ],
+  },
+  {
+    title: 'A tájékoztató változásai',
+    body: [
+      'TODO: hogyan és mikor értesítünk a változásokról, és hol lesz látható, mikor frissült utoljára.',
     ],
   },
 ]
