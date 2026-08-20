@@ -86,8 +86,9 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
           required
           autoComplete="email"
           autoFocus
+          disabled={state === 'sending'}
           placeholder="te@pelda.hu"
-          className="glass min-h-14 w-full rounded-2xl px-5 text-base text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-accent"
+          className="glass min-h-14 w-full rounded-2xl px-5 text-base text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-accent disabled:opacity-60"
         />
       </div>
 
@@ -102,12 +103,13 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
       <button
         type="submit"
         disabled={state === 'sending'}
+        aria-busy={state === 'sending'}
         className="btn-shine inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground disabled:opacity-60"
       >
         {state === 'sending' ? (
-          <Loader2 className="size-5 animate-spin" />
+          <Loader2 className="size-5 animate-spin" aria-hidden="true" />
         ) : (
-          <Mail className="size-5" strokeWidth={1.8} />
+          <Mail className="size-5" strokeWidth={1.8} aria-hidden="true" />
         )}
         {state === 'sending' ? 'Küldés…' : 'Belépési link kérése'}
       </button>
