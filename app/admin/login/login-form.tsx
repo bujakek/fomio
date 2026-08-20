@@ -2,33 +2,38 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { Check, Loader2, Mail } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useActionState, useRef } from 'react'
 
-type State = 'idle' | 'sending' | 'sent' | 'error'
+type Result = { status: 'idle' | 'sent' | 'error'; message?: string }
+
+const INITIAL: Result = { status: 'idle' }
 
 export function LoginForm({ linkError }: { linkError: boolean }) {
-  const [state, setState] = useState<State>('idle')
-  const [message, setMessage] = useState('')
+  // Not hand-rolled useState, and the difference is visible: `<form action>`
+  // runs its function inside a transition, and a transition deliberately
+  // suppresses intermediate renders — it holds the current UI rather than
+  // flashing a loading state. A manual setState('sending') therefore never
+  // reliably painted, so the spinner and the disabled styling did not appear.
+  // `useActionState` exposes the pending flag React itself manages, which is
+  // the one that renders. Same shape as the other admin forms.
+  const [result, submit, pending] = useActionState(sendLink, INITIAL)
 
-  // `disabled={state === 'sending'}` is not a lock. setState schedules a
-  // re-render, and the attribute only reaches the DOM once React commits it —
-  // so a second submit dispatched in the same tick (double-tap, or Enter held
-  // down) runs before the button is ever disabled, and Supabase sends a second
-  // magic link. Each new link invalidates the previous one, so the fast
-  // clicker ends up with two mails and the one they open first is dead.
-  //
-  // A ref flips synchronously, which is what actually closes the window. Same
-  // pattern as `runningRef` in components/event/upload-queue.tsx.
+  // React queues concurrent dispatches rather than dropping them, so `pending`
+  // alone still allows a fast double-tap to send twice. This flips
+  // synchronously and is what actually closes that window — each new magic
+  // link invalidates the previous one, so the second mail would kill the first.
   const sendingRef = useRef(false)
 
-  async function onSubmit(formData: FormData) {
+  async function sendLink(
+    previous: Result,
+    formData: FormData,
+  ): Promise<Result> {
     const email = String(formData.get('email') ?? '').trim()
-    if (!email) return
+    if (!email) return INITIAL
 
-    if (sendingRef.current) return
+    if (sendingRef.current) return previous
     sendingRef.current = true
 
-    setState('sending')
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -48,14 +53,16 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
       // Released only on failure. On success the form unmounts for the
       // confirmation card, so there is nothing left to submit twice.
       sendingRef.current = false
-      setState('error')
-      setMessage('Nem sikerült elküldeni. Próbáld újra egy kicsit később.')
-      return
+      return {
+        status: 'error',
+        message: 'Nem sikerült elküldeni. Próbáld újra egy kicsit később.',
+      }
     }
-    setState('sent')
+
+    return { status: 'sent' }
   }
 
-  if (state === 'sent') {
+  if (result.status === 'sent') {
     return (
       <div className="glass-strong flex flex-col items-center gap-3 rounded-3xl px-6 py-8 text-center">
         <span className="flex size-14 items-center justify-center rounded-full bg-accent/20">
@@ -71,7 +78,7 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
   }
 
   return (
-    <form action={onSubmit} className="flex flex-col gap-4">
+    <form action={submit} className="flex flex-col gap-4">
       <div>
         <label
           htmlFor="email"
@@ -86,32 +93,32 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
           required
           autoComplete="email"
           autoFocus
-          disabled={state === 'sending'}
+          disabled={pending}
           placeholder="te@pelda.hu"
           className="glass min-h-14 w-full rounded-2xl px-5 text-base text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-accent disabled:opacity-60"
         />
       </div>
 
-      {linkError || state === 'error' ? (
+      {linkError || result.status === 'error' ? (
         <p className="text-destructive text-sm">
-          {state === 'error'
-            ? message
+          {result.status === 'error'
+            ? result.message
             : 'Ez a link lejárt vagy már felhasználtad. Kérj egy újat.'}
         </p>
       ) : null}
 
       <button
         type="submit"
-        disabled={state === 'sending'}
-        aria-busy={state === 'sending'}
+        disabled={pending}
+        aria-busy={pending}
         className="btn-shine inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground disabled:opacity-60"
       >
-        {state === 'sending' ? (
+        {pending ? (
           <Loader2 className="size-5 animate-spin" aria-hidden="true" />
         ) : (
           <Mail className="size-5" strokeWidth={1.8} aria-hidden="true" />
         )}
-        {state === 'sending' ? 'Küldés…' : 'Belépési link kérése'}
+        {pending ? 'Küldés…' : 'Belépési link kérése'}
       </button>
     </form>
   )
