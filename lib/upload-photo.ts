@@ -54,6 +54,10 @@ function isRefusal(error: unknown): boolean {
  * fresh id sidesteps it and leaves at worst an orphan, which is harmless and
  * cleanable — the failure mode the ordering below is chosen to avoid is far
  * worse.
+ *
+ * Returns that id. The caller cannot derive it — it is minted here — and the
+ * gallery needs it to key the photo it shows before the server has been asked
+ * about it.
  */
 export async function uploadPhoto({
   eventId,
@@ -63,7 +67,7 @@ export async function uploadPhoto({
   eventId: string
   prepared: PreparedPhoto
   uploaderName: string | null
-}): Promise<void> {
+}): Promise<string> {
   const supabase = createGuestClient()
   const photoId = crypto.randomUUID()
   const paths = photoStoragePaths(eventId, photoId)
@@ -71,16 +75,27 @@ export async function uploadPhoto({
   // Objects first, row last. A failed insert leaves files nobody references;
   // the reverse would put a row in the gallery pointing at nothing, which
   // renders as a broken tile in someone's wedding album.
-  for (const [path, body] of [
-    [paths.full, prepared.full],
-    [paths.thumb, prepared.thumb],
-  ] as const) {
-    const { error } = await supabase.storage
-      .from(PHOTO_BUCKET)
-      .upload(path, body, {
+  //
+  // The two objects go up together. They used to be a sequential loop, which
+  // spent a whole round trip on the ~40KB thumbnail after the ~2MB original
+  // had already finished — pure latency, repeated once per photo, on the
+  // highest-latency network the product will ever run on. Concurrency here
+  // does not weaken the ordering above: both still land before the insert.
+  const puts = await Promise.all(
+    (
+      [
+        [paths.full, prepared.full],
+        [paths.thumb, prepared.thumb],
+      ] as const
+    ).map(([path, body]) =>
+      supabase.storage.from(PHOTO_BUCKET).upload(path, body, {
         contentType: 'image/jpeg',
         cacheControl: '31536000',
-      })
+      }),
+    ),
+  )
+
+  for (const { error } of puts) {
     if (error) throw isRefusal(error) ? new UploadRefusedError() : error
   }
 
@@ -100,4 +115,6 @@ export async function uploadPhoto({
     taken_at: prepared.takenAt?.toISOString() ?? null,
   })
   if (error) throw isRefusal(error) ? new UploadRefusedError() : error
+
+  return photoId
 }

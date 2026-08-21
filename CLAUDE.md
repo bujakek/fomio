@@ -80,6 +80,13 @@ Deployed builds are unaffected: Vercel injects all of these at build and runtime
 - **Marketing landing page** — `app/page.tsx` composing `components/site/*` (hero, stats, how-it-works, occasions, testimonials, qr-preview, live-demo, photo-quality, faq, final-cta, footer). Originally v0-generated, now the permanent homepage at `/`.
 - `components/site/live-demo.tsx` is a **fake simulation** with hardcoded images, not a real gallery.
 - **Phases 1–5 built** (see `docs/mvp-backlog.md`): migrations applied, RLS and storage policies enforced and covered by `supabase/tests/*.py`, typed clients and query modules in `lib/`, the guest event page and gallery, the upload pipeline and queue, and the admin area. `pnpm seed` creates an event to develop against and prints its URL.
+- **Guest pages are latency-tuned; the migration is not pushed.**
+  `20260821090000_guest_page_round_trips.sql` adds `event_page_by_slug` and
+  `event_gallery_by_slug`, and `lib/events.ts` / `lib/photos.ts` already call
+  them — so **the guest routes 500 until it is pushed**. `supabase db push`
+  applies every pending migration, which means pushing this one also pushes
+  roles and Stripe billing below, turning on the 5-photo cap. Those three go
+  live together or not at all.
 - **Payments and roles are written but not live.** Two migrations —
   `20260820100000_user_roles.sql` and `20260820100100_stripe_billing.sql` — are
   **not yet pushed**, and there is no Stripe account, so `.env.local` has no
@@ -87,6 +94,63 @@ Deployed builds are unaffected: Vercel injects all of these at build and runtime
   every event is uncapped because the cap function does not exist yet, and the
   admin billing card says payment is not switched on. See Billing below.
 - `lib/slug.ts` holds the canonical `slugify()` — admin and the QR preview must both use it so printed QR codes never disagree.
+- `vercel.json` pins functions to **`fra1`**. Supabase is in `eu-central-2`
+  (Zurich) and Vercel's default is `iad1` (Washington DC), so every query on
+  the guest path was crossing the Atlantic twice. Frankfurt is the closest
+  Vercel region. If the Supabase project ever moves, move this with it —
+  nothing else in the code notices, and the symptom is a uniformly slow app.
+
+## The join gate is in the pages, not the layout (settled — learned the hard way)
+
+`guestHasJoined()` (`lib/guest-name-server.ts`) reads a cookie that
+`writeGuestName()` mirrors, and **each guest page checks it and returns
+`<JoinGate>` before fetching anything**. Do not move this back up into
+`app/e/[slug]/layout.tsx`, however much tidier that looks:
+
+- Next renders the child segment and hands the layout the **result**. A layout
+  that declines to render `children` still lets the page run — verified: a
+  gated gallery served all seven `thumb_path`s and every `uploader_name` in the
+  flight payload to a visitor who had typed nothing. Only an early return
+  inside the page skips the query.
+- The old localStorage check could only run after hydration, so every guest who
+  had already joined saw the gate flash on every navigation.
+
+Joining costs one `router.refresh()`. That is the deliberate trade for the two
+fixes above: it happens once per device, at the moment a guest expects a submit.
+The gate is still **UX, not access control** — a cookie is forged as easily as
+it is read, and privacy still rests on the unguessable slug.
+
+## Optimistic updates (settled)
+
+Three places show the result before the server has confirmed it. All three
+revert on their own — none of them carries hand-written rollback code.
+
+- **`components/admin/moderation-grid.tsx`** — `useOptimistic` is held on the
+  **grid**, not the tile, so the "N rejtve" counter moves with the photo it
+  describes. Per-tile state would flip the tile instantly and leave the count a
+  round trip behind, which reads as a bug. Measured: tile, label and counter
+  all update 74ms after the tap, and a failed action reverts all three and
+  shows "Nem sikerült".
+- **`components/admin/gallery-toggle.tsx`** — same reasoning, one boolean. A
+  switch that sits still for a round trip is one a host taps twice.
+- **`lib/recent-uploads.ts` + `app/e/[slug]/gallery/loading.tsx`** — the
+  gallery's loading state draws the guest's own just-uploaded photos from the
+  `blob:` URLs still in memory. Measured cold: their photo is on screen 377ms
+  after the tap and holds until the real grid arrives.
+
+Two rules the upload store depends on:
+
+1. **Only committed uploads are recorded.** `rememberUpload` is called after
+   the row insert succeeds, so everything shown is genuinely in the album.
+   Recording at queue time would flicker — a guest who navigated mid-queue
+   would watch photos appear and then vanish when the server answered.
+2. **The store owns the object URLs it is handed.** `upload-queue.tsx` marks
+   those items `handedOver` and skips them when it revokes previews on unmount,
+   or the gallery draws broken tiles. The store caps itself and revokes what it
+   evicts.
+
+`loading.tsx` is also what makes the tap navigate at all — Next partially
+prefetches a dynamic route only when the route has one.
 
 ## Routing (settled — QR codes get printed, so this is expensive to change)
 

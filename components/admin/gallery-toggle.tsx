@@ -2,14 +2,17 @@
 
 import { setGalleryHidden } from '@/app/admin/events/[slug]/actions'
 import { cn } from '@/lib/utils'
-import { Loader2 } from 'lucide-react'
-import { useState, useTransition } from 'react'
+import { useOptimistic, useState, useTransition } from 'react'
 
 /**
  * Opens and closes the gallery to guests. Uploads are unaffected either way,
  * which the copy has to say plainly — "hidden" reads like "closed" otherwise,
  * and a host who wants a reveal at the end of the night needs to know guests
  * can still contribute while it is off.
+ *
+ * The switch moves on the tap rather than on the response. A toggle that sits
+ * still for a round trip is one a host taps twice, and the second tap puts the
+ * gallery back where it started.
  */
 export function GalleryToggle({
   slug,
@@ -20,6 +23,9 @@ export function GalleryToggle({
 }) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState(false)
+  // Falls back to `hidden` on its own once the action settles or throws, so
+  // a failed toggle returns to the truth without any rollback code here.
+  const [optimisticHidden, setOptimisticHidden] = useOptimistic(hidden)
 
   return (
     <div className="glass rounded-2xl px-5 py-4">
@@ -27,7 +33,7 @@ export function GalleryToggle({
         <div className="min-w-0">
           <p className="font-medium">Galéria láthatósága</p>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            {hidden
+            {optimisticHidden
               ? 'A vendégek most nem látják az albumot. Feltölteni továbbra is tudnak.'
               : 'A vendégek látják az albumot.'}
           </p>
@@ -36,34 +42,31 @@ export function GalleryToggle({
         <button
           type="button"
           role="switch"
-          aria-checked={!hidden}
+          aria-checked={!optimisticHidden}
           aria-label="Galéria láthatósága"
           disabled={pending}
           onClick={() =>
             startTransition(async () => {
               setError(false)
+              setOptimisticHidden(!optimisticHidden)
               try {
-                await setGalleryHidden(slug, !hidden)
+                await setGalleryHidden(slug, !optimisticHidden)
               } catch {
                 setError(true)
               }
             })
           }
           className={cn(
-            'relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition-colors disabled:opacity-60',
-            hidden ? 'bg-white/10' : 'bg-accent/70',
+            'relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition-colors disabled:opacity-70',
+            optimisticHidden ? 'bg-white/10' : 'bg-accent/70',
           )}
         >
           <span
             className={cn(
-              'absolute flex size-6 items-center justify-center rounded-full bg-white transition-transform',
-              hidden ? 'translate-x-1' : 'translate-x-7',
+              'absolute size-6 rounded-full bg-white transition-transform',
+              optimisticHidden ? 'translate-x-1' : 'translate-x-7',
             )}
-          >
-            {pending ? (
-              <Loader2 className="size-3 animate-spin text-black/60" />
-            ) : null}
-          </span>
+          />
         </button>
       </div>
 

@@ -3,12 +3,30 @@
 import type { HostPhoto } from '@/lib/photos'
 import { photoPublicUrl } from '@/lib/storage'
 import { cn } from '@/lib/utils'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
-import { useTransition, useState } from 'react'
+import { useOptimistic, useState, useTransition } from 'react'
 import { setPhotoHidden } from '@/app/admin/events/[slug]/actions'
 
-function Tile({ photo, slug }: { photo: HostPhoto; slug: string }) {
+/**
+ * Stands in for a real `hidden_at` until the server sends one back.
+ *
+ * Nothing here reads the value — the tile and the counter both ask only
+ * whether it is null — and a constant keeps the `useOptimistic` reducer pure.
+ * `new Date()` there would be a fresh value on every render of a function
+ * React may call more than once.
+ */
+const OPTIMISTIC_HIDDEN = 'optimistic'
+
+function Tile({
+  photo,
+  slug,
+  onToggle,
+}: {
+  photo: HostPhoto
+  slug: string
+  onToggle: (photoId: string) => void
+}) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState(false)
   const hidden = photo.hidden_at !== null
@@ -41,6 +59,11 @@ function Tile({ photo, slug }: { photo: HostPhoto; slug: string }) {
         onClick={() =>
           startTransition(async () => {
             setError(false)
+            // Before the await, so the tile flips on the same frame as the tap.
+            // A host moderating an album does it in a run of a dozen taps, and
+            // a round trip between each one turns that into a stutter. React
+            // rolls this back on its own if the action throws.
+            onToggle(photo.id)
             try {
               await setPhotoHidden(slug, photo.id, !hidden)
             } catch {
@@ -50,15 +73,12 @@ function Tile({ photo, slug }: { photo: HostPhoto; slug: string }) {
         }
         aria-pressed={hidden}
         aria-label={hidden ? 'Kép visszaállítása' : 'Kép elrejtése'}
-        className="glass-strong absolute right-2 bottom-2 flex size-11 items-center justify-center rounded-full text-foreground disabled:opacity-60"
+        // No spinner. The icon has already flipped, so a spinner on top of it
+        // would be reporting on work the host has been told is done. The dimmed
+        // state is enough to say the tap landed and is still settling.
+        className="glass-strong absolute right-2 bottom-2 flex size-11 items-center justify-center rounded-full text-foreground transition-opacity disabled:opacity-70"
       >
-        {pending ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : hidden ? (
-          <Eye className="size-4" />
-        ) : (
-          <EyeOff className="size-4" />
-        )}
+        {hidden ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
       </button>
 
       {error ? (
@@ -78,7 +98,18 @@ export function ModerationGrid({
   photos: HostPhoto[]
   slug: string
 }) {
-  if (photos.length === 0) {
+  // Held for the whole grid rather than per tile so the "N rejtve" counter
+  // moves with the tile it describes. Per-tile state would flip the photo
+  // instantly and leave the count a round trip behind, which reads as a bug.
+  const [items, toggle] = useOptimistic(photos, (state, photoId: string) =>
+    state.map((p) =>
+      p.id === photoId
+        ? { ...p, hidden_at: p.hidden_at ? null : OPTIMISTIC_HIDDEN }
+        : p,
+    ),
+  )
+
+  if (items.length === 0) {
     return (
       <p className="glass rounded-2xl px-5 py-6 text-center text-sm text-muted-foreground">
         Még nem érkezett kép.
@@ -86,17 +117,17 @@ export function ModerationGrid({
     )
   }
 
-  const hiddenCount = photos.filter((p) => p.hidden_at !== null).length
+  const hiddenCount = items.filter((p) => p.hidden_at !== null).length
 
   return (
     <>
       <p className="mb-3 text-sm text-muted-foreground">
-        {photos.length} kép
+        {items.length} kép
         {hiddenCount > 0 ? ` · ${hiddenCount} rejtve` : ''}
       </p>
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {photos.map((photo) => (
-          <Tile key={photo.id} photo={photo} slug={slug} />
+        {items.map((photo) => (
+          <Tile key={photo.id} photo={photo} slug={slug} onToggle={toggle} />
         ))}
       </ul>
     </>

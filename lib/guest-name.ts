@@ -14,6 +14,29 @@
 /** Unchanged from the original inline constant — guests already have values
  *  stored under this key and renaming it would silently forget them. */
 const NAME_KEY = 'ourfilm:uploader-name'
+
+/**
+ * The name, mirrored into a cookie so the **server** can see it.
+ *
+ * localStorage alone forced the gate to be decided in the browser: the server
+ * had to render the gate every time, ship it, hydrate, read localStorage a
+ * tick later and swap. A guest who had already joined paid a full render plus
+ * a visible flash on every single navigation, and the album they had not yet
+ * unlocked was serialised into the flight payload regardless.
+ *
+ * A cookie is the one piece of client state a Server Component can read, so
+ * the gate decision moves to the first byte of HTML. localStorage stays the
+ * source of truth for the client-side readers that already exist; this rides
+ * alongside it.
+ *
+ * Still **not access control**. A cookie is typed as easily as it is read, and
+ * privacy here rests entirely on the unguessable slug — see `hasGuestName`.
+ */
+export const GUEST_NAME_COOKIE = 'ourfilm_name'
+
+/** A wedding is not a session. The album outlives the browser tab, and a guest
+ *  re-scanning the QR at the reception should not meet the gate twice. */
+const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 const UPSELL_DISMISSED_KEY = 'ourfilm:upsell-dismissed'
 const UPLOADED_KEY_PREFIX = 'ourfilm:uploaded:'
 
@@ -39,12 +62,41 @@ function write(key: string, value: string) {
   }
 }
 
+function readCookie(name: string): string | null {
+  try {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`))
+    return match?.[1] ? decodeURIComponent(match[1]) : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Falls back to the cookie because the two can genuinely disagree: Safari in
+ * private mode throws on localStorage while still accepting cookies, and a
+ * guest who joined before the cookie existed has the mirror image. Whichever
+ * one survived is the name the guest typed.
+ */
 export function readGuestName(): string {
-  return read(NAME_KEY)?.trim() ?? ''
+  return (read(NAME_KEY) ?? readCookie(GUEST_NAME_COOKIE))?.trim() ?? ''
 }
 
 export function writeGuestName(name: string) {
-  write(NAME_KEY, name.slice(0, GUEST_NAME_MAX_LENGTH))
+  const trimmed = name.slice(0, GUEST_NAME_MAX_LENGTH)
+  write(NAME_KEY, trimmed)
+
+  try {
+    // `Lax` rather than `Strict`: guests arrive from a QR scanner, a WhatsApp
+    // thread or a messages app, and `Strict` withholds the cookie on exactly
+    // those cross-site entries — which is every way a guest actually reaches
+    // an album. Getting it wrong shows the gate again to someone who joined.
+    document.cookie =
+      `${GUEST_NAME_COOKIE}=${encodeURIComponent(trimmed)}` +
+      `; path=/; max-age=${COOKIE_MAX_AGE_SECONDS}; samesite=lax`
+  } catch {
+    // Same posture as localStorage above: the name is a nicety, and a guest
+    // who cannot store it still gets the client-side gate.
+  }
 }
 
 /**

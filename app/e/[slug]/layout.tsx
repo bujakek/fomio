@@ -1,6 +1,4 @@
-import { JoinGate } from '@/components/event/join-gate'
 import { BackgroundGlow } from '@/components/site/background-glow'
-import { getEventBySlug } from '@/lib/events'
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
@@ -24,29 +22,28 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function EventLayout({
-  children,
-  params,
-}: {
-  children: ReactNode
-  params: Promise<{ slug: string }>
-}) {
-  const { slug } = await params
-  // React-cached, so this shares the page's lookup rather than adding a
-  // round trip. A missing event falls through ungated so the page can 404 —
-  // gating a 404 would tell a stranger the slug was worth guessing again.
-  const event = await getEventBySlug(slug)
-
+/**
+ * Deliberately fetches nothing.
+ *
+ * The join gate used to live here, wrapping `children`. That looked like the
+ * tidy place for it and was the wrong one twice over. It read localStorage, so
+ * the decision could only be made after hydration — every guest who had
+ * already joined saw the gate flash on every navigation. And a layout cannot
+ * gate a fetch anyway: Next renders the child segment and hands the layout the
+ * *result*, so the page below ran, queried, and serialised its photos into the
+ * flight payload whether or not this component chose to render them. Measured,
+ * not assumed — a gated gallery shipped all seven `thumb_path`s and every
+ * uploader name to a visitor who had typed nothing.
+ *
+ * The gate now sits in each page, where it can return before fetching. What is
+ * left here is the backdrop, and a layout that costs no round trip in front of
+ * every page beneath it.
+ */
+export default function EventLayout({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-screen">
       <BackgroundGlow />
-      <div className="relative z-10">
-        {event ? (
-          <JoinGate eventName={event.event_name}>{children}</JoinGate>
-        ) : (
-          children
-        )}
-      </div>
+      <div className="relative z-10">{children}</div>
     </div>
   )
 }

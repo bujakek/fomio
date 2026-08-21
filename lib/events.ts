@@ -10,16 +10,32 @@ import type { Database } from './supabase/database.types'
  * return type rather than hand-written, so adding a column to the function
  * without updating callers is a compile error instead of a silent `undefined`.
  * Note there is no `owner_id` — the function deliberately withholds it.
+ *
+ * Carries the album's photo and contributor counts alongside the row. They are
+ * aggregated in the same query rather than fetched separately because they are
+ * free there — the alternative was pulling every photo row in the album across
+ * the wire to count it in JavaScript.
+ *
+ * `contributorCount` is a **floor, not a headcount**. Guests who skip the name
+ * field are indistinguishable from one another, so every anonymous upload
+ * collapses into a single bucket — twenty unnamed photos from twenty people
+ * count as one. Undercounting is the right direction to be wrong in: it never
+ * inflates participation, which is the number the pilot exists to measure.
+ *
+ * Both counts read zero while the gallery is hidden, matching what
+ * `event_gallery_by_slug` returns in the same state. Check `gallery_private`
+ * before showing them, or a host holding photos back for a reveal gets the
+ * total printed on the landing screen anyway.
  */
 export type GuestEvent =
-  Database['public']['Functions']['event_by_slug']['Returns'][number]
+  Database['public']['Functions']['event_page_by_slug']['Returns'][number]
 
 /**
- * Look up an event by the slug in its URL.
+ * Look up an event by the slug in its URL, with its counts.
  *
- * Goes through the `event_by_slug` RPC, not `.from('events')`: guests have no
- * read policy on the table, precisely so that nobody can list every album.
- * You must already know the slug to get anything back.
+ * Goes through the `event_page_by_slug` RPC, not `.from('events')`: guests
+ * have no read policy on the table, precisely so that nobody can list every
+ * album. You must already know the slug to get anything back.
  *
  * Wrapped in React `cache()` because every event route needs the same row
  * twice — once in `generateMetadata` to title the page, once in the component.
@@ -30,7 +46,7 @@ export const getEventBySlug = cache(
   async (slug: string): Promise<GuestEvent | null> => {
     const supabase = await createClient()
     const { data, error } = await supabase
-      .rpc('event_by_slug', { p_slug: slug })
+      .rpc('event_page_by_slug', { p_slug: slug })
       .maybeSingle()
 
     // supabase-js resolves rather than rejects on a failed query, so an

@@ -239,9 +239,36 @@ export type Database = {
         Args: { p_folder: string }
         Returns: boolean
       }
+      event_gallery_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          created_at: string
+          height: number
+          id: string
+          storage_path: string
+          thumb_path: string
+          uploader_name: string
+          width: number
+        }[]
+      }
       event_has_unlimited_uploads: {
         Args: { p_event_id: string }
         Returns: boolean
+      }
+      event_page_by_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          contributor_count: number
+          created_at: string
+          event_date: string
+          event_name: string
+          gallery_private: boolean
+          has_named_contributors: boolean
+          id: string
+          photo_count: number
+          slug: string
+          uploads_close_at: string
+        }[]
       }
       event_photo_count_capped: {
         Args: { p_cap: number; p_event_id: string }

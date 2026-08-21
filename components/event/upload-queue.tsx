@@ -3,6 +3,7 @@
 import { CreateOwnAlbum } from '@/components/event/create-own-album'
 import { markUploadedTo, readGuestName } from '@/lib/guest-name'
 import { prepareForUpload, type PreparedPhoto } from '@/lib/image'
+import { rememberUpload } from '@/lib/recent-uploads'
 import { uploadPhoto, UploadRefusedError } from '@/lib/upload-photo'
 import { cn } from '@/lib/utils'
 import {
@@ -23,6 +24,18 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  *  idea why. We convert them ourselves regardless. */
 const ACCEPT = 'image/jpeg,image/png,image/webp,.heic,.heif'
 
+/**
+ * How many photos may be on the wire at once.
+ *
+ * Three, because the bottleneck at a venue is per-request latency rather than
+ * bandwidth: a single 2MB PUT spends much of its life in handshake and ack,
+ * and a guest posting twenty photos used to pay that serially, twenty times.
+ * Decoding stays strictly one at a time regardless — that is the step holding
+ * a full-size bitmap, and two at once is what runs mobile Safari out of
+ * memory. This only ever holds prepared blobs, a couple of megabytes each.
+ */
+const UPLOAD_CONCURRENCY = 3
+
 type Status = 'queued' | 'preparing' | 'uploading' | 'done' | 'error'
 
 type Item = {
@@ -33,6 +46,9 @@ type Item = {
   error?: string
   /** Retrying will fail the same way — the album refused it, not the network. */
   fatal?: boolean
+  /** The preview URL now belongs to `recent-uploads`, which shows it in the
+   *  gallery after this component is gone. Unmount must not revoke it. */
+  handedOver?: boolean
 }
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -70,9 +86,15 @@ export function UploadQueue({
   // Revoke previews on unmount. Object URLs live until the document dies, so
   // a guest who uploads forty photos and stays on the page would otherwise
   // pin forty full-size images in memory on a phone.
+  //
+  // Except the ones handed to `recent-uploads`: those are about to be rendered
+  // by the gallery this guest is on their way to, and revoking here would
+  // leave it drawing broken tiles. That store owns them and caps its own size.
   useEffect(
     () => () => {
-      itemsRef.current.forEach((i) => URL.revokeObjectURL(i.previewUrl))
+      itemsRef.current.forEach((i) => {
+        if (!i.handedOver) URL.revokeObjectURL(i.previewUrl)
+      })
     },
     [],
   )
@@ -113,74 +135,89 @@ export function UploadQueue({
 
       patch(item.key, { status: 'preparing', error: undefined })
       const work = prepareForUpload(item.file)
-      // Awaited an upload later, so a rejection would otherwise spend that
-      // whole window looking unhandled to the browser. This observes it
-      // without consuming it — the await still sees the rejection.
+      // Awaited below, so a rejection would otherwise spend that whole window
+      // looking unhandled to the browser. This observes it without consuming
+      // it — the await still sees the rejection.
       work.catch(() => {})
       return { item, work }
     }
 
+    // One prepared photo's trip to Storage. Deliberately never rejects: a
+    // failure is queue state, and the pool below races these, so a rejection
+    // would surface as an unhandled one the moment it lost the race.
+    const send = async (item: Item, prepared: PreparedPhoto) => {
+      // The join gate guarantees this is set. `|| null` covers the guest who
+      // cleared site data mid-session rather than trusting it.
+      const uploaderName = readGuestName() || null
+
+      try {
+        const photoId = await uploadPhoto({ eventId, prepared, uploaderName })
+        patch(item.key, { status: 'done', handedOver: true })
+        // Committed, so the gallery can show it on sight rather than after a
+        // round trip. Only reached on success — see `lib/recent-uploads.ts`.
+        rememberUpload(slug, {
+          id: photoId,
+          previewUrl: item.previewUrl,
+          uploaderName,
+        })
+        markUploadedTo(eventId)
+        setRemaining((left) => (left === null ? null : Math.max(left - 1, 0)))
+      } catch (e) {
+        // A refusal is final, so it must not leave a "Újra" button promising
+        // otherwise. It also means the local count is stale — two guests can
+        // both spend the last slot — so trust the database and zero it.
+        if (e instanceof UploadRefusedError) setRemaining(0)
+        patch(item.key, {
+          status: 'error',
+          error: reason(e),
+          fatal: e instanceof UploadRefusedError,
+        })
+      }
+    }
+
+    const inFlight = new Set<Promise<void>>()
+
     try {
-      let ahead: { item: Item; work: Promise<PreparedPhoto> } | null = null
-
       for (;;) {
-        // Scan here rather than trusting the lookahead below: files the guest
-        // added while the previous photo was uploading are only visible now.
-        ahead ??= startNext()
-        if (!ahead) break
+        // Block only when the pool is full. Uploads dominate the wall clock on
+        // venue wifi and a single HTTPS PUT never saturates the uplink — the
+        // limit is per-request latency, not bandwidth — so sending strictly
+        // one at a time left the radio idle through every handshake and ack.
+        if (inFlight.size >= UPLOAD_CONCURRENCY) await Promise.race(inFlight)
 
-        const { item, work } = ahead
-        ahead = null
+        // Scan here rather than trusting a lookahead: files the guest added
+        // while earlier photos were in flight are only visible now.
+        const next = startNext()
+        if (!next) break
 
         let prepared: PreparedPhoto
         try {
-          prepared = await work
+          prepared = await next.work
         } catch (e) {
-          patch(item.key, { status: 'error', error: reason(e) })
+          patch(next.item.key, { status: 'error', error: reason(e) })
           continue
         }
 
-        patch(item.key, { status: 'uploading' })
+        patch(next.item.key, { status: 'uploading' })
 
-        // The point of the exercise: start decoding the next photo now, so the
-        // CPU chews through it while this one is on the wire. Uploads dominate
-        // on venue wifi and the two used to strictly alternate, leaving the
-        // radio idle through every decode and the CPU idle through every send.
-        //
-        // Depth of exactly one. Two decodes at once is what runs mobile Safari
-        // out of memory, and one photo already prepared is at most a couple of
-        // megabytes of blob waiting its turn.
-        ahead = startNext()
-
-        try {
-          await uploadPhoto({
-            eventId,
-            prepared,
-            // The join gate guarantees this is set. `|| null` covers the
-            // guest who cleared site data mid-session rather than trusting it.
-            uploaderName: readGuestName() || null,
-          })
-          patch(item.key, { status: 'done' })
-          markUploadedTo(eventId)
-          setRemaining((left) => (left === null ? null : Math.max(left - 1, 0)))
-        } catch (e) {
-          // A refusal is final, so it must not leave a "Újra" button promising
-          // otherwise. It also means the local count is stale — two guests can
-          // both spend the last slot — so trust the database and zero it.
-          if (e instanceof UploadRefusedError) setRemaining(0)
-          patch(item.key, {
-            status: 'error',
-            error: reason(e),
-            fatal: e instanceof UploadRefusedError,
-          })
-        }
+        // Not awaited: this is what lets the next decode start while this photo
+        // is on the wire. Awaiting the decode above is equally deliberate —
+        // two at once is what runs mobile Safari out of memory, and it is the
+        // decode that holds the full-size bitmap, not the send.
+        const sending = send(next.item, prepared).finally(() => {
+          inFlight.delete(sending)
+        })
+        inFlight.add(sending)
       }
+
+      // `send` swallows its own failures, so this settles rather than rejects.
+      await Promise.all(inFlight)
     } finally {
       // Nothing awaits between the scan that ends the loop and this line, so a
       // file added by the guest cannot slip in behind a still-true flag.
       runningRef.current = false
     }
-  }, [eventId, patch])
+  }, [eventId, slug, patch])
 
   const addFiles = (files: FileList | null) => {
     if (!files?.length) return

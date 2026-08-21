@@ -1,8 +1,9 @@
+import { JoinGate } from '@/components/event/join-gate'
 import { UploadQueue } from '@/components/event/upload-queue'
 import { getEventQuotaOrNull } from '@/lib/billing'
 import { getEventBySlug, uploadsAreOpen } from '@/lib/events'
-import { getEventPhotos, summarisePhotos } from '@/lib/photos'
 import { formatEventDate } from '@/lib/format'
+import { guestHasJoined } from '@/lib/guest-name-server'
 import { Images, Lock } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -25,24 +26,40 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function EventPage({ params }: Props) {
   const { slug } = await params
-  const event = await getEventBySlug(slug)
+
+  // Both settle together — `guestHasJoined` only reads a cookie, so it adds no
+  // round trip, and putting it here rather than in the layout is what lets the
+  // gate return before anything else is fetched.
+  const [event, joined] = await Promise.all([
+    getEventBySlug(slug),
+    guestHasJoined(),
+  ])
   if (!event) notFound()
+
+  // Returning the gate *instead of* the page is the point: the quota read
+  // below never happens, and nothing about the album reaches a visitor who has
+  // not joined. Still not access control — a cookie is forged as easily as it
+  // is read — but it no longer hands the album over in the flight payload.
+  if (!joined) return <JoinGate eventName={event.event_name} />
 
   const eventDate = formatEventDate(event.event_date)
   const canUpload = uploadsAreOpen(event)
 
-  // Costs a full row fetch for two numbers, which is the honest trade at pilot
-  // scale — a dedicated count needs a `security definer` function, since
-  // guests cannot read the table. Revisit if an album ever gets large enough
-  // for this to show up. `event_photos` returns nothing while the gallery is
-  // hidden, so skip it rather than render a confident zero.
-  const summary = event.gallery_private
-    ? null
-    : summarisePhotos(await getEventPhotos(event.id))
+  // The counts arrive with the event row now, aggregated in Postgres. This
+  // used to fetch every photo in the album to count them in JavaScript, which
+  // meant a six-hundred-photo wedding serialised the whole table over the wire
+  // to render "600 kép". They read zero while the gallery is hidden, so the
+  // guard is about telling the guest why rather than about the number.
+  const summary = event.gallery_private ? null : event
 
   // Read here rather than inside the queue: the guest arrives on a server
   // render and the number has to be right in the first paint, otherwise the
   // pickers appear and then vanish under them on a full album.
+  //
+  // Not folded into the event RPC on purpose. `event_upload_quota` lives
+  // behind a migration that is not pushed yet, and `getEventQuotaOrNull`
+  // exists so the guest page still renders when it is missing; combining them
+  // would trade that fallback for a page that fails outright.
   const quota = canUpload ? await getEventQuotaOrNull(event.id) : null
 
   return (
@@ -71,19 +88,19 @@ export default async function EventPage({ params }: Props) {
         {/* Social proof, and a signal that the album is alive. Hidden at zero:
           "0 kép" reads as broken rather than as an empty album waiting for
           you. The contributor count is suppressed until at least one guest
-          has given a name — see summarisePhotos for why it is a floor. */}
-        {summary && summary.photoCount > 0 ? (
+          has given a name — see GuestEvent for why it is a floor. */}
+        {summary && summary.photo_count > 0 ? (
           <div className="glass mt-6 flex items-stretch justify-center divide-x divide-border rounded-2xl py-3">
             <div className="px-7 text-center">
               <p className="text-xl font-semibold tracking-tight">
-                {summary.photoCount}
+                {summary.photo_count}
               </p>
               <p className="text-xs text-muted-foreground">kép</p>
             </div>
-            {summary.hasNamedContributors ? (
+            {summary.has_named_contributors ? (
               <div className="px-7 text-center">
                 <p className="text-xl font-semibold tracking-tight">
-                  {summary.contributorCount}
+                  {summary.contributor_count}
                 </p>
                 <p className="text-xs text-muted-foreground">vendég</p>
               </div>

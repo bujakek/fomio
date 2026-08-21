@@ -1,8 +1,10 @@
 import { CreateOwnAlbum } from '@/components/event/create-own-album'
 import { InviteButton } from '@/components/event/invite-button'
+import { JoinGate } from '@/components/event/join-gate'
 import { PhotoGrid } from '@/components/event/photo-grid'
 import { getEventBySlug, uploadsAreOpen } from '@/lib/events'
-import { getEventPhotos } from '@/lib/photos'
+import { guestHasJoined } from '@/lib/guest-name-server'
+import { getGalleryPhotosBySlug, type GalleryPhoto } from '@/lib/photos'
 import { eventUrl } from '@/lib/site'
 import { ArrowLeft, EyeOff, ImagePlus } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -22,12 +24,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function GalleryPage({ params }: Props) {
   const { slug } = await params
-  const event = await getEventBySlug(slug)
+
+  // A cookie read, so this costs nothing and can gate the query below it.
+  const joined = await guestHasJoined()
+
+  // Both keyed on the slug, so they go out together. The photo read used to
+  // need `event.id`, which chained it behind the event lookup and made every
+  // gallery load two serial round trips to Postgres.
+  const [event, photos] = await Promise.all([
+    getEventBySlug(slug),
+    joined ? getGalleryPhotosBySlug(slug) : Promise.resolve<GalleryPhoto[]>([]),
+  ])
   if (!event) notFound()
 
-  // `event_photos` already returns nothing while the gallery is closed, so
-  // this branch is about telling the guest why — not about enforcement.
-  const photos = event.gallery_private ? [] : await getEventPhotos(event.id)
+  // Before the grid, and before the album is fetched at all. This is the leak
+  // the old layout-level gate could not close: it hid the photos in the DOM
+  // while Next serialised every `thumb_path` and `uploader_name` into the
+  // payload behind it, so view-source reconstructed the album.
+  if (!joined) return <JoinGate eventName={event.event_name} />
+
+  // `event_gallery_by_slug` already returns nothing while the gallery is
+  // closed, so this branch is about telling the guest why — not enforcement.
   const canUpload = uploadsAreOpen(event)
 
   return (
