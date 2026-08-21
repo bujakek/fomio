@@ -80,19 +80,26 @@ Deployed builds are unaffected: Vercel injects all of these at build and runtime
 - **Marketing landing page** — `app/page.tsx` composing `components/site/*` (hero, stats, how-it-works, occasions, testimonials, qr-preview, live-demo, photo-quality, faq, final-cta, footer). Originally v0-generated, now the permanent homepage at `/`.
 - `components/site/live-demo.tsx` is a **fake simulation** with hardcoded images, not a real gallery.
 - **Phases 1–5 built** (see `docs/mvp-backlog.md`): migrations applied, RLS and storage policies enforced and covered by `supabase/tests/*.py`, typed clients and query modules in `lib/`, the guest event page and gallery, the upload pipeline and queue, and the admin area. `pnpm seed` creates an event to develop against and prints its URL.
-- **Guest pages are latency-tuned; the migration is not pushed.**
+- **Guest pages are latency-tuned; the migration may still be pending.**
   `20260821090000_guest_page_round_trips.sql` adds `event_page_by_slug` and
   `event_gallery_by_slug`, and `lib/events.ts` / `lib/photos.ts` already call
-  them — so **the guest routes 500 until it is pushed**. `supabase db push`
-  applies every pending migration, which means pushing this one also pushes
-  roles and Stripe billing below, turning on the 5-photo cap. Those three go
-  live together or not at all.
-- **Payments and roles are written but not live.** Two migrations —
-  `20260820100000_user_roles.sql` and `20260820100100_stripe_billing.sql` — are
-  **not yet pushed**, and there is no Stripe account, so `.env.local` has no
-  `STRIPE_*` keys. Until both happen the app builds and runs exactly as before:
-  every event is uncapped because the cap function does not exist yet, and the
-  admin billing card says payment is not switched on. See Billing below.
+  them — so **the guest routes 500 until it is pushed**. Deploying the code
+  and pushing the migration are two separate acts and there is no CI step that
+  does the second one; `pnpm supabase db push` is manual.
+- **Roles and the billing schema are live; Stripe itself is not.**
+  `20260820100000_user_roles.sql` and `20260820100100_stripe_billing.sql` are
+  **applied on the remote**, so the 5-photo cap is real and enforced today.
+  There is still no Stripe account, so `.env.local` has no `STRIPE_*` keys and
+  the admin billing card says payment is not switched on — a host cannot yet
+  lift the cap by paying. See Billing below.
+
+  **Check, never assume, which migrations are live.** This section claimed for
+  a while that roles and billing were unpushed after they had been pushed, and
+  a stale note here is worse than no note: it made an ordinary one-migration
+  deploy look like it would switch on billing as a side effect.
+  `pnpm supabase migration list` compares local against remote and is the only
+  answer worth trusting.
+
 - `lib/slug.ts` holds the canonical `slugify()` — admin and the QR preview must both use it so printed QR codes never disagree.
 - `vercel.json` pins functions to **`fra1`**. Supabase is in `eu-central-2`
   (Zurich) and Vercel's default is `iad1` (Washington DC), so every query on
