@@ -1,31 +1,86 @@
 /**
- * The company facts the legal pages need, in one place so the privacy notice
- * and the ÁSZF can never disagree with each other.
+ * The provider's facts, in one place so the privacy notice and the ÁSZF can
+ * never disagree with each other.
  *
- * **Every value marked TODO must be filled in before the pages are published.**
- * They are the details only the business has — a company register entry, a tax
- * number — and inventing them would be worse than leaving them visibly blank.
- * `hasRealCompanyDetails` below is what un-drafts the pages, so filling these
- * in and flipping that flag is the whole job.
+ * **The provider is an egyéni vállalkozó (sole trader), not a company.** That
+ * is not a cosmetic distinction: an EV has no cégnév, no cégjegyzékszám and no
+ * registering court. It has a name, a nyilvántartási szám in the Egyéni
+ * Vállalkozók Nyilvántartása, and an adószám. Printing "Cégjegyzékszám" on a
+ * consumer-facing page for an EV is simply a false statement, so the fields
+ * below are shaped for the entity that actually exists.
+ *
+ * **Every value marked TODO must be filled in before the pages are
+ * published.** They are the details only the business has, and inventing them
+ * would be worse than leaving them visibly blank. `hasRealCompanyDetails`
+ * below is what un-drafts the pages, so filling these in and flipping that
+ * flag is the whole job.
  *
  * Hungarian law requires each of these on a consumer-facing service:
  * 45/2014. (II. 26.) Korm. rendelet 11. § and the Elker tv. (2001. évi CVIII.).
  */
 export const COMPANY = {
-  /** Full registered company name, e.g. "Példa Kft." */
-  name: '[CÉGNÉV — TODO]',
-  /** Registered seat, full postal address. */
+  /** Full name as registered, e.g. "Példa Péter e.v." */
+  name: '[NÉV — TODO]',
+  /** Székhely, full postal address. */
   seat: '[SZÉKHELY — TODO]',
-  /** Cégjegyzékszám, e.g. "01-09-123456". */
-  registryNumber: '[CÉGJEGYZÉKSZÁM — TODO]',
-  /** The court that registered the company, e.g. "Fővárosi Törvényszék Cégbírósága". */
-  registryCourt: '[BEJEGYZŐ BÍRÓSÁG — TODO]',
-  /** Adószám, e.g. "12345678-2-41". */
+  /**
+   * Nyilvántartási szám from the EVNY — **not** a cégjegyzékszám. It is the
+   * number on the egyéni vállalkozói igazolvány / the EVNY record.
+   */
+  registryNumber: '[NYILVÁNTARTÁSI SZÁM — TODO]',
+  /**
+   * Adószám, e.g. "12345678-1-42".
+   *
+   * Worth checking the middle digit against reality: `1` marks a taxpayer who
+   * charges no VAT, which is what alanyi adómentes looks like. A `2` there
+   * would mean the AAM status below is wrong.
+   */
   taxNumber: '[ADÓSZÁM — TODO]',
   /** A reachable phone number. Required; an email address alone is not enough. */
   phone: '[TELEFONSZÁM — TODO]',
   /** Chamber of commerce, e.g. "Budapesti Kereskedelmi és Iparkamara". */
   chamber: '[SZAKMAI KAMARA — TODO]',
+} as const
+
+/**
+ * The register an egyéni vállalkozó appears in.
+ *
+ * Replaces the "nyilvántartó bíróság" a company would name. EVs are not
+ * registered by a cégbíróság at all — the EVNY is an administrative register,
+ * so naming a court would be inventing an authority that was never involved.
+ */
+export const REGISTRY = 'Egyéni Vállalkozók Nyilvántartása (EVNY)'
+
+/**
+ * VAT status: alanyi adómentes.
+ *
+ * Under the Áfa tv. an AAM provider charges no VAT, so the price a guest sees
+ * is simply the price — there is no gross/net split to state, and the ÁSZF
+ * must not claim the fee is "áfával növelt". Invoices carry the AAM marking.
+ *
+ * Two things to watch, both of which end the exemption or add an obligation
+ * without anyone sending a warning:
+ *
+ * - There is an annual revenue threshold. Crossing it ends the exemption from
+ *   the transaction that crosses it, not from the next tax year. Confirm the
+ *   current figure with a könyvelő rather than trusting a number written here.
+ * - Buying services from an EU supplier — Stripe Ireland, and likely the other
+ *   vendors named in these pages — is reverse charged. An AAM taxpayer then
+ *   needs a közösségi adószám and has to self-assess and pay the Hungarian VAT
+ *   on those purchases, even though it charges none on its own sales. This is
+ *   the obligation most easily missed on the day the first Stripe fee lands.
+ */
+export const VAT_STATUS = {
+  /** The marking an invoice must carry. */
+  code: 'AAM',
+  label: 'alanyi adómentes',
+  /**
+   * What a price page must say. Note it states the displayed figure is the
+   * final amount payable — consumer pricing rules care about that far more
+   * than about the tax mechanism behind it.
+   */
+  priceNote:
+    'A feltüntetett ár a fizetendő végösszeg. A szolgáltató alanyi adómentes (AAM), az ár áfát nem tartalmaz.',
 } as const
 
 /** Hosting provider named in the ÁSZF, per the Elker tv. */
@@ -57,11 +112,16 @@ export const PAYMENT_PROCESSOR = {
 export const EMAIL_PROVIDER = 'Resend'
 
 /** Shown at the foot of both legal pages. Update when their text changes. */
-export const LAST_UPDATED = '2026. augusztus 20.'
+export const LAST_UPDATED = '2026. augusztus 21.'
 
 /**
- * Flips the legal pages out of draft: hides the DraftNotice banners and lets
- * them be indexed. Keep false until COMPANY above is real — publishing a
- * privacy notice with `[CÉGNÉV — TODO]` in it is worse than not publishing one.
+ * Flips the legal pages *and* the price page out of draft: hides the
+ * DraftNotice banners and lets all three be indexed.
+ *
+ * Keep false until COMPANY above is real. Publishing a privacy notice that
+ * says `[NÉV — TODO]` is worse than not publishing one, and /arak is gated on
+ * the same flag for a sharper reason — a price a stranger can find in Google
+ * is an offer, and an offer cannot lawfully be made to a consumer while the
+ * mandatory identifiers are placeholders.
  */
 export const hasRealCompanyDetails = false

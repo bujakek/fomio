@@ -1,5 +1,6 @@
 import { DraftNotice } from '@/components/site/draft-notice'
 import { PageShell } from '@/components/site/page-shell'
+import { hasRealCompanyDetails, VAT_STATUS } from '@/lib/company'
 import { Check } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -8,17 +9,23 @@ export const metadata: Metadata = {
   title: 'Árak — OurFilm',
   description:
     'Az OurFilm csomagjai eseményekhez. Egy esemény, egy QR-kód, korlátlan vendég.',
-  // TODO(copy): drop this once the real prices land. Illustrative numbers have
-  // no business in search results.
-  robots: { index: false, follow: true },
+  // Indexed only once the provider's details are real. The prices below are
+  // now final, but a price a stranger can find in Google leads to an ÁSZF
+  // that still says [NÉV — TODO], and a service cannot lawfully be sold to a
+  // consumer while the mandatory identifiers are placeholders. One flag,
+  // flipped in lib/company.ts, releases the whole set of pages together.
+  robots: { index: hasRealCompanyDetails, follow: true },
 }
 
-// PLACEHOLDER — every *price* here is invented scaffolding, not a figure we
-// have agreed to charge. Replace the amounts when the real packaging exists.
+// The numbers here are real and load-bearing.
 //
-// The one number that is real is the free tier's 5-photo cap: it comes from
-// `public.free_photo_limit()` and is enforced on every guest upload, so this
-// list has to keep saying it. Raising the limit means changing both.
+// - 12 900 Ft is the amount configured on the Stripe Price that
+//   STRIPE_PRICE_EVENT points at. If one changes, the other has to.
+// - The 5-photo free cap comes from `public.free_photo_limit()` and is
+//   enforced on every guest upload. Raising it means changing both.
+//
+// No gross/net split is shown because there is none to show: the provider is
+// alanyi adómentes and charges no VAT. See VAT_STATUS in lib/company.ts.
 const tiers = [
   {
     name: 'Próba',
@@ -37,8 +44,8 @@ const tiers = [
   },
   {
     name: 'Esemény',
-    price: '— Ft',
-    cadence: 'egy eseményre',
+    price: '12 900 Ft',
+    cadence: 'egyszeri díj, eseményenként',
     description: 'Egy nagy naphoz, a teljes albummal és letöltéssel.',
     features: [
       'Minden, ami a Próbában',
@@ -76,14 +83,15 @@ export default function ArakPage() {
       <section className="relative px-4 pb-24 sm:px-6 lg:pb-32">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-3xl">
-            <DraftNotice>
-              <strong className="font-semibold text-foreground">
-                Ez az oldal még vázlat.
-              </strong>{' '}
-              A csomagok és az összegek csak illusztrációk — még nincs
-              véglegesített árazás. Az oldal egyelőre nem jelenik meg a
-              keresőkben.
-            </DraftNotice>
+            {hasRealCompanyDetails ? null : (
+              <DraftNotice>
+                <strong className="font-semibold text-foreground">
+                  Ez az oldal még nem éles.
+                </strong>{' '}
+                Az összegek véglegesek, de a szolgáltatás megrendelése még nem
+                indult el. Az oldal addig nem jelenik meg a keresőkben.
+              </DraftNotice>
+            )}
           </div>
 
           <div className="mt-12 grid gap-4 lg:grid-cols-3">
@@ -144,6 +152,10 @@ export default function ArakPage() {
           </div>
 
           <p className="mx-auto mt-10 max-w-3xl text-sm leading-relaxed text-pretty text-muted-foreground">
+            {VAT_STATUS.priceNote}
+          </p>
+
+          <p className="mx-auto mt-4 max-w-3xl text-sm leading-relaxed text-pretty text-muted-foreground">
             Kérdésed van a csomagokról?{' '}
             <Link
               href="/kapcsolat"

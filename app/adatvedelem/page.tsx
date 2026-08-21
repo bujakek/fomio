@@ -6,6 +6,7 @@ import {
 import { PageShell } from '@/components/site/page-shell'
 import {
   COMPANY,
+  REGISTRY,
   hasRealCompanyDetails,
   EMAIL_PROVIDER,
   LAST_UPDATED,
@@ -31,7 +32,7 @@ const sections: LegalSection[] = [
   {
     title: 'Ki kezeli az adataidat',
     body: [
-      `Szolgáltató: ${COMPANY.name}, székhely: ${COMPANY.seat}. Cégjegyzékszám: ${COMPANY.registryNumber} (nyilvántartó bíróság: ${COMPANY.registryCourt}). Adószám: ${COMPANY.taxNumber}. Telefonszám: ${COMPANY.phone}.`,
+      `Szolgáltató: ${COMPANY.name} egyéni vállalkozó, székhely: ${COMPANY.seat}. Nyilvántartási szám: ${COMPANY.registryNumber} (${REGISTRY}). Adószám: ${COMPANY.taxNumber}. Telefonszám: ${COMPANY.phone}.`,
       `E-mail: ${CONTACT_EMAIL}. Adatvédelmi kérdésekben erre a címre írhatsz.`,
       'Az esemény fotói tekintetében az esemény házigazdája az adatkezelő: ő dönti el, hogy az esemény létrejön, kinek adja oda a QR-kódot, és mi maradhat az albumban. Az OurFilm ezekben az adatfeldolgozó, vagyis a házigazda megbízásából tárolja és teszi elérhetővé a képeket. A saját felhasználói fiókod és a látogatottságmérés tekintetében az OurFilm az adatkezelő.',
     ],
@@ -142,12 +143,12 @@ export default function AdatvedelemPage() {
           {hasRealCompanyDetails ? null : (
             <DraftNotice>
               <strong className="font-semibold text-foreground">
-                Hiányoznak a cégadatok.
+                Hiányoznak a vállalkozás adatai.
               </strong>{' '}
-              A szöveg kész, de a szögletes zárójeles helyek ([CÉGNÉV],
-              [ADÓSZÁM] és társaik) valódi adatra cserélendők a{' '}
-              <code>lib/company.ts</code> fájlban. Amíg ez nem történik meg, az
-              oldal nem jelenik meg a keresőkben.
+              A szöveg kész, de a szögletes zárójeles helyek ([NÉV],
+              [NYILVÁNTARTÁSI SZÁM], [ADÓSZÁM] és társaik) valódi adatra
+              cserélendők a <code>lib/company.ts</code> fájlban. Amíg ez nem
+              történik meg, az oldal nem jelenik meg a keresőkben.
             </DraftNotice>
           )}
 
