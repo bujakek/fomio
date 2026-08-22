@@ -65,8 +65,11 @@ export async function startEventCheckout(
     const session = await getStripe().checkout.sessions.create({
       mode: 'payment',
       line_items: [{ price: stripeEnv().eventPriceId, quantity: 1 }],
-      success_url: `${origin}/admin/events/${event.slug}?checkout=success`,
-      cancel_url: `${origin}/admin/events/${event.slug}?checkout=cancelled`,
+      // Back to the settings page rather than the event page: the billing
+      // card that explains the outcome lives there, and it is where the host
+      // started checkout from.
+      success_url: `${origin}/admin/events/${event.slug}/settings?checkout=success`,
+      cancel_url: `${origin}/admin/events/${event.slug}/settings?checkout=cancelled`,
       // Both, and not by accident. `metadata` is what the webhook reads;
       // `client_reference_id` is what shows up in the Stripe dashboard's
       // search, which is where you will be looking at 2am when a host says

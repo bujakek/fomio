@@ -56,6 +56,9 @@ export async function setGalleryHidden(slug: string, hidden: boolean) {
     throw new Error('Az esemény nem módosult.')
   }
 
+  // The toggle lives on the settings page; the event page is revalidated too
+  // because it links to it and shares the same event read.
+  revalidatePath(`/admin/events/${slug}/settings`)
   revalidatePath(`/admin/events/${slug}`)
   revalidatePath(`/e/${slug}`)
   revalidatePath(`/e/${slug}/gallery`)
