@@ -14,6 +14,7 @@ export function photoStoragePaths(eventId: string, photoId: string) {
   return {
     full: `${eventId}/${photoId}.jpg`,
     thumb: `${eventId}/${photoId}_thumb.jpg`,
+    view: `${eventId}/${photoId}_view.jpg`,
   }
 }
 

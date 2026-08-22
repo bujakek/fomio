@@ -97,7 +97,13 @@ export function Lightbox({
         <div className="relative min-h-0 flex-1">
           <Image
             key={photo.id}
-            src={photoPublicUrl(photo.storage_path)}
+            // The ~1600px render, not the print master. Showing `storage_path`
+            // here meant decoding 12.6 megapixels — roughly 50MB of bitmap —
+            // on the phone for every swipe, to fill a screen that is about
+            // 1200px across. `view_path` is null only for photos uploaded
+            // before that render existed, which fall back to the old
+            // behaviour rather than to a broken tile.
+            src={photoPublicUrl(photo.view_path ?? photo.storage_path)}
             alt={caption}
             fill
             sizes="100vw"

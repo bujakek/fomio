@@ -30,8 +30,10 @@ import { generateEventSlug } from '../lib/slug.ts'
 const EVENT_NAME = 'Anna & Péter'
 const MAX_EDGE = 4096
 const THUMB_EDGE = 400
+const VIEW_EDGE = 1600
 const QUALITY = 92
 const THUMB_QUALITY = 80
+const VIEW_QUALITY = 85
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -143,12 +145,26 @@ async function main() {
       .jpeg({ quality: THUMB_QUALITY })
       .toBuffer()
 
+    // The lightbox render, same as the browser pipeline produces. Without it
+    // seeded albums would fall back to the 4096px master and quietly hide the
+    // very decode cost this exists to avoid.
+    const view = await sharp(source)
+      .rotate()
+      .resize(VIEW_EDGE, VIEW_EDGE, {
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .jpeg({ quality: VIEW_QUALITY })
+      .toBuffer()
+
     const fullPath = `${eventId}/${photoId}.jpg`
     const thumbPath = `${eventId}/${photoId}_thumb.jpg`
+    const viewPath = `${eventId}/${photoId}_view.jpg`
 
     for (const [objectPath, body] of [
       [fullPath, full],
       [thumbPath, thumb],
+      [viewPath, view],
     ] as const) {
       const { error } = await supabase.storage
         .from('event-photos')
@@ -167,6 +183,7 @@ async function main() {
       event_id: eventId,
       storage_path: fullPath,
       thumb_path: thumbPath,
+      view_path: viewPath,
       uploader_name: UPLOADERS[i] ?? null,
       width: meta.width ?? null,
       height: meta.height ?? null,

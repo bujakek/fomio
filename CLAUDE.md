@@ -86,6 +86,15 @@ Deployed builds are unaffected: Vercel injects all of these at build and runtime
   them — so **the guest routes 500 until it is pushed**. Deploying the code
   and pushing the migration are two separate acts and there is no CI step that
   does the second one; `pnpm supabase db push` is manual.
+- **`20260822100000_photo_view_render.sql` is applied on the remote.** It adds
+  `photos.view_path` and **drops and recreates** `event_photos` and
+  `event_gallery_by_slug` to return it (a `returns table` cannot gain a column
+  via `create or replace`), so the lightbox now serves a ~1600px render instead
+  of the 4096px master. Photos uploaded before it keep working: the column is
+  nullable and every reader falls back to `storage_path`. Run
+  `pnpm types:check` if `lib/supabase/database.types.ts` looks suspect — the
+  `view_path` entries there were hand-written to match the generator rather
+  than regenerated.
 - **Roles and the billing schema are live; Stripe itself is not.**
   `20260820100000_user_roles.sql` and `20260820100100_stripe_billing.sql` are
   **applied on the remote**, so the 5-photo cap is real and enforced today.
@@ -187,7 +196,7 @@ Details, DDL, and RLS live in `.cursor/skills/ourfilm-supabase/SKILL.md`. Shape:
 
 - **`events`** — `id`, `slug` (unique), `event_name`, `event_date`, `uploads_close_at` (upload window; gallery stays viewable after), `gallery_hidden_at` (set = guests upload but cannot view; host togglable both ways), `owner_id` (→ `auth.users`; the host, and what every RLS host policy keys off), `created_at`
 
-- **`photos`** — `id`, `event_id`, `storage_path`, `thumb_path`, `uploader_name` (nullable — optional guest nickname, remembered on their device), `hidden_at` (soft delete for moderation; never hard-delete), `width`, `height`, `byte_size`, `mime_type` (so the gallery grid reserves space and avoids layout shift), `taken_at` (EXIF capture time, read in the browser **before** the canvas re-encode destroys it; null when the file carried none — always fall back to `created_at`), `created_at`
+- **`photos`** — `id`, `event_id`, `storage_path`, `thumb_path`, `view_path` (nullable — the ~1600px lightbox render; null on photos uploaded before it existed, so **always read it as `view_path ?? storage_path`**), `uploader_name` (nullable — optional guest nickname, remembered on their device), `hidden_at` (soft delete for moderation; never hard-delete), `width`, `height`, `byte_size`, `mime_type` (so the gallery grid reserves space and avoids layout shift), `taken_at` (EXIF capture time, read in the browser **before** the canvas re-encode destroys it; null when the file carried none — always fall back to `created_at`), `created_at`
 
 **Guests never read these tables directly.** The anon key is public, so any table `anon` can `select` is a table anyone can list — a permissive read policy on `events` would hand out every album's slug and make the unguessable URL pointless. Guest reads go through `security definer` functions keyed on the slug or event id (`event_by_slug`, `event_photos`); admin reads the tables directly under ownership policies. Details in the Supabase skill.
 
@@ -197,9 +206,17 @@ Details, DDL, and RLS live in `.cursor/skills/ourfilm-supabase/SKILL.md`. Shape:
 
 - **`stripe_webhook_events`** — `id` (Stripe's `evt_…`), `type`, `received_at`, `processed_at`. Idempotency plus an audit trail. RLS on with no policies at all: only the service role reaches it.
 
-Storage layout: `event-photos/{event_id}/{photo_id}.jpg` plus `event-photos/{event_id}/{photo_id}_thumb.jpg`.
+Storage layout: `event-photos/{event_id}/{photo_id}.jpg` plus `_thumb.jpg` and `_view.jpg` beside it. Storage policies key on the **folder** (the event id) and never on the filename, so a new derivative needs no policy change.
 
-**The gallery must serve the thumb, never the full image.** A 4096px/~2MB file is the right artifact to download and print, and completely the wrong one to tile at 200px — a single guest scrolling a 600-photo album would pull over a gigabyte. The client already holds the decoded bitmap during upload, so the ~400px thumb is nearly free to produce there.
+**Three renders, one per job. Never serve a bigger one than the job needs.** The client already holds the decoded bitmap during upload, so producing all three there costs a resize each rather than another decode.
+
+| Render         | Size          | Used by                               |
+| -------------- | ------------- | ------------------------------------- |
+| `storage_path` | 4096px / q92  | ZIP export, print. Nothing on screen. |
+| `view_path`    | ~1600px / q85 | Lightbox                              |
+| `thumb_path`   | ~400px / q80  | Gallery grid, moderation grid         |
+
+Both downscales exist because of measured cost on a phone, not tidiness. Tiling 4096px files at 200px would have one guest pull over a gigabyte to scroll a 600-photo album. And the lightbox showing the master decoded 12.6 megapixels — roughly 50MB of bitmap — per swipe, to fill a screen about 1200px across; that was the second-largest source of device heat in the product.
 
 ## Billing (settled)
 

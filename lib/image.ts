@@ -36,9 +36,25 @@ const QUALITY = 0.92
 const THUMB_EDGE = 400
 const THUMB_QUALITY = 0.8
 
+/**
+ * Lightbox render. The grid was always careful to serve the thumb; the
+ * lightbox was not, and opening a photo used to decode the full 12.6MP master
+ * into ~50MB of bitmap on the phone, once per swipe. A phone screen is around
+ * 1200px on its long edge at 3x, so 1600px covers it with room to pinch-zoom
+ * and costs an eighth of the pixels.
+ *
+ * Quality is lower than the master's 0.92 on purpose: this render is looked at
+ * on a phone and thrown away, never printed. `storage_path` remains the
+ * print-ready artefact and is what the ZIP export hands the couple.
+ */
+const VIEW_EDGE = 1600
+const VIEW_QUALITY = 0.85
+
 export type PreparedPhoto = {
   full: Blob
   thumb: Blob
+  /** Screen-sized render for the lightbox. */
+  view: Blob
   /** Dimensions of `full`, stored so the gallery can reserve grid space. */
   width: number
   height: number
@@ -199,8 +215,10 @@ async function encodeAt(
 }
 
 /**
- * Decode once, encode twice. Producing the thumbnail from the bitmap already
- * in memory costs a resize rather than a second decode of a large file.
+ * Decode once, encode three times. Producing the smaller renders from the
+ * bitmap already in memory costs a resize each rather than another decode of a
+ * large file — which is why adding the lightbox render is close to free here
+ * and saves a full 12.6MP decode on every phone that later views the photo.
  *
  * Call this **sequentially** across a selection. One photo may be preparing
  * while another uploads, but two decodes at once will run mobile Safari out of
@@ -231,6 +249,14 @@ export async function prepareForUpload(file: File): Promise<PreparedPhoto> {
     // guarantee that no location data leaves the device.
     const full = await encodeAt(bitmap, width, height, QUALITY)
 
+    const viewSize = scaledSize(bitmap, VIEW_EDGE)
+    const view = await encodeAt(
+      bitmap,
+      viewSize.width,
+      viewSize.height,
+      VIEW_QUALITY,
+    )
+
     const thumbSize = scaledSize(bitmap, THUMB_EDGE)
     const thumb = await encodeAt(
       bitmap,
@@ -239,7 +265,7 @@ export async function prepareForUpload(file: File): Promise<PreparedPhoto> {
       THUMB_QUALITY,
     )
 
-    return { full, thumb, width, height, takenAt }
+    return { full, thumb, view, width, height, takenAt }
   } finally {
     // Phones are memory-tight and the next file is queued right behind this
     // one. Release in `finally` so a mid-pipeline throw cannot leak it.

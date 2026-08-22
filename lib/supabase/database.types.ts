@@ -85,6 +85,7 @@ export type Database = {
           taken_at: string | null
           thumb_path: string
           uploader_name: string | null
+          view_path: string | null
           width: number | null
         }
         Insert: {
@@ -99,6 +100,7 @@ export type Database = {
           taken_at?: string | null
           thumb_path: string
           uploader_name?: string | null
+          view_path?: string | null
           width?: number | null
         }
         Update: {
@@ -113,6 +115,7 @@ export type Database = {
           taken_at?: string | null
           thumb_path?: string
           uploader_name?: string | null
+          view_path?: string | null
           width?: number | null
         }
         Relationships: [
@@ -248,6 +251,7 @@ export type Database = {
           storage_path: string
           thumb_path: string
           uploader_name: string
+          view_path: string
           width: number
         }[]
       }
@@ -283,6 +287,7 @@ export type Database = {
           storage_path: string
           thumb_path: string
           uploader_name: string
+          view_path: string
           width: number
         }[]
       }

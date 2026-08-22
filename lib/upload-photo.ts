@@ -76,16 +76,19 @@ export async function uploadPhoto({
   // the reverse would put a row in the gallery pointing at nothing, which
   // renders as a broken tile in someone's wedding album.
   //
-  // The two objects go up together. They used to be a sequential loop, which
+  // The three objects go up together. They used to be a sequential loop, which
   // spent a whole round trip on the ~40KB thumbnail after the ~2MB original
   // had already finished — pure latency, repeated once per photo, on the
   // highest-latency network the product will ever run on. Concurrency here
-  // does not weaken the ordering above: both still land before the insert.
+  // does not weaken the ordering above: all of them still land before the
+  // insert. The lightbox render is ~250KB and rides along in the same window
+  // the master already occupies, so it costs no extra wall-clock.
   const puts = await Promise.all(
     (
       [
         [paths.full, prepared.full],
         [paths.thumb, prepared.thumb],
+        [paths.view, prepared.view],
       ] as const
     ).map(([path, body]) =>
       supabase.storage.from(PHOTO_BUCKET).upload(path, body, {
@@ -107,6 +110,7 @@ export async function uploadPhoto({
     event_id: eventId,
     storage_path: paths.full,
     thumb_path: paths.thumb,
+    view_path: paths.view,
     uploader_name: uploaderName || null,
     width: prepared.width,
     height: prepared.height,
