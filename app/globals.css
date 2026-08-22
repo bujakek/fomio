@@ -92,14 +92,22 @@
     animation: glow-drift 22s ease-in-out infinite alternate;
   }
 
-  /* Touch devices get the blobs, but not the animation.
-     A static blurred layer is rasterized once and then costs nothing. An
-     animated one costs a full-screen blur every frame — and, worse, keeps
-     invalidating the backdrop of every `.glass` surface above it, so the whole
-     page recomposites at 60Hz with the phone sitting untouched on a table.
-     That is what made the app heat up within two minutes of idling. */
+  /* Touch devices get the blobs flat and still: no animation, no blur.
+     Stopping the animation is what fixed the idle burn — an animated blur
+     costs a full-screen convolution every frame and, worse, invalidates the
+     backdrop of every `.glass` surface above it, so the page recomposited at
+     60Hz with the phone untouched on a table. Measured on device: compositing
+     after the initial load fell from 1417ms to 26.6ms across a recording.
+
+     Dropping `filter` as well is the second half. "A static blur is rasterized
+     once and then free" is true, but that once is not cheap: three
+     screen-sized layers at a 64px radius and 3x DPR, and the first composite
+     span did not improve at all when only the animation went. The source is
+     already a radial gradient fading to `transparent 70%`, so a blur on top of
+     it buys very little — verify at 390px before assuming otherwise. */
   @media (pointer: coarse) {
     .glow-blob {
+      filter: none;
       animation: none;
     }
   }
