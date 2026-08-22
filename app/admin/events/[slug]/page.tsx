@@ -3,7 +3,7 @@ import { QrCard } from '@/components/admin/qr-card'
 import { ModerationGridSkeleton } from '@/components/admin/skeletons'
 import { getEventQuota } from '@/lib/billing'
 import { getOwnedEventBySlug } from '@/lib/events'
-import { formatEventDate } from '@/lib/format'
+import { formatDeadline } from '@/lib/format'
 import { getAllEventPhotos } from '@/lib/photos'
 import { eventUrl } from '@/lib/site'
 import {
@@ -51,6 +51,15 @@ export default async function AdminEventPage({ params }: Props) {
   const closed =
     event.uploads_close_at !== null &&
     new Date(event.uploads_close_at) <= new Date()
+  // The deadline, not the event date: this is the host's own screen, and what
+  // they need from a glance at it is whether guests can still upload. Events
+  // created before the deadline was required have none — say that plainly
+  // rather than leaving the line blank.
+  const deadline = !event.uploads_close_at
+    ? 'Nincs záró időpont'
+    : closed
+      ? 'A feltöltés lezárult'
+      : `Feltöltés ${formatDeadline(event.uploads_close_at)}-ig`
 
   return (
     <main className="mx-auto w-full max-w-lg px-4 py-10 sm:py-16">
@@ -67,10 +76,7 @@ export default async function AdminEventPage({ params }: Props) {
           <h1 className="text-3xl font-semibold tracking-tight text-balance">
             {event.event_name}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {formatEventDate(event.event_date) ?? 'Nincs dátum'}
-            {closed ? ' · a feltöltés lezárult' : ''}
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{deadline}</p>
         </div>
 
         <Link

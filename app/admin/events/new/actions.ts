@@ -1,5 +1,6 @@
 'use server'
 
+import { eventLocalToIso } from '@/lib/format'
 import { generateEventSlug } from '@/lib/slug'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -14,12 +15,20 @@ export async function createEvent(
   formData: FormData,
 ): Promise<CreateEventState> {
   const name = String(formData.get('event_name') ?? '').trim()
-  const date = String(formData.get('event_date') ?? '').trim()
-  // Computed in the browser, because a datetime-local value carries no zone
-  // and resolving it here would silently use the server's.
-  const closesAt = String(formData.get('uploads_close_at') ?? '').trim()
+  // A datetime-local value carries no zone, so it is read as the event's wall
+  // clock rather than the server's — Vercel runs UTC, which would move every
+  // deadline two hours earlier than the host typed.
+  const closesAt = eventLocalToIso(
+    String(formData.get('uploads_close_at') ?? '').trim(),
+  )
 
   if (!name) return { error: 'Adj nevet az eseménynek.' }
+  // Required, unlike before. An optional deadline is one nobody sets, and an
+  // event without one accepts uploads forever.
+  if (!closesAt) return { error: 'Add meg, mikor ér véget az esemény.' }
+  if (new Date(closesAt) <= new Date()) {
+    return { error: 'A záró időpont legyen a jövőben.' }
+  }
 
   const supabase = await createClient()
   const {
@@ -34,8 +43,7 @@ export async function createEvent(
     const { error } = await supabase.from('events').insert({
       slug: candidate,
       event_name: name,
-      event_date: date || null,
-      uploads_close_at: closesAt || null,
+      uploads_close_at: closesAt,
       owner_id: user.id,
     })
 

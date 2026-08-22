@@ -17,12 +17,25 @@ const SUGGESTIONS = [
   'Évforduló',
 ]
 
-export function NewEventForm() {
+/**
+ * Two questions: what the event is called, and when it stops taking photos.
+ *
+ * The deadline is **required and pre-filled**, which is the whole point of the
+ * field. It used to be optional alongside a separate, also optional event
+ * date — and an optional deadline is one nobody sets, which left every album
+ * open forever. Asking for the end instead of the start is what makes one
+ * question do the job: uploads open the moment the event exists, so the start
+ * is not a thing a host can tell us anything useful about.
+ */
+export function NewEventForm({
+  suggestedCloses,
+  earliestCloses,
+}: {
+  suggestedCloses: string
+  earliestCloses: string
+}) {
   const [state, action, pending] = useActionState(createEvent, initial)
   const [name, setName] = useState('')
-  // A datetime-local value has no timezone. Converting it here means the
-  // browser's zone is used — which is the host's — instead of the server's.
-  const [closesIso, setClosesIso] = useState('')
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -62,40 +75,24 @@ export function NewEventForm() {
 
       <div>
         <label
-          htmlFor="event_date"
+          htmlFor="uploads_close_at"
           className="mb-2 block text-sm text-muted-foreground"
         >
-          Dátum — nem kötelező
+          Mikor ér véget az esemény?
         </label>
         <input
-          id="event_date"
-          name="event_date"
-          type="date"
-          className="glass min-h-14 w-full rounded-2xl px-5 text-base outline-none focus:border-accent"
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="closes_local"
-          className="mb-2 block text-sm text-muted-foreground"
-        >
-          Feltöltés eddig — nem kötelező
-        </label>
-        <input
-          id="closes_local"
+          id="uploads_close_at"
+          name="uploads_close_at"
           type="datetime-local"
-          onChange={(e) =>
-            setClosesIso(
-              e.target.value ? new Date(e.target.value).toISOString() : '',
-            )
-          }
+          required
+          defaultValue={suggestedCloses}
+          min={earliestCloses}
           className="glass min-h-14 w-full rounded-2xl px-5 text-base outline-none focus:border-accent"
         />
-        <input type="hidden" name="uploads_close_at" value={closesIso} />
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          Ha üresen hagyod, a vendégek bármeddig tölthetnek fel. A galéria
-          ezután is megmarad.
+          A feltöltés azonnal megnyílik, és a vendégek eddig az időpontig
+          tölthetnek fel. A közös album ezután is megmarad, és a határidőt
+          később bármikor módosíthatod.
         </p>
       </div>
 

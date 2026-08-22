@@ -194,7 +194,26 @@ The `/e/` prefix is what the landing page already advertises in `qr-preview.tsx`
 
 Details, DDL, and RLS live in `.cursor/skills/ourfilm-supabase/SKILL.md`. Shape:
 
-- **`events`** — `id`, `slug` (unique), `event_name`, `event_date`, `uploads_close_at` (upload window; gallery stays viewable after), `gallery_hidden_at` (set = guests upload but cannot view; host togglable both ways), `owner_id` (→ `auth.users`; the host, and what every RLS host policy keys off), `created_at`
+- **`events`** — `id`, `slug` (unique), `event_name`, `event_date` (**legacy**; nullable, and nothing sets it any more — read it only as a fallback), `uploads_close_at` (when uploads stop; the gallery stays viewable after), `gallery_hidden_at` (set = guests upload but cannot view; host togglable both ways), `owner_id` (→ `auth.users`; the host, and what every RLS host policy keys off), `created_at`
+
+  **Creating an event asks one date question: when it ends.** `uploads_close_at`
+  is required by the create form and pre-filled a week out at 23:59; the start
+  is not asked because uploads open the moment the event exists. It replaced a
+  pair of optional fields — an optional deadline is one nobody sets, so every
+  album accepted uploads forever. The column stays nullable for the events
+  created before this, which really are open-ended; each surface says so rather
+  than leaving the line blank.
+
+  Both directions of the conversion live in `lib/format.ts` and read the wall
+  clock as **`EVENT_TIME_ZONE`**, never the browser's or the server's — a
+  `datetime-local` value carries no zone, and Vercel runs UTC, so resolving one
+  there would move every deadline two hours off what the host typed.
+
+  The host can move it afterwards on `settings` (`DeadlineCard` →
+  `setUploadDeadline`). Setting a time in the past is the supported way to
+  close an album early, which is why that action does not reject one — and the
+  reason a required deadline needs an edit path at all.
+
 
 - **`photos`** — `id`, `event_id`, `storage_path`, `thumb_path`, `view_path` (nullable — the ~1600px lightbox render; null on photos uploaded before it existed, so **always read it as `view_path ?? storage_path`**), `uploader_name` (nullable — optional guest nickname, remembered on their device), `hidden_at` (soft delete for moderation; never hard-delete), `width`, `height`, `byte_size`, `mime_type` (so the gallery grid reserves space and avoids layout shift), `taken_at` (EXIF capture time, read in the browser **before** the canvas re-encode destroys it; null when the file carried none — always fall back to `created_at`), `created_at`
 

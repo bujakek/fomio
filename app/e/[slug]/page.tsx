@@ -2,7 +2,7 @@ import { JoinGate } from '@/components/event/join-gate'
 import { UploadQueue } from '@/components/event/upload-queue'
 import { getEventQuotaOrNull } from '@/lib/billing'
 import { getEventBySlug, uploadsAreOpen } from '@/lib/events'
-import { formatEventDate } from '@/lib/format'
+import { formatDeadline, formatEventDate } from '@/lib/format'
 import { guestHasJoined } from '@/lib/guest-name-server'
 import { Images, Lock } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -42,8 +42,16 @@ export default async function EventPage({ params }: Props) {
   // is read — but it no longer hands the album over in the flight payload.
   if (!joined) return <JoinGate eventName={event.event_name} />
 
-  const eventDate = formatEventDate(event.event_date)
   const canUpload = uploadsAreOpen(event)
+  // While uploads are open the deadline is the more useful of the two facts a
+  // guest could be told, and the only one that changes what they do next. The
+  // event date is the fallback for albums created before the deadline was
+  // asked for; once uploads close, the paragraph below says so and this line
+  // would only repeat it.
+  const subline =
+    canUpload && event.uploads_close_at
+      ? `Feltöltés ${formatDeadline(event.uploads_close_at)}-ig`
+      : formatEventDate(event.event_date)
 
   // The counts arrive with the event row now, aggregated in Postgres. This
   // used to fetch every photo in the album to count them in JavaScript, which
@@ -75,8 +83,8 @@ export default async function EventPage({ params }: Props) {
           <h1 className="mt-6 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             {event.event_name}
           </h1>
-          {eventDate ? (
-            <p className="mt-3 text-sm text-muted-foreground">{eventDate}</p>
+          {subline ? (
+            <p className="mt-3 text-sm text-muted-foreground">{subline}</p>
           ) : null}
           <p className="mx-auto mt-5 max-w-sm leading-relaxed text-pretty text-muted-foreground">
             {canUpload

@@ -1,5 +1,5 @@
 import type { EventWithPreview } from '@/lib/events'
-import { formatEventDate } from '@/lib/format'
+import { formatDeadline } from '@/lib/format'
 import { photoPublicUrl } from '@/lib/storage'
 import { EyeOff, Images } from 'lucide-react'
 import Image from 'next/image'
@@ -55,7 +55,9 @@ function EventRow({ event }: { event: EventWithPreview }) {
         <div className="flex flex-wrap items-baseline justify-between gap-x-4">
           <p className="truncate font-semibold">{event.event_name}</p>
           <p className="text-xs text-muted-foreground">
-            {formatEventDate(event.event_date) ?? 'Nincs dátum'}
+            {event.uploads_close_at
+              ? formatDeadline(event.uploads_close_at)
+              : 'Nincs záró időpont'}
           </p>
         </div>
         <p className="mt-1 truncate text-xs text-muted-foreground">

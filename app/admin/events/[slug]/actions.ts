@@ -1,5 +1,6 @@
 'use server'
 
+import { eventLocalToIso } from '@/lib/format'
 import { PHOTO_BUCKET } from '@/lib/storage'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
@@ -60,6 +61,43 @@ export async function setGalleryHidden(slug: string, hidden: boolean) {
   // because it links to it and shares the same event read.
   revalidatePath(`/admin/events/${slug}/settings`)
   revalidatePath(`/admin/events/${slug}`)
+  revalidatePath(`/e/${slug}`)
+  revalidatePath(`/e/${slug}/gallery`)
+}
+
+/**
+ * Move the moment uploads stop.
+ *
+ * Every event has one — it is required at creation — so this only ever moves
+ * it, never clears it. There is no "leave it open forever" here on purpose:
+ * that was the old default, and it is what this change exists to remove.
+ *
+ * The value arrives as a `datetime-local` string and is read as the event's
+ * wall clock, the same as at creation. Moving it into the past is allowed and
+ * is the fastest way to close an album early — a host standing in the room at
+ * the end of the night should not have to compute a future timestamp to stop
+ * uploads now.
+ */
+export async function setUploadDeadline(slug: string, local: string) {
+  const closesAt = eventLocalToIso(local)
+  if (!closesAt) throw new Error('Add meg, mikor záruljon a feltöltés.')
+
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('events')
+    .update({ uploads_close_at: closesAt })
+    .eq('slug', slug)
+    .select('id')
+
+  if (error) throw error
+  if (!data || data.length === 0) {
+    throw new Error('Az esemény nem módosult.')
+  }
+
+  revalidatePath(`/admin/events/${slug}/settings`)
+  revalidatePath(`/admin/events/${slug}`)
+  revalidatePath('/admin')
   revalidatePath(`/e/${slug}`)
   revalidatePath(`/e/${slug}/gallery`)
 }

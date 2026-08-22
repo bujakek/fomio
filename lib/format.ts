@@ -142,3 +142,58 @@ const HU_MOMENT = new Intl.DateTimeFormat('hu-HU', {
 export function formatMoment(iso: string): string {
   return HU_MOMENT.format(new Date(iso))
 }
+
+const HU_DEADLINE = new Intl.DateTimeFormat('hu-HU', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+  timeZone: EVENT_TIME_ZONE,
+})
+
+/**
+ * `2026. aug. 29. 23:59` — an upload deadline, short enough for a table row.
+ *
+ * Same instant-in-the-event's-zone rule as `formatMoment`; the month is
+ * abbreviated because this appears next to an event name in the admin list and
+ * under the title on a 390px phone, where the long form pushes to a second
+ * line. The year stays: a wedding booked for next January is not a hypothesis.
+ */
+export function formatDeadline(iso: string): string {
+  return HU_DEADLINE.format(new Date(iso))
+}
+
+/**
+ * `2026-08-29T23:59` — an instant as an `<input type="datetime-local">` value,
+ * read in the event's zone.
+ *
+ * The input has no timezone of its own: it shows whatever wall clock it is
+ * handed. Handing it the browser's would mean a host abroad sees a deadline an
+ * hour off the one the guests are held to, so it gets the event's instead.
+ */
+export function formatEventLocalInput(date: Date): string {
+  const p = eventParts(date.toISOString())
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`
+}
+
+/**
+ * The reverse: a `datetime-local` value read as event-zone wall clock.
+ *
+ * Returns null for anything that is not one, which is the validation — the
+ * value arrives in a `FormData` and a form field is only ever a suggestion.
+ *
+ * The zone offset is a property of the instant, not of the wall clock, so it
+ * has to be looked up from an instant we do not have yet. Reading the same
+ * wall clock as UTC is close enough to land on the correct side of every DST
+ * boundary except within the switch hour itself — where the clock is genuinely
+ * ambiguous and no answer is the right one.
+ */
+export function eventLocalToIso(local: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(local)) return null
+  const guess = new Date(`${local}:00Z`)
+  if (Number.isNaN(guess.getTime())) return null
+  const exact = new Date(`${local}:00${eventUtcOffset(guess.toISOString())}`)
+  return Number.isNaN(exact.getTime()) ? null : exact.toISOString()
+}

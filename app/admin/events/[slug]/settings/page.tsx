@@ -1,5 +1,6 @@
 import { BillingCard } from '@/components/admin/billing-card'
 import { DangerZone } from '@/components/admin/danger-zone'
+import { DeadlineCard } from '@/components/admin/deadline-card'
 import { GalleryToggle } from '@/components/admin/gallery-toggle'
 import {
   type EventQuota,
@@ -9,7 +10,7 @@ import {
   type Purchase,
 } from '@/lib/billing'
 import { getOwnedEventBySlug } from '@/lib/events'
-import { formatMoment } from '@/lib/format'
+import { formatEventLocalInput, formatMoment } from '@/lib/format'
 import { getAllEventPhotos } from '@/lib/photos'
 import { stripeIsConfigured } from '@/lib/stripe/env'
 import { ArrowLeft } from 'lucide-react'
@@ -59,6 +60,19 @@ export default async function AdminEventSettingsPage({
   // Only the two values Stripe is sent back with are honoured. Anything else
   // in the query string is somebody typing, and a "payment succeeded" banner
   // is not something a URL should be able to conjure.
+  // The field needs a wall clock either way. An event that predates the
+  // required deadline has none to show, so it gets the same week-out
+  // suggestion the create form offers rather than an empty picker.
+  const now = new Date()
+  const deadlineState = !event.uploads_close_at
+    ? 'none'
+    : new Date(event.uploads_close_at) <= now
+      ? 'closed'
+      : 'open'
+  const deadlineValue = event.uploads_close_at
+    ? formatEventLocalInput(new Date(event.uploads_close_at))
+    : `${formatEventLocalInput(new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)).slice(0, 10)}T23:59`
+
   const { checkout } = await searchParams
   const checkoutState =
     checkout === 'success' || checkout === 'cancelled' ? checkout : null
@@ -77,13 +91,20 @@ export default async function AdminEventSettingsPage({
         Beállítások
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Az album láthatósága, a feltöltési keret és az esemény törlése.
+        Az album láthatósága, a feltöltési határidő és keret, és az esemény
+        törlése.
       </p>
 
       <div className="mt-8 flex flex-col gap-4">
         <GalleryToggle
           slug={event.slug}
           hidden={event.gallery_hidden_at !== null}
+        />
+
+        <DeadlineCard
+          slug={event.slug}
+          value={deadlineValue}
+          state={deadlineState}
         />
 
         <Suspense fallback={<BillingCardSkeleton />}>
