@@ -69,7 +69,7 @@ export function RecentUploadTiles() {
 
       {Array.from({ length: skeletons }, (_, i) => (
         <li key={`skeleton-${i}`}>
-          <div className="glass aspect-square w-full animate-pulse rounded-2xl" />
+          <div className="skeleton aspect-square w-full animate-pulse rounded-2xl" />
         </li>
       ))}
     </ul>

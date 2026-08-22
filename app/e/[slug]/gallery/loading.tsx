@@ -18,15 +18,15 @@ import { RecentUploadTiles } from '@/components/event/recent-upload-tiles'
 export default function GalleryLoading() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-10 sm:py-16">
-      <div className="glass h-5 w-32 animate-pulse rounded-full" />
+      <div className="skeleton h-5 w-32 animate-pulse rounded-full" />
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <h1 className="text-3xl font-semibold tracking-tight text-balance">
           Közös album
         </h1>
         <div className="flex items-center gap-2">
-          <div className="glass size-11 animate-pulse rounded-full" />
-          <div className="glass size-11 animate-pulse rounded-full" />
+          <div className="skeleton size-11 animate-pulse rounded-full" />
+          <div className="skeleton size-11 animate-pulse rounded-full" />
         </div>
       </div>
 

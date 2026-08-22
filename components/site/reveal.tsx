@@ -18,6 +18,9 @@ export function Reveal({
 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
+  // Drives `will-change` for the duration of the transition and no longer —
+  // see the `.reveal` rules in globals.css for why it is not simply always on.
+  const [animating, setAnimating] = useState(false)
 
   useEffect(() => {
     const node = ref.current
@@ -27,6 +30,7 @@ export function Reveal({
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             setVisible(true)
+            setAnimating(true)
             observer.unobserve(entry.target)
           }
         })
@@ -42,8 +46,19 @@ export function Reveal({
   return (
     <Tag
       ref={ref}
-      className={cn('reveal', visible && 'is-visible', className)}
+      className={cn(
+        'reveal',
+        visible && 'is-visible',
+        animating && 'reveal-animating',
+        className,
+      )}
       style={{ transitionDelay: `${delay}ms` }}
+      // Children transition too — a card hovering inside a revealed section
+      // would otherwise re-arm `will-change` on the whole section. Opacity and
+      // transform each fire one event; settling twice is a no-op.
+      onTransitionEnd={(e) => {
+        if (e.target === e.currentTarget) setAnimating(false)
+      }}
     >
       {children}
     </Tag>

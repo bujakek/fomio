@@ -154,7 +154,10 @@ export default async function AdminEventPage({ params, searchParams }: Props) {
 
 function BillingCardSkeleton() {
   return (
-    <div className="glass h-32 animate-pulse rounded-2xl" aria-hidden="true" />
+    <div
+      className="skeleton h-32 animate-pulse rounded-2xl"
+      aria-hidden="true"
+    />
   )
 }
 
